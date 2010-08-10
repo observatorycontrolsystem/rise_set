@@ -1,0 +1,84 @@
+#!/usr/bin/python
+from __future__ import division
+
+# Standard library imports
+import datetime
+from nose.tools import assert_equal
+
+# Module imports
+from rise_set.angle import Angle
+
+#Import the module to test
+from rise_set.telescope import Telescope
+
+
+class TestCanopusFromSidingSpring(object):
+    '''Integration test: rise/set/transit of a Southern star from a Southern
+       observatory.'''
+       
+    # IMPORTANT NOTE: LATITUDES
+    # IAU convention         = East is +ve
+    # Config DB convention   = East is +ve,  e.g. Siding Spring = +149 04 14.13
+    # Astro. Alg. convention = West is +ve
+    # SLALIB convention (SLA_OBS) = West is +ve
+    # SLALIB (rest of library) convention = East is +ve
+
+
+    def setUp(self):
+    
+        # Target
+        # Note: Aladin units are mas/yr...
+        self.canopus = {
+                         'ra'                : Angle(ra='06 23 57.11'),
+                         'dec'               : Angle(dec='-52 40 03.5'),
+                         'ra_proper_motion'  : Angle(ra='00 00 00.01999'),
+                         'dec_proper_motion' : Angle(dec='00 00 00.02367'),
+                         'parallax'          : 0.01043,   # Units: arcsec
+                         'rad_vel'           : 20.5,      # Units: km/s (-ve approaches)
+                         'epoch'             : 2000,
+                       }                       
+
+        # Site (East +ve longitude)
+        self.siding_spring = Telescope(latitude=-31.273, 
+                                       longitude=149.070593)   
+                                       
+        # Date
+        self.date = datetime.date(year = 2010, month = 3, day = 12)
+
+        self.siding_spring.set_date(self.date)
+
+
+    def test_rise_set(self):
+        (transit, rise, set) = self.siding_spring.calc_rise_set(self.canopus)
+
+        # Second accuracy isn't meaningful, so just check we would round up or
+        # down as apppropriate.
+        exp_secs = 30
+
+        # Expected times taken from http://aa.usno.navy.mil/data/docs/mrst.php
+
+        # Transit
+        exp_t_hr  = 9
+        exp_t_min = 8
+        
+        assert_equal(transit[0], exp_t_hr)
+        assert_equal(transit[1], exp_t_min)
+        assert transit[2] <= exp_secs, '%r !> %r' % (transit[2], exp_secs)
+        
+        
+        # Rise
+        exp_r_hr  = 23
+        exp_r_min = 27
+        
+        assert_equal(rise[0], exp_r_hr)
+        assert_equal(rise[1], exp_r_min)
+        assert rise[2] <= exp_secs, '%r !> %r' % (rise[2], exp_secs)
+        
+        
+        # Set
+        exp_s_hr  = 18
+        exp_s_min = 45    # USNO actually gives 18.46, but let's not worry...
+        
+        assert_equal(set[0], exp_s_hr)
+        assert_equal(set[1], exp_s_min)
+        assert set[2] <= exp_secs, '%r !< %r' % (set[2], exp_secs)
