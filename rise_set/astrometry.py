@@ -523,7 +523,7 @@ def correct_transit(m, local_hour_angle):
     '''
 
     # Local hour angle must be normalised to between -180 and +180
-    if ( local_hour_angle < 180 ):
+    if ( local_hour_angle < -180 ):
         local_hour_angle += 360
     elif ( local_hour_angle > 180 ):
         local_hour_angle -= 360
