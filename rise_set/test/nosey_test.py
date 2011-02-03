@@ -10,8 +10,6 @@ def test_from_degrees():
     a.from_degrees(37)
     eq_(a.in_degrees(), 37)
 
-    
-    
 
 
 class some_test_class_i_just_made_up(object):

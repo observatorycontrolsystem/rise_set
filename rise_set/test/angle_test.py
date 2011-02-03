@@ -11,19 +11,19 @@ from rise_set.angle import Angle, AngleConfigError, InvalidAngleError
 
 class TestAngle(object):
     '''Unit tests for the angle.Angle class.'''
-    
-    def setUp(self):    
-        pass        
-        
+
+    def setUp(self):
+        pass
+
     def tearDown(self):
         pass
-        
+
     @raises(AngleConfigError)
     def test_invalid_angle_type(self):
         self.angle = Angle(flibflobs=45)
-    
-    
-    def test_in_degrees(self):        
+
+
+    def test_in_degrees(self):
         self.angle = Angle(degrees=37)
         assert_equal(self.angle.in_degrees(), 37)
 
@@ -61,7 +61,7 @@ class TestAngle(object):
     def test_from_sexegesimal_valid_format_no_delimiters(self):
         self.angle = Angle(ra='123030')
         assert_equal(self.angle.in_degrees(), 187.625)
-        
+
     def test_from_sexegesimal_valid_format_colons(self):
         self.angle = Angle(ra='12:30:30')
         assert_equal(self.angle.in_degrees(), 187.625)
@@ -111,8 +111,8 @@ class TestAngle(object):
 
     @raises(InvalidAngleError)
     def test_from_sexegesimal_invalid_format_number_mins_too_long(self):
-        self.angle = Angle(ra='12:0120:00')    
-        
+        self.angle = Angle(ra='12:0120:00')
+
     @raises(InvalidAngleError)
     def test_from_sexegesimal_invalid_format_secs_too_long(self):
         self.angle = Angle(ra='12:00:0032')
@@ -124,7 +124,7 @@ class TestAngle(object):
     @raises(InvalidAngleError)
     def test_from_sexegesimal_invalid_hr_too_big(self):
         self.angle = Angle(ra='24:00:00')
-    
+
     @raises(InvalidAngleError)
     def test_from_sexegesimal_invalid_min_too_big(self):
         self.angle = Angle(ra='12:75:00')
@@ -175,12 +175,10 @@ class TestAngle(object):
             assert False
         except InvalidAngleError as e:
             expected_message = ("'90 10 0' exceeds maximum allowable"
-                                " declination")            
+                                " declination")
             assert_equal(e.value, expected_message)
 
 
     @raises(InvalidAngleError)
     def test_from_sexegesimal_invalid_format_number_too_big_secs(self):
         self.angle = Angle(dec='90:00:01')
-
-

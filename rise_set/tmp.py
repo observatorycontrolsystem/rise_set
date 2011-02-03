@@ -161,7 +161,7 @@ def test_capella_from_st_andrews():
 
 
 def get_sunrise():
-    
+
     # Date
     date = datetime.date(year=2010, month=4, day=27)
 
@@ -190,7 +190,7 @@ logging.basicConfig(
 #(transit, rise, setting) = test_capella_from_st_andrews()
 (transit, rise, setting) = get_sunrise()
 
-print               
+print
 print __name__
 print 'Rise:', rise
 print 'Transit:', transit

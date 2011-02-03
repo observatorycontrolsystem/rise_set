@@ -15,7 +15,7 @@ from rise_set.telescope import Telescope
 class TestCanopusFromSidingSpring(object):
     '''Integration test: rise/set/transit of a Southern star from a Southern
        observatory.'''
-       
+
     # IMPORTANT NOTE: LATITUDES
     # IAU convention         = East is +ve
     # Config DB convention   = East is +ve,  e.g. Siding Spring = +149 04 14.13
@@ -25,7 +25,7 @@ class TestCanopusFromSidingSpring(object):
 
 
     def setUp(self):
-    
+
         # Target
         # Note: Aladin units are mas/yr...
         self.canopus = {
@@ -36,12 +36,12 @@ class TestCanopusFromSidingSpring(object):
                          'parallax'          : 0.01043,   # Units: arcsec
                          'rad_vel'           : 20.5,      # Units: km/s (-ve approaches)
                          'epoch'             : 2000,
-                       }                       
+                       }
 
         # Site (East +ve longitude)
-        self.siding_spring = Telescope(latitude=-31.273, 
-                                       longitude=149.070593)   
-                                       
+        self.siding_spring = Telescope(latitude=-31.273,
+                                       longitude=149.070593)
+
         # Date
         self.date = datetime.date(year = 2010, month = 3, day = 12)
 
@@ -60,25 +60,25 @@ class TestCanopusFromSidingSpring(object):
         # Transit
         exp_t_hr  = 9
         exp_t_min = 8
-        
+
         assert_equal(transit[0], exp_t_hr)
         assert_equal(transit[1], exp_t_min)
         assert transit[2] <= exp_secs, '%r !> %r' % (transit[2], exp_secs)
-        
-        
+
+
         # Rise
         exp_r_hr  = 23
         exp_r_min = 27
-        
+
         assert_equal(rise[0], exp_r_hr)
         assert_equal(rise[1], exp_r_min)
         assert rise[2] <= exp_secs, '%r !> %r' % (rise[2], exp_secs)
-        
-        
+
+
         # Set
         exp_s_hr  = 18
         exp_s_min = 45    # USNO actually gives 18.46, but let's not worry...
-        
+
         assert_equal(set[0], exp_s_hr)
         assert_equal(set[1], exp_s_min)
         assert set[2] <= exp_secs, '%r !< %r' % (set[2], exp_secs)

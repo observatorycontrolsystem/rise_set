@@ -13,22 +13,22 @@ class YiannisIsTryingToBreakMyDateCalculator(object):
         self.day   = 20
         self.month = 30
         self.year  = 1988
-    
+
 
 class TestAstrometry(object):
     '''Unit tests for the astrometry module.'''
-    
-    def setUp(self):    
+
+    def setUp(self):
         self.date      = datetime.date(year=1988, month=3, day=20)
-        self.bad_month = YiannisIsTryingToBreakMyDateCalculator() 
+        self.bad_month = YiannisIsTryingToBreakMyDateCalculator()
         self.mjd       = 47240.0
- 
-        
+
+
     def tearDown(self):
         pass
-        
 
-    def test_gregorian_to_ut_mjd(self):                    
+
+    def test_gregorian_to_ut_mjd(self):
         assert_equal(gregorian_to_ut_mjd(self.date), self.mjd)
 
 
@@ -36,8 +36,6 @@ class TestAstrometry(object):
     def test_gregorian_to_ut_mjd_bad_month(self):
         gregorian_to_ut_mjd(self.bad_month)
 
-
-    
 #    def test_ut_mjd_to_gmst_in_radians(self):
 #        assert_equal(ut_mjd_to_gmst_in_radians(self.mjd), 4)
 
@@ -50,26 +48,26 @@ class TestVenusRiseTransitSet(object):
         self.boston = {
            'latitude'  : 42.3333,
            'longitude' : -71.0833
-        }       
-        
-        self.app_sidereal_time = Angle(ra='11 50 58.10')        
+        }
+
+        self.app_sidereal_time = Angle(ra='11 50 58.10')
         self.alpha_2 = Angle(ra='02 46 55.51')
         self.delta_2 = Angle(dec='18 26 27.3')
 
         self.std_alt = Angle(degrees=-0.5667)
 
-          
+
     def test_calc_transit_day_fraction(self):
-        m_0 = calc_transit_day_fraction(self.alpha_2, self.boston['longitude'], 
+        m_0 = calc_transit_day_fraction(self.alpha_2, self.boston['longitude'],
                                         self.app_sidereal_time)
         assert_almost_equal(m_0, 0.81965, places=5)
 
-        
-        (hour_angle, msg) = calc_rise_set_hour_angle(self.boston['latitude'], 
+
+        (hour_angle, msg) = calc_rise_set_hour_angle(self.boston['latitude'],
                                                      self.delta_2,
                                                      self.std_alt)
         assert_almost_equal(hour_angle.in_degrees(), 108.5344, places=4)
-        
+
         m_1 = calc_rising_day_fraction(m_0, hour_angle)
         assert_almost_equal(m_1, 0.51816, places=5)
 
@@ -83,7 +81,7 @@ class TestVenusRiseTransitSet(object):
         assert_equal(hrs, 12)
         assert_equal(mins, 45)
         assert_almost_equal(secs, 40, places=5)
-        
+
 
 
 class TestDenebFromMaui(object):
@@ -112,7 +110,7 @@ class TestDenebFromMaui(object):
                        'rad_vel'           : -4.5,  # Units: km/s (-ve approaches)
                        'epoch'             : 2000,
                       }
-                
+
         # Site (East +ve longitude)
         self.maui = {
            'latitude'  : 20.7069444444,
@@ -129,22 +127,22 @@ class TestDenebFromMaui(object):
         # Second accuracy isn't meaningful, so just check we would round up or
         # down as apppropriate.
         exp_secs = 30
-        
+
         # Expected times taken from http://aa.usno.navy.mil/data/docs/mrst.php
-        
+
         # Transit
         exp_t_hr  = 4
         exp_t_min = 52   # Not 53, because we expect to round up seconds
-        
+
         assert_equal(transit[0], exp_t_hr)
         assert_equal(transit[1], exp_t_min)
         assert transit[2] >= exp_secs, '%r !> %r' % (transit[2], exp_secs)
-        
-        
+
+
         # Rise
         exp_r_hr  = 21
         exp_r_min = 16   # Not 17, because we expect to round up seconds
-                      
+
         assert_equal(rise[0], exp_r_hr)
         assert_equal(rise[1], exp_r_min)
         assert rise[2] >= exp_secs, '%r !> %r' % (rise[2], exp_secs)
@@ -153,7 +151,7 @@ class TestDenebFromMaui(object):
         # Set
         exp_s_hr  = 12
         exp_s_min = 25   # Not 24, because we expect to round down seconds
-                      
+
         assert_equal(set[0], exp_s_hr)
         assert_equal(set[1], exp_s_min)
         assert set[2] <= exp_secs, '%r !< %r' % (set[2], exp_secs)
@@ -163,7 +161,7 @@ class TestDenebFromMaui(object):
 class TestCanopusFromSidingSpring(object):
     '''Integration test: rise/set/transit of a Southern star from a Southern
        observatory.'''
-       
+
     # IMPORTANT NOTE: LATITUDES
     # IAU convention         = East is +ve
     # Config DB convention   = East is +ve,  e.g. Siding Spring = +149 04 14.13
@@ -173,7 +171,7 @@ class TestCanopusFromSidingSpring(object):
 
 
     def setUp(self):
-    
+
         # Target
         # Note: Aladin units are mas/yr...
         self.canopus = {
@@ -184,7 +182,7 @@ class TestCanopusFromSidingSpring(object):
                          'parallax'          : 0.01043,   # Units: arcsec
                          'rad_vel'           : 20.5,      # Units: km/s (-ve approaches)
                          'epoch'             : 2000,
-                       }                       
+                       }
 
         # Site (East +ve longitude)
         self.siding_spring = {
@@ -209,35 +207,35 @@ class TestCanopusFromSidingSpring(object):
         # Transit
         exp_t_hr  = 9
         exp_t_min = 8
-        
+
         assert_equal(transit[0], exp_t_hr)
         assert_equal(transit[1], exp_t_min)
         assert transit[2] <= exp_secs, '%r !> %r' % (transit[2], exp_secs)
-        
-        
+
+
         # Rise
         exp_r_hr  = 23
         exp_r_min = 27
-        
+
         assert_equal(rise[0], exp_r_hr)
         assert_equal(rise[1], exp_r_min)
         assert rise[2] <= exp_secs, '%r !> %r' % (rise[2], exp_secs)
-        
-        
+
+
         # Set
         exp_s_hr  = 18
         exp_s_min = 45    # USNO actually gives 18.46, but let's not worry...
-        
+
         assert_equal(set[0], exp_s_hr)
         assert_equal(set[1], exp_s_min)
         assert set[2] <= exp_secs, '%r !< %r' % (set[2], exp_secs)
-        
-        
+
+
 
 class TestCanopusFromStAndrews(object):
     '''Integration test: rise/set/transit of a Southern star from a Northern
        observatory (never rises).'''
-       
+
     # IMPORTANT NOTE: LATITUDES
     # IAU convention         = East is +ve
     # Config DB convention   = East is +ve,  e.g. Siding Spring = +149 04 14.13
@@ -247,7 +245,7 @@ class TestCanopusFromStAndrews(object):
 
 
     def setUp(self):
-       
+
         # Target
         # Note: Aladin units are mas/yr...
         self.canopus = {
@@ -272,11 +270,11 @@ class TestCanopusFromStAndrews(object):
 
 
     @raises(RiseSetError)
-    def test_rise_set(self):        
+    def test_rise_set(self):
         (transit, rise, set) = calc_rise_set(self.canopus, self.st_andrews,
                                              self.date)
-                                             
-        
+
+
 class TestCapellaFromStAndrews(object):
     '''Integration test: rise/set/transit of a circumpolar star from a Northern
         observatory (never sets).'''
@@ -312,7 +310,7 @@ class TestCapellaFromStAndrews(object):
         # Date
         self.date = datetime.date(year=2010, month=3, day=12)
 
-    
+
     @raises(RiseSetError)
     def test_rise_set(self):
         (transit, rise, set) = calc_rise_set(self.capella, self.st_andrews,
