@@ -21,6 +21,7 @@ from __future__ import division
 # Standard library imports
 # Trigonometry functions
 from math import sin, cos, asin, acos, radians, degrees, modf
+import datetime
 
 # API for accessing data files after deployment, within an egg
 from pkg_resources import resource_stream
@@ -574,6 +575,68 @@ def calculate_altitude(latitude, dec, local_hour_angle):
                )
 
     return Angle(radians=altitude)
+
+
+def get_dark_intervals(location, start, end):
+
+    # Find rise/set/transit for the first day
+    # Get day intervals by identifying which case we have
+    # find_when_target_is_up()
+    intervals = find_when_sun_is_down(location, start)
+
+    # Repeat for each day
+
+    return intervals
+
+
+def find_when_sun_is_down(location, dt):
+
+    # Remove any time component of the provided datetime object
+    dt = dt.replace(hour=0, minute=0, second=0, microsecond=0)
+
+    # Get the rise/set/transit times for this day
+    (transit, rise, set) = calc_sunrise_set(location, dt, 'sunrise')
+
+    intervals = []
+
+    # Case 1: Overlapping start of day boundary
+    # Target rose yesterday, and sets today. Rises again later today.
+    # Rise  0hr    Transit      Set    Rise  24hr
+    if (rise > transit) and (set > transit):
+        # Store the first interval - start of day until target set
+        absolute_set = dt.replace(hour=set[0], minute=set[1], second=set[2])
+        intervals.append((dt, absolute_set))
+
+        # Store the second interval - target rise until end of day
+        absolute_rise = dt.replace(hour=rise[0], minute=rise[1], second=rise[2])
+        intervals.append((absolute_rise, dt + datetime.timedelta(day=1)))
+
+
+    # Case 2: Rise, set and transit all fall within the day, in order
+    # Target rises today, transits, and sets before the day ends
+    # 0hr    Rise      Transit      Set    24hr
+    elif (rise < transit) and (set > transit):
+        # Only one interval - rise until target set
+        absolute_rise = dt.replace(hour=rise[0], minute=rise[1], second=rise[2])
+        absolute_set  = dt.replace(hour=set[0], minute=set[1], second=set[2])
+        intervals.append(absolute_rise, absolute_set)
+
+
+    # Case 3: Overlapping end of day boundary
+    # Target rose yesterday, and sets today. Rises again later today.
+    # Rise  Transit 0hr    Set    Rise  Transit 24hr
+    elif (rise < transit) and (set < transit):
+        # Same code as case 1!
+        # Store the first interval - start of day until target set
+        absolute_set = dt.replace(hour=set[0], minute=set[1], second=set[2])
+        intervals.append((dt, absolute_set))
+
+        # Store the second interval - target rise until end of day
+        absolute_rise = dt.replace(hour=rise[0], minute=rise[1], second=rise[2])
+        intervals.append((absolute_rise, dt + datetime.timedelta(days=1)))
+
+
+    return intervals
 
 
 
