@@ -42,6 +42,8 @@ logging.config.fileConfig(_log_config_location)
 _log = logging.getLogger('rise_set.astrometry')
 
 
+# Set convenient constants
+ONE_DAY = datetime.timedelta(days=1)
 
 def gregorian_to_ut_mjd(date):
     '''Convert Gregorian calendar date to UT MJD.'''
@@ -577,14 +579,23 @@ def calculate_altitude(latitude, dec, local_hour_angle):
     return Angle(radians=altitude)
 
 
-def get_dark_intervals(location, start, end):
+def get_dark_intervals(location, start_date, end_date):
 
-    # Find rise/set/transit for the first day
-    # Get day intervals by identifying which case we have
-    # find_when_target_is_up()
-    intervals = find_when_sun_is_down(location, start)
+    # Find rise/set/transit for each day
+    intervals = []
+    current_date = start_date
+    while current_date < end_date:
+        # find_when_target_is_up()
+        day_intervals = find_when_sun_is_down(location, current_date)
 
-    # Repeat for each day
+        # Add today's intervals to the accumulating list of intervals
+        intervals.extend(day_intervals)
+
+        # Move on to tomorrow
+        current_date += ONE_DAY
+
+    # Collapse adjacent intervals into continuous larger intervals
+    intervals = coalesce_adjacent_intervals(intervals)
 
     return intervals
 
@@ -609,7 +620,7 @@ def find_when_sun_is_down(location, dt):
 
         # Store the second interval - target rise until end of day
         absolute_rise = dt.replace(hour=rise[0], minute=rise[1], second=rise[2])
-        intervals.append((absolute_rise, dt + datetime.timedelta(day=1)))
+        intervals.append((absolute_rise, dt + ONE_DAY))
 
 
     # Case 2: Rise, set and transit all fall within the day, in order
@@ -633,10 +644,25 @@ def find_when_sun_is_down(location, dt):
 
         # Store the second interval - target rise until end of day
         absolute_rise = dt.replace(hour=rise[0], minute=rise[1], second=rise[2])
-        intervals.append((absolute_rise, dt + datetime.timedelta(days=1)))
+        intervals.append((absolute_rise, dt + ONE_DAY))
 
 
     return intervals
+
+
+def coalesce_adjacent_intervals(intervals):
+    coalesced_intervals = [intervals[0]]
+    for interval in intervals[1:]:
+
+        # If the current interval end matches the next interval start...
+        if coalesced_intervals[-1][1] == interval[0]:
+            # ...the two intervals are contiguous - combine them
+            coalesced_intervals[-1] = (coalesced_intervals[-1][0], interval[1])
+        else:
+            # ...the two intervals are not contiguous - store seperately
+            coalesced_intervals.append(interval)
+
+    return coalesced_intervals
 
 
 

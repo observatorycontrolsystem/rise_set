@@ -315,3 +315,47 @@ class TestCapellaFromStAndrews(object):
     def test_rise_set(self):
         (transit, rise, set) = calc_rise_set(self.capella, self.st_andrews,
                                      self.date)
+
+
+class TestIntervals(object):
+
+    def setUp(self):
+        self.some_adjacent_intervals = [
+               # Two contiguous intervals
+               (datetime.datetime(year=2011, month=2, day=1, hour=12, minute=0),
+                datetime.datetime(year=2011, month=2, day=1, hour=12, minute=30)),
+               (datetime.datetime(year=2011, month=2, day=1, hour=12, minute=30),
+                datetime.datetime(year=2011, month=2, day=1, hour=13, minute=0)),
+               # Three contiguous intervals
+               (datetime.datetime(year=2011, month=2, day=1, hour=15, minute=0),
+                datetime.datetime(year=2011, month=2, day=1, hour=15, minute=30)),
+               (datetime.datetime(year=2011, month=2, day=1, hour=15, minute=30),
+                datetime.datetime(year=2011, month=2, day=1, hour=16, minute=0)),
+               (datetime.datetime(year=2011, month=2, day=1, hour=16, minute=0),
+                datetime.datetime(year=2011, month=2, day=1, hour=16, minute=30)),
+               # Two non-contiguous intervals
+               (datetime.datetime(year=2011, month=2, day=1, hour=17, minute=0),
+                datetime.datetime(year=2011, month=2, day=1, hour=17, minute=30)),
+               (datetime.datetime(year=2011, month=2, day=1, hour=18, minute=0),
+                datetime.datetime(year=2011, month=2, day=1, hour=18, minute=30)),
+              ]
+
+
+        self.expected_coalescence = [
+               # First coalescence
+               (datetime.datetime(year=2011, month=2, day=1, hour=12, minute=0),
+                datetime.datetime(year=2011, month=2, day=1, hour=13, minute=0)),
+               # Second coalescence
+               (datetime.datetime(year=2011, month=2, day=1, hour=15, minute=0),
+                datetime.datetime(year=2011, month=2, day=1, hour=16, minute=30)),
+               # Remaining, non-continous intervals
+               (datetime.datetime(year=2011, month=2, day=1, hour=17, minute=0),
+                datetime.datetime(year=2011, month=2, day=1, hour=17, minute=30)),
+               (datetime.datetime(year=2011, month=2, day=1, hour=18, minute=0),
+                datetime.datetime(year=2011, month=2, day=1, hour=18, minute=30)),
+            ]
+
+    def test_coalesce_adjacent_intervals(self):
+        received = coalesce_adjacent_intervals(self.some_adjacent_intervals)
+
+        assert_equal(received, self.expected_coalescence)
