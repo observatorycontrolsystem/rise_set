@@ -607,7 +607,9 @@ def find_when_target_is_down(target, site, dt):
 
     dt = dt.replace(hour=0, minute=0, second=0, microsecond=0)
 
-    up_intervals = find_when_target_is_up(target, site, current_date)
+    up_intervals = find_when_target_is_up(target, site, dt)
+
+    down_intervals = []
 
     # Treat the edges specially
 
@@ -620,7 +622,7 @@ def find_when_target_is_down(target, site, dt):
         down_start = dt
         down_end   = up_intervals[0][0]
 
-        down_intervals.append(down_start, down_end)
+        down_intervals.append((down_start, down_end))
 
 
     # Proceed through the intervals, extracting the gaps
@@ -628,7 +630,7 @@ def find_when_target_is_down(target, site, dt):
         down_start = up_intervals[i][1]
         down_end   = up_intervals[i+1][0]
 
-        down_intervals.append(down_start, down_end)
+        down_intervals.append((down_start, down_end))
 
 
     # If the target sets before the end of the day, grab that as an
@@ -637,7 +639,7 @@ def find_when_target_is_down(target, site, dt):
         down_start = up_intervals[-1][1]
         down_end   = dt + ONE_DAY
 
-        down_intervals.append(down_start, down_end)
+        down_intervals.append((down_start, down_end))
 
     return down_intervals
 
