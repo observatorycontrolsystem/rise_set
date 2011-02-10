@@ -44,6 +44,7 @@ _log = logging.getLogger('rise_set.astrometry')
 
 # Set convenient constants
 ONE_DAY = datetime.timedelta(days=1)
+MIDNIGHT = datetime.time()
 
 def gregorian_to_ut_mjd(date):
     '''Convert Gregorian calendar date to UT MJD.'''
@@ -579,14 +580,16 @@ def calculate_altitude(latitude, dec, local_hour_angle):
     return Angle(radians=altitude)
 
 
-def get_dark_intervals(location, start_date, end_date):
+def get_dark_intervals(site, start_date, end_date):
+
+    target = 'sun'
 
     # Find rise/set/transit for each day
     intervals = []
     current_date = start_date
     while current_date < end_date:
         # find_when_target_is_up()
-        day_intervals = find_when_sun_is_down(location, current_date)
+        day_intervals = find_when_target_is_up(target, site, current_date)
 
         # Add today's intervals to the accumulating list of intervals
         intervals.extend(day_intervals)
@@ -600,13 +603,55 @@ def get_dark_intervals(location, start_date, end_date):
     return intervals
 
 
-def find_when_sun_is_down(location, dt):
+def find_when_target_is_down(target, site, dt):
+
+    dt = dt.replace(hour=0, minute=0, second=0, microsecond=0)
+
+    up_intervals = find_when_target_is_up(target, site, current_date)
+
+    # Treat the edges specially
+
+    # If the first value has time 00:00:00, then the target starts up
+    if up_intervals[0][0].time() == MIDNIGHT:
+        pass
+
+    # Otherwise the target starts down - there's one extra interval at start
+    else:
+        down_start = dt
+        down_end   = up_intervals[0][0]
+
+        down_intervals.append(down_start, down_end)
+
+
+    # Proceed through the intervals, extracting the gaps
+    for i in range(len(up_intervals) - 1):
+        down_start = up_intervals[i][1]
+        down_end   = up_intervals[i+1][0]
+
+        down_intervals.append(down_start, down_end)
+
+
+    # If the target sets before the end of the day, grab that as an
+    # extra down interval
+    if up_intervals[-1][1].time() != MIDNIGHT:
+        down_start = up_intervals[-1][1]
+        down_end   = dt + ONE_DAY
+
+        down_intervals.append(down_start, down_end)
+
+    return down_intervals
+
+
+def find_when_target_is_up(target, site, dt):
 
     # Remove any time component of the provided datetime object
     dt = dt.replace(hour=0, minute=0, second=0, microsecond=0)
 
     # Get the rise/set/transit times for this day
-    (transit, rise, set) = calc_sunrise_set(location, dt, 'sunrise')
+    if target == 'sun':
+        (transit, rise, set) = calc_sunrise_set(site, dt, 'sunrise')
+    else:
+        (transit, rise, set) = calc_rise_set(target, site, dt)
 
     intervals = []
 
