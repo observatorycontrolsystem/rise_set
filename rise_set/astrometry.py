@@ -589,7 +589,7 @@ def get_dark_intervals(site, start_date, end_date):
     current_date = start_date
     while current_date < end_date:
         # find_when_target_is_up()
-        day_intervals = find_when_target_is_up(target, site, current_date)
+        day_intervals = find_when_target_is_down(target, site, current_date)
 
         # Add today's intervals to the accumulating list of intervals
         intervals.extend(day_intervals)
