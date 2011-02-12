@@ -580,7 +580,8 @@ def calculate_altitude(latitude, dec, local_hour_angle):
     return Angle(radians=altitude)
 
 
-def get_dark_intervals(site, start_date, end_date):
+def get_dark_intervals(site, start_date, end_date, twilight='sunrise'):
+    ''''''
 
     target = 'sun'
 
@@ -589,7 +590,7 @@ def get_dark_intervals(site, start_date, end_date):
     current_date = start_date
     while current_date < end_date:
         # find_when_target_is_up()
-        day_intervals = find_when_target_is_down(target, site, current_date)
+        day_intervals = find_when_target_is_down(target, site, current_date, twilight)
 
         # Add today's intervals to the accumulating list of intervals
         intervals.extend(day_intervals)
@@ -603,11 +604,11 @@ def get_dark_intervals(site, start_date, end_date):
     return intervals
 
 
-def find_when_target_is_down(target, site, dt):
+def find_when_target_is_down(target, site, dt, twilight):
 
     dt = dt.replace(hour=0, minute=0, second=0, microsecond=0)
 
-    up_intervals = find_when_target_is_up(target, site, dt)
+    up_intervals = find_when_target_is_up(target, site, dt, twilight)
 
     down_intervals = []
 
@@ -644,14 +645,14 @@ def find_when_target_is_down(target, site, dt):
     return down_intervals
 
 
-def find_when_target_is_up(target, site, dt):
+def find_when_target_is_up(target, site, dt, twilight):
 
     # Remove any time component of the provided datetime object
     dt = dt.replace(hour=0, minute=0, second=0, microsecond=0)
 
     # Get the rise/set/transit times for this day
     if target == 'sun':
-        (transit, rise, set) = calc_sunrise_set(site, dt, 'sunrise')
+        (transit, rise, set) = calc_sunrise_set(site, dt, twilight)
     else:
         (transit, rise, set) = calc_rise_set(target, site, dt)
 

@@ -355,7 +355,38 @@ class TestIntervals(object):
                 datetime.datetime(year=2011, month=2, day=1, hour=18, minute=30)),
             ]
 
+        self.target   = 'sun'
+        self.bpl      = dict(latitude = 34.4332222222, longitude = -119.863045833)
+        self.dt       = datetime.datetime(year=2011, month=2, day=9)
+        self.twilight = 'sunrise'
+
+
     def test_coalesce_adjacent_intervals(self):
         received = coalesce_adjacent_intervals(self.some_adjacent_intervals)
 
         assert_equal(received, self.expected_coalescence)
+
+
+    def test_can_get_sun_up_intervals(self):
+
+        expected = [
+                     (self.dt, self.dt.replace(hour=1, minute=36, second=1)),
+                     (self.dt.replace(hour=14, minute=50, second=42),
+                      self.dt.replace(day=10))
+                    ]
+        received = find_when_target_is_up(self.target, self.bpl,
+                                          self.dt, self.twilight)
+
+        assert_equal(received, expected)
+
+
+    def test_can_get_sun_down_intervals(self):
+
+        expected = [
+                    (self.dt.replace(hour=1, minute=36, second=1),
+                     self.dt.replace(hour=14, minute=50, second=42))
+                    ]
+        received = find_when_target_is_down(self.target, self.bpl,
+                                            self.dt, self.twilight)
+
+        assert_equal(received, expected)

@@ -11,7 +11,7 @@ February 2011
 '''
 
 import datetime
-from astrometry import calc_sunrise_set, get_dark_intervals
+from astrometry import calc_sunrise_set, get_dark_intervals, find_when_target_is_up
 
 # BPL East 0.4m - from http://tlister-linux/django/configdb/telescope/16/
 sba = dict(latitude = 34.4332222222, longitude = -119.863045833)
@@ -32,9 +32,17 @@ print "Set:", set
 
 
 start = datetime.datetime(year=2011, month=2, day=9)
-end   = datetime.datetime(year=2011, month=2, day=16)
+end   = datetime.datetime(year=2011, month=2, day=10)
 dark_intervals = get_dark_intervals(sba, start, end)
 
+print "Dark intervals:"
 for interval in dark_intervals:
+    print "Start:", interval[0]
+    print "Stop:",  interval[1]
+
+
+up_intervals = find_when_target_is_up('sun', sba, start, twilight='sunrise')
+print "Up intervals:"
+for interval in up_intervals:
     print "Start:", interval[0]
     print "Stop:",  interval[1]
