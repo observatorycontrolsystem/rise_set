@@ -581,7 +581,9 @@ def calculate_altitude(latitude, dec, local_hour_angle):
 
 
 def get_dark_intervals(site, start_date, end_date, twilight='sunrise'):
-    ''''''
+    '''Returns a set of datetime 2-tuples, each of which represents an interval of
+       uninterrupted darkness at the specified site. The set of tuples give the
+       complete dark intervals between the provided start and end date.'''
 
     target = 'sun'
 
@@ -605,20 +607,29 @@ def get_dark_intervals(site, start_date, end_date, twilight='sunrise'):
 
 
 def find_when_target_is_down(target, site, dt, twilight):
+    '''Returns a set of datetime 2-tuples, each of which represents an interval of
+       uninterrupted time below the horizon at the specified site, for the requested
+       date.
 
+       Note: Even though this function currently ignores times, the dt object must
+       be a datetime, *not* a date.
+    '''
+
+    # Ensure we only deal with dates, because our rise/set/transit tuple is
+    # day specific.
+    # TODO: Extend to arbitrary start/end times
     dt = dt.replace(hour=0, minute=0, second=0, microsecond=0)
 
+    # We will calculate down intervals as the inverse of the up intervals
     up_intervals = find_when_target_is_up(target, site, dt, twilight)
 
     down_intervals = []
-
-    # Treat the edges specially
 
     # If the first value has time 00:00:00, then the target starts up
     if up_intervals[0][0].time() == MIDNIGHT:
         pass
 
-    # Otherwise the target starts down - there's one extra interval at start
+    # Otherwise the target starts down - so there's one extra interval at start
     else:
         down_start = dt
         down_end   = up_intervals[0][0]
@@ -645,12 +656,20 @@ def find_when_target_is_down(target, site, dt, twilight):
     return down_intervals
 
 
+
 def find_when_target_is_up(target, site, dt, twilight):
+    '''Returns a set of datetime 2-tuples, each of which represents an interval of
+       uninterrupted time above the horizon at the specified site, for the requested
+       date.
+
+       Note: Even though this function currently ignores times, the dt object must
+       be a datetime, *not* a date.
+    '''
 
     # Remove any time component of the provided datetime object
     dt = dt.replace(hour=0, minute=0, second=0, microsecond=0)
 
-    # Get the rise/set/transit times for this day
+    # Get the rise/set/transit times for the target, for this day
     if target == 'sun':
         (transit, rise, set) = calc_sunrise_set(site, dt, twilight)
     else:
@@ -660,7 +679,12 @@ def find_when_target_is_up(target, site, dt, twilight):
 
     # Case 1: Overlapping start of day boundary
     # Target rose yesterday, and sets today. Rises again later today.
-    # Rise  0hr    Transit      Set    Rise  24hr
+    #         |       x                                     |
+    #         |    x     x                                  |
+    #         | x           x                               | x
+    #        x|                x                           x|
+    #     x   |                   x                     x   |
+    #   Rise  0hr  Transit       Set                  Rise 24hr
     if (rise > transit) and (set > transit):
         # Store the first interval - start of day until target set
         absolute_set = dt.replace(hour=set[0], minute=set[1], second=set[2])
@@ -673,7 +697,13 @@ def find_when_target_is_up(target, site, dt, twilight):
 
     # Case 2: Rise, set and transit all fall within the day, in order
     # Target rises today, transits, and sets before the day ends
-    # 0hr    Rise      Transit      Set    24hr
+    #         |                      x                     |
+    #         |                   x     x                  |
+    #         |                x           x               |
+    #         |             x                 x            |
+    #         |          x                       x         |
+    #         |       x                             x      |
+    #         0hr   Rise           Transit          Set   24hr
     elif (rise < transit) and (set > transit):
         # Only one interval - rise until target set
         absolute_rise = dt.replace(hour=rise[0], minute=rise[1], second=rise[2])
@@ -683,7 +713,12 @@ def find_when_target_is_up(target, site, dt, twilight):
 
     # Case 3: Overlapping end of day boundary
     # Target rose yesterday, and sets today. Rises again later today.
-    # Rise  Transit 0hr    Set    Rise  Transit 24hr
+    #                 x    |                                        x    |
+    #              x     x |                                     x     x |
+    #           x          |x                                 x          |x
+    #        x             |   x                           x             |   x
+    #     x                |      x                     x                |
+    #   Rise       Transit 0hr   Set                  Rise      Transit 24hr
     elif (rise < transit) and (set < transit):
         # Same code as case 1!
         # Store the first interval - start of day until target set
@@ -699,6 +734,10 @@ def find_when_target_is_up(target, site, dt, twilight):
 
 
 def coalesce_adjacent_intervals(intervals):
+    '''Combine a set of datetime 2-tuples, coalescing adjacent intervals into
+       larger intervals wherever possible.
+    '''
+
     coalesced_intervals = [intervals[0]]
     for interval in intervals[1:]:
 
