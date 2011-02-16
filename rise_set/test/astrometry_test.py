@@ -320,6 +320,7 @@ class TestCapellaFromStAndrews(object):
 class TestIntervals(object):
 
     def setUp(self):
+
         self.some_adjacent_intervals = [
                # Two contiguous intervals
                (datetime.datetime(year=2011, month=2, day=1, hour=12, minute=0),
@@ -355,14 +356,20 @@ class TestIntervals(object):
                 datetime.datetime(year=2011, month=2, day=1, hour=18, minute=30)),
             ]
 
-        self.target   = 'sun'
-        self.bpl      = dict(latitude = 34.4332222222, longitude = -119.863045833)
-        self.dt       = datetime.datetime(year=2011, month=2, day=9)
-        self.twilight = 'sunrise'
+        self.target     = 'sun'
+        self.bpl        = dict(latitude = 34.4332222222, longitude = -119.863045833)
+        self.dt         = datetime.datetime(year=2011, month=2, day=9)
+        self.start_date = datetime.datetime(year=2011, month=2, day=9)
+        self.end_date   = datetime.datetime(year=2011, month=2, day=10)
+        self.twilight   = 'sunrise'
+
+        self.visibility = Visibility(self.bpl, self.start_date, self.end_date,
+                                     self.twilight)
 
 
     def test_coalesce_adjacent_intervals(self):
-        received = coalesce_adjacent_intervals(self.some_adjacent_intervals)
+        received = self.visibility.coalesce_adjacent_intervals(
+                                                        self.some_adjacent_intervals)
 
         assert_equal(received, self.expected_coalescence)
 
@@ -374,8 +381,7 @@ class TestIntervals(object):
                      (self.dt.replace(hour=14, minute=50, second=42),
                       self.dt.replace(day=10))
                     ]
-        received = find_when_target_is_up(self.target, self.bpl,
-                                          self.dt, self.twilight)
+        received = self.visibility.find_when_target_is_up(self.target, self.dt)
 
         assert_equal(received, expected)
 
@@ -386,7 +392,6 @@ class TestIntervals(object):
                     (self.dt.replace(hour=1, minute=36, second=1),
                      self.dt.replace(hour=14, minute=50, second=42))
                     ]
-        received = find_when_target_is_down(self.target, self.bpl,
-                                            self.dt, self.twilight)
+        received = self.visibility.find_when_target_is_down(self.target, self.dt)
 
         assert_equal(received, expected)
