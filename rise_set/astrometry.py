@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 '''rise_set/astrometry.py - astrometry calculations for telescope scheduling.
 
@@ -11,7 +11,6 @@ are implementations of Astronomical Algorithms, Ch. 14 (Jean Meeus).
 
 
 Author: Eric Saunders (esaunders@lcogt.net)
-
 May 2010
 '''
 
@@ -28,6 +27,8 @@ from pkg_resources import resource_stream
 
 # Third party imports
 import slalib as sla
+
+# Internal imports
 from angle import Angle
 
 # Import logging modules
@@ -41,10 +42,6 @@ _log_config_location = resource_stream(__name__, _log_config_file)
 logging.config.fileConfig(_log_config_location)
 _log = logging.getLogger('rise_set.astrometry')
 
-
-# Set convenient constants
-ONE_DAY = datetime.timedelta(days=1)
-MIDNIGHT = datetime.time()
 
 def gregorian_to_ut_mjd(date):
     '''Convert Gregorian calendar date to UT MJD.'''
@@ -578,191 +575,6 @@ def calculate_altitude(latitude, dec, local_hour_angle):
                )
 
     return Angle(radians=altitude)
-
-
-
-class Visibility(object):
-
-    def __init__(self, site, start_date, end_date, horizon=0, twilight='sunrise'):
-        self.site       = site
-        self.start_date = start_date
-        self.end_date   = end_date
-        self.horizon    = horizon
-        self.twilight   = twilight
-
-        self.dark_intervals = []
-
-
-    def get_dark_intervals(self):
-        '''Returns a set of datetime 2-tuples, each of which represents an interval
-           of uninterrupted darkness at the specified site. The set of tuples give
-           the complete dark intervals between the provided start and end date.'''
-
-        target = 'sun'
-
-        # Find rise/set/transit for each day
-        self.dark_intervals = []
-        current_date = self.start_date
-        while current_date < self.end_date:
-            self.dark_intervals = self.find_when_target_is_down(target, self.site,
-                                                          current_date, self.twilight)
-
-            # Add today's intervals to the accumulating list of intervals
-            self.dark_intervals.extend(day_intervals)
-
-            # Move on to tomorrow
-            current_date += ONE_DAY
-
-        # Collapse adjacent intervals into continuous larger intervals
-        self.dark_intervals = self.coalesce_adjacent_intervals(self.dark_intervals)
-
-        return self.dark_intervals
-
-
-    def find_when_target_is_down(self, target, dt):
-        '''Returns a set of datetime 2-tuples, each of which represents an interval
-           of uninterrupted time below the horizon at the specified site, for the
-           requested date.
-
-           Note: Even though this function currently ignores times, the dt object
-           must be a datetime, *not* a date.
-        '''
-
-        # Ensure we only deal with dates, because our rise/set/transit tuple is
-        # day specific.
-        # TODO: Extend to arbitrary start/end times
-        dt = dt.replace(hour=0, minute=0, second=0, microsecond=0)
-
-        # We will calculate down intervals as the inverse of the up intervals
-        up_intervals = self.find_when_target_is_up(target, dt)
-
-        down_intervals = []
-
-        # If the first value has time 00:00:00, then the target starts up
-        if up_intervals[0][0].time() == MIDNIGHT:
-            pass
-
-        # Otherwise the target starts down - so there's one extra interval at start
-        else:
-            down_start = dt
-            down_end   = up_intervals[0][0]
-
-            down_intervals.append((down_start, down_end))
-
-
-        # Proceed through the intervals, extracting the gaps
-        for i in range(len(up_intervals) - 1):
-            down_start = up_intervals[i][1]
-            down_end   = up_intervals[i+1][0]
-
-            down_intervals.append((down_start, down_end))
-
-
-        # If the target sets before the end of the day, grab that as an
-        # extra down interval
-        if up_intervals[-1][1].time() != MIDNIGHT:
-            down_start = up_intervals[-1][1]
-            down_end   = dt + ONE_DAY
-
-            down_intervals.append((down_start, down_end))
-
-        return down_intervals
-
-
-    def find_when_target_is_up(self, target, dt):
-        '''Returns a set of datetime 2-tuples, each of which represents an
-           interval of uninterrupted time above the horizon at the specified
-           site, for the requested date.
-
-           Note: Even though this function currently ignores times, the dt
-           object must be a datetime, *not* a date.
-        '''
-
-        # Remove any time component of the provided datetime object
-        dt = dt.replace(hour=0, minute=0, second=0, microsecond=0)
-
-        # Get the rise/set/transit times for the target, for this day
-        if target == 'sun':
-            (transit, rise, set) = calc_sunrise_set(self.site, dt, self.twilight)
-        else:
-            (transit, rise, set) = calc_rise_set(target, self.site, dt)
-
-        intervals = []
-
-        # Case 1: Overlapping start of day boundary
-        # Target rose yesterday, and sets today. Rises again later today.
-        #         |       x                                     |
-        #         |    x     x                                  |
-        #         | x           x                               | x
-        #        x|                x                           x|
-        #     x   |                   x                     x   |
-        #   Rise  0hr  Transit       Set                  Rise 24hr
-        if (rise > transit) and (set > transit):
-            # Store the first interval - start of day until target set
-            absolute_set = dt.replace(hour=set[0], minute=set[1], second=set[2])
-            intervals.append((dt, absolute_set))
-
-            # Store the second interval - target rise until end of day
-            absolute_rise = dt.replace(hour=rise[0], minute=rise[1], second=rise[2])
-            intervals.append((absolute_rise, dt + ONE_DAY))
-
-
-        # Case 2: Rise, set and transit all fall within the day, in order
-        # Target rises today, transits, and sets before the day ends
-        #         |                      x                     |
-        #         |                   x     x                  |
-        #         |                x           x               |
-        #         |             x                 x            |
-        #         |          x                       x         |
-        #         |       x                             x      |
-        #         0hr   Rise           Transit          Set   24hr
-        elif (rise < transit) and (set > transit):
-            # Only one interval - rise until target set
-            absolute_rise = dt.replace(hour=rise[0], minute=rise[1], second=rise[2])
-            absolute_set  = dt.replace(hour=set[0], minute=set[1], second=set[2])
-            intervals.append(absolute_rise, absolute_set)
-
-
-        # Case 3: Overlapping end of day boundary
-        # Target rose yesterday, and sets today. Rises again later today.
-        #                 x    |                                        x    |
-        #              x     x |                                     x     x |
-        #           x          |x                                 x          |x
-        #        x             |   x                           x             |   x
-        #     x                |      x                     x                |
-        #   Rise       Transit 0hr   Set                  Rise      Transit 24hr
-        elif (rise < transit) and (set < transit):
-            # Same code as case 1!
-            # Store the first interval - start of day until target set
-            absolute_set = dt.replace(hour=set[0], minute=set[1], second=set[2])
-            intervals.append((dt, absolute_set))
-
-            # Store the second interval - target rise until end of day
-            absolute_rise = dt.replace(hour=rise[0], minute=rise[1], second=rise[2])
-            intervals.append((absolute_rise, dt + ONE_DAY))
-
-
-        return intervals
-
-
-    def coalesce_adjacent_intervals(self, intervals):
-        '''Combine a set of datetime 2-tuples, coalescing adjacent intervals into
-           larger intervals wherever possible.
-        '''
-
-        coalesced_intervals = [intervals[0]]
-        for interval in intervals[1:]:
-
-            # If the current interval end matches the next interval start...
-            if coalesced_intervals[-1][1] == interval[0]:
-                # ...the two intervals are contiguous - combine them
-                coalesced_intervals[-1] = (coalesced_intervals[-1][0], interval[1])
-            else:
-                # ...the two intervals are not contiguous - store seperately
-                coalesced_intervals.append(interval)
-
-        return coalesced_intervals
-
 
 
 class InvalidDateError(Exception):
