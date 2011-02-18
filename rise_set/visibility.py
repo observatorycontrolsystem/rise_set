@@ -37,28 +37,58 @@ class Visibility(object):
 
     def get_dark_intervals(self):
         '''Returns a set of datetime 2-tuples, each of which represents an interval
-           of uninterrupted darkness at the specified site. The set of tuples give
-           the complete dark intervals between the provided start and end date.'''
+           of uninterrupted darkness. The set of tuples gives the complete dark
+           intervals between the Visibility object's start and end date.
+        '''
+
+        # Don't compute this again if we've already done it
+        if self.dark_intervals:
+            return self.dark_intervals
 
         target = 'sun'
 
+        self.dark_intervals = self.get_target_down_intervals(target)
+
+        return self.dark_intervals
+
+
+    def get_target_intervals(self, target, up=True):
+        '''Returns a set of datetime 2-tuples, each of which represents an interval
+           of uninterrupted time when the target was below the horizon. The set of
+           tuples gives the complete target down intervals between the Visibility
+           object's start and end date.
+        '''
+
+        if up:
+            day_interval_func = find_when_target_is_up
+        else:
+            day_interval_func = find_when_target_is_down
+
         # Find rise/set/transit for each day
-        self.dark_intervals = []
+        intervals = []
         current_date = self.start_date
         while current_date < self.end_date:
-            self.dark_intervals = self.find_when_target_is_down(target, self.site,
-                                                          current_date, self.twilight)
+            one_day_intervals = self.day_interval_func(target, self.site,
+                                                       current_date, self.twilight)
 
             # Add today's intervals to the accumulating list of intervals
-            self.dark_intervals.extend(day_intervals)
+            intervals.extend(one_day_intervals)
 
             # Move on to tomorrow
             current_date += ONE_DAY
 
         # Collapse adjacent intervals into continuous larger intervals
-        self.dark_intervals = self.coalesce_adjacent_intervals(self.dark_intervals)
+        intervals = self.coalesce_adjacent_intervals(intervals)
 
-        return self.dark_intervals
+        return intervals
+
+
+    def get_target_up_intervals(self, target):
+        return self.get_target_intervals(target, up=True)
+
+
+    def get_target_down_intervals(self, target):
+        return self.get_target_intervals(target, up=False)
 
 
     def find_when_target_is_down(self, target, dt):
@@ -141,8 +171,6 @@ class Visibility(object):
         #   Rise  0hr  Transit       Set                  Rise 24hr
         if (rise > transit) and (set > transit):
 
-
-
             # Store the first interval - start of day until target set
             absolute_set = self.time_tuple_to_datetime(set, dt)
             intervals.append((dt, absolute_set))
@@ -221,3 +249,14 @@ class Visibility(object):
                                   )
 
         return absolute_time
+
+
+    def dark_and_up(self):
+
+        # Get the set of dark intervals
+        dark_intervals = self.get_dark_intervals()
+
+        # Get the set of target up intervals
+        target_up_intervals = self.get_target_up_intervals()
+        # Calculate the intersection between the two interval sets
+        # Return the intersection
