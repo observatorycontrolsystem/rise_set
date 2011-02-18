@@ -88,3 +88,14 @@ class TestIntervals(object):
         received = self.visibility.find_when_target_is_down(self.target, self.dt)
 
         assert_equal(received, expected)
+
+
+    def test_time_tuple_to_datetime(self):
+
+        time_tuple = (11.0, 45.0, 39.329936620018202)
+        expected = datetime.datetime(year=2011, month=2, day=9,
+                                     hour=11, minute=45, second=39)
+
+        received = self.visibility.time_tuple_to_datetime(time_tuple, self.dt)
+
+        assert_equal(received, expected)
