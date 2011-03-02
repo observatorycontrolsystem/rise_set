@@ -16,7 +16,7 @@ from __future__ import division
 import datetime
 
 # Internal imports
-from rise_set.astrometry import calc_sunrise_set
+from astrometry import calc_sunrise_set, calc_rise_set
 
 
 # Set convenient constants
@@ -47,7 +47,7 @@ class Visibility(object):
 
         target = 'sun'
 
-        self.dark_intervals = self.get_target_down_intervals(target)
+        self.dark_intervals = self.get_target_intervals(target, up=False)
 
         return self.dark_intervals
 
@@ -60,16 +60,15 @@ class Visibility(object):
         '''
 
         if up:
-            day_interval_func = find_when_target_is_up
+            day_interval_func = self.find_when_target_is_up
         else:
-            day_interval_func = find_when_target_is_down
+            day_interval_func = self.find_when_target_is_down
 
         # Find rise/set/transit for each day
         intervals = []
         current_date = self.start_date
         while current_date < self.end_date:
-            one_day_intervals = self.day_interval_func(target, self.site,
-                                                       current_date, self.twilight)
+            one_day_intervals = day_interval_func(target, current_date)
 
             # Add today's intervals to the accumulating list of intervals
             intervals.extend(one_day_intervals)
@@ -81,14 +80,6 @@ class Visibility(object):
         intervals = self.coalesce_adjacent_intervals(intervals)
 
         return intervals
-
-
-    def get_target_up_intervals(self, target):
-        return self.get_target_intervals(target, up=True)
-
-
-    def get_target_down_intervals(self, target):
-        return self.get_target_intervals(target, up=False)
 
 
     def find_when_target_is_down(self, target, dt):

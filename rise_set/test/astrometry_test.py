@@ -314,4 +314,94 @@ class TestCapellaFromStAndrews(object):
     @raises(RiseSetError)
     def test_rise_set(self):
         (transit, rise, set) = calc_rise_set(self.capella, self.st_andrews,
-                                     self.date)
+                                             self.date)
+
+
+
+
+class TestPolarisFromSidingSpring(object):
+    '''Integration test: rise/set/transit of a Northern star from a Southern
+       observatory (never rises).'''
+
+    # IMPORTANT NOTE: LATITUDES
+    # IAU convention         = East is +ve
+    # Config DB convention   = East is +ve,  e.g. Siding Spring = +149 04 14.13
+    # Astro. Alg. convention = West is +ve
+    # SLALIB convention (SLA_OBS) = West is +ve
+    # SLALIB (rest of library) convention = East is +ve
+
+
+    def setUp(self):
+
+        # Target
+        # Note: Aladin units for proper motion are mas/yr...
+        self.polaris = {
+                         'ra'                : Angle(ra='02 31 49.09'),
+                         'dec'               : Angle(dec='+89 15 50.8'),
+                         'ra_proper_motion'  : Angle(ra='00 00 00.04448'),
+                         'dec_proper_motion' : Angle(dec='-00 00 00.01185'),
+                         'parallax'          : 0.00754,   # Units: arcsec
+                         'rad_vel'           : -17.0,      # Units: km/s (-ve approaches)
+                         'epoch'             : 2000,
+                       }
+
+
+        # Site (East +ve longitude)
+        self.siding_spring = {
+            'latitude'  : -31.273,
+            'longitude' : 149.070593
+        }
+
+        # Date
+        self.date = datetime.date(year = 2010, month = 3, day = 12)
+
+
+
+    @raises(RiseSetError)
+    def test_rise_set(self):
+        (transit, rise, set) = calc_rise_set(self.polaris, self.siding_spring,
+                                             self.date)
+
+
+
+
+class TestMimosaFromSidingSpring(object):
+    '''Integration test: rise/set/transit of a circumpolar star from a Southern
+        observatory (never sets).'''
+
+       # IMPORTANT NOTE: LATITUDES
+    # IAU convention         = East is +ve
+    # Config DB convention   = East is +ve,  e.g. Siding Spring = +149 04 14.13
+    # Astro. Alg. convention = West is +ve
+    # SLALIB convention (SLA_OBS) = West is +ve
+    # SLALIB (rest of library) convention = East is +ve
+
+
+    def setUp(self):
+        # Target
+        # Note: Aladin units for proper motion are mas/yr...
+        self.mimosa = {
+                         'ra'                : Angle(ra='12 47 43.26'),
+                         'dec'               : Angle(dec='-59 41 19.549'),
+                         'ra_proper_motion'  : Angle(ra='-00 00 00.048'),
+                         'dec_proper_motion' : Angle(dec='-00 00 00.012'),
+                         'parallax'          : 0.00925,   # Units: arcsec
+                         'rad_vel'           : 15.6,      # Units: km/s (-ve approaches)
+                         'epoch'             : 2000,
+                       }
+
+        # Site (East +ve longitude)
+        # Very rough St. Andrews coords, for easy almanac comparison
+        self.siding_spring = {
+            'latitude'  : -31.273,
+            'longitude' : 149.070593
+        }
+
+        # Date
+        self.date = datetime.date(year=2010, month=3, day=12)
+
+
+    @raises(RiseSetError)
+    def test_rise_set(self):
+        (transit, rise, set) = calc_rise_set(self.mimosa, self.siding_spring,
+                                             self.date)
