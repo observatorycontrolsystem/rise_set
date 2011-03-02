@@ -36,7 +36,7 @@ class Angle(object):
                                 'dec'         : self.from_sexegesimal,
                              }
 
-        self.degrees = None
+        self.degrees = 0.0
         try:
             for key in kwargs:
                 if ( key == 'ra' ):

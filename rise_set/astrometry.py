@@ -94,6 +94,21 @@ def mean_to_apparent(target, tdb):
        Thin wrapper for SLA_MAP.
     '''
 
+    # Complain if the minimum target fields aren't present
+    if not target.get('ra'):
+        raise IncompleteTargetError("Missing RA in target definition")
+
+    if not target.get('dec'):
+        raise IncompleteTargetError("Missing Declination in target definition")
+
+
+    # Fill the extra fields required by slalib with defaults, as necessary
+    target.setdefault('ra_proper_motion', Angle())
+    target.setdefault('dec_proper_motion', Angle())
+    target.setdefault('parallax', 0.0)
+    target.setdefault('rad_vel', 0.0)
+    target.setdefault('epoch', 2000)
+
     (ra_app_rads, dec_app_rads) = sla.sla_map(target['ra'].in_radians(),
                                               target['dec'].in_radians(),
                                               target['ra_proper_motion'].in_radians(),
@@ -594,5 +609,16 @@ class RiseSetError(Exception):
     def __init__(self, value):
         self.value = value
 
+    def __str__(self):
+        return self.value
+
+
+
+class IncompleteTargetError(Exception):
+    '''Raised when a target is missing a key value (RA, Dec).'''
+    
+    def __init__(self, value):
+        self.value = value
+        
     def __str__(self):
         return self.value

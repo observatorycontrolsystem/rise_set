@@ -40,6 +40,20 @@ class TestAstrometry(object):
 #        assert_equal(ut_mjd_to_gmst_in_radians(self.mjd), 4)
 
 
+    @raises(IncompleteTargetError)
+    def test_missing_ra_raises_exception(self):
+        tdb = self.mjd
+        target_missing_ra = dict(dec='18 26 27.3')
+        mean_to_apparent(target_missing_ra, tdb)
+
+
+    @raises(IncompleteTargetError)
+    def test_missing_dec_raises_exception(self):
+        tdb = self.mjd
+        target_missing_dec = dict(ra='02 46 55.51')
+        mean_to_apparent(target_missing_dec, tdb)
+
+
 
 class TestVenusRiseTransitSet(object):
     '''Implementation of Example 14.a from Astronomical Algorithms, p.99'''
@@ -338,11 +352,6 @@ class TestPolarisFromSidingSpring(object):
         self.polaris = {
                          'ra'                : Angle(ra='02 31 49.09'),
                          'dec'               : Angle(dec='+89 15 50.8'),
-                         'ra_proper_motion'  : Angle(ra='00 00 00.04448'),
-                         'dec_proper_motion' : Angle(dec='-00 00 00.01185'),
-                         'parallax'          : 0.00754,   # Units: arcsec
-                         'rad_vel'           : -17.0,      # Units: km/s (-ve approaches)
-                         'epoch'             : 2000,
                        }
 
 
@@ -383,11 +392,6 @@ class TestMimosaFromSidingSpring(object):
         self.mimosa = {
                          'ra'                : Angle(ra='12 47 43.26'),
                          'dec'               : Angle(dec='-59 41 19.549'),
-                         'ra_proper_motion'  : Angle(ra='-00 00 00.048'),
-                         'dec_proper_motion' : Angle(dec='-00 00 00.012'),
-                         'parallax'          : 0.00925,   # Units: arcsec
-                         'rad_vel'           : 15.6,      # Units: km/s (-ve approaches)
-                         'epoch'             : 2000,
                        }
 
         # Site (East +ve longitude)
