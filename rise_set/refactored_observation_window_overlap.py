@@ -54,6 +54,14 @@ overlaps = find_overlaps(seq1, seq2)
 print overlaps
 
 
+def windows_intersect(start1, end1, start2, end2):
+    if end2 <= start1 or start2 >= end1:
+        return False
+
+    return  start1 <= end2 and end1 >= start2
+
+
+
 def find_overlaps2(seq1, seq2):
     overlaps = ()
 
