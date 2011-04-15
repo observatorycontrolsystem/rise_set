@@ -6,8 +6,10 @@ This package provides the Angle() class, which provides a simple way to specify
 an angle in degrees, radians, RA or Dec, and to transform between these.
 
 Author: Eric Saunders (esaunders@lcogt.net)
+Co-Author: Michelle Becker
 
 May 2010
+April 2011
 '''
 
 # Required for true (non-integer) division
@@ -21,39 +23,51 @@ import sys
 
 class Angle(object):
     '''A multi-unit Angle implementation.
-       Usage: Angle(degrees|radians|ra|dec=[value])
+       Usage: Angle(degrees|radians)
        e.g.
-            a = Angle()
             a = Angle(degrees=45)
-            a = Angle(ra=12 20 34.5)
+            a = Angle(radians=12 20 34.5)
     '''
 
-    def __init__(self, **kwargs):
+    def __init__(self, degrees = None, radians = None, units = 'arc', **kwargs):
         self.unit_mapping = {
                                 'degrees'     : self.from_degrees,
                                 'radians'     : self.from_radians,
-                                'ra'          : self.from_sexegesimal,
-                                'dec'         : self.from_sexegesimal,
                              }
-
+        self.units   = units            
         self.degrees = 0.0
-        try:
-            for key in kwargs:
-                if ( key == 'ra' ):
-                    self.unit_mapping[key](kwargs[key], ra=True)
-                elif ( key == 'dec' ):
-                    self.unit_mapping[key](kwargs[key], dec=True)
-                else:
-                    self.unit_mapping[key](kwargs[key])
-
-        except KeyError as e:
-            msg = ("Error constructing Angle: " + str(e)
-                  + " is not a valid unit. Try 'degrees', 'radians', 'ra',"
-                  + "or 'dec' instead.")
-
+        
+        #Check if the units entered were in time or arc
+        if self.units not in ['arc', 'time']:
+            msg = (self.units + " not a valid unit. Please enter 'time' or 'arc'")
             raise AngleConfigError(msg)
+        
+        #We expect to only get one item in the dictionary
+        # if we get more this means someone messed up, 
+        # only take the first on entered and run some validation
+        
+        if degrees:
+            self.measurement = degrees
+            key         = 'degrees'
+        elif radians:
+            self.measurement = radians
+            key         = 'radians'
+        else:
+            msg = ("Please specify an angle in either degrees or radians")
+            raise AngleConfigError(msg)
+            
+        if type(self.measurement) == str:
+            self.from_sexegesimal(self.measurement)
+        else:
+            try:
+                self.unit_mapping[key](self.measurement)
 
+            except KeyError as e:
+                msg = ("Error constructing Angle: " + str(e)
+                      + " is not a valid unit. Try 'degrees', 'radians' instead.")
 
+                raise AngleConfigError(msg)
+        
 
     def from_degrees(self, degrees):
         '''Set the Angle using a value provided in degrees.'''
@@ -61,22 +75,15 @@ class Angle(object):
         self.degrees = degrees
 
 
-
     def from_radians(self, radians):
         '''Set the Angle using a value provided in radians.'''
         self.degrees = degrees(radians)
 
 
+    def from_sexegesimal(self, sexegesimal):
+        '''Convert from sexegesimal into degrees'''
 
-    def from_sexegesimal(self, sexegesimal, ra=False, dec=False):
-        '''Set the Angle using a provided right ascension or declination.'''
-
-        # Check we have been told the type of the sexegesimal number
-        if ( not (ra or dec) ):
-            raise InvalidAngleError("Sexegesimal number must be qualified"
-                                        + " with either 'ra' or 'dec'")
-
-        # Match sexegesimal with almost arbitrary delimiters
+       # Match sexegesimal with almost arbitrary delimiters
         match = re.search('^([+-])?(\d\d)[^-\d]*(\d\d)[^-\d]*(\d\d(?:[.]\d+)?)$'
                           ,sexegesimal)
 
@@ -89,22 +96,15 @@ class Angle(object):
                      + " instead (e.g. -12:34:56)")
             raise InvalidAngleError(error)
 
-
-        # If the input is a right ascension
-        if ( ra ):
-            self.validate_ra(sign, hr, min, sec)
-
-            # We have a valid RA, so do the conversion
-            self.degrees = self.ra_to_degrees(hr, min, sec)
-
-
-        # If the input is a declination
-        if ( dec ):
-            self.validate_dec(hr, min, sec)
-
-            # We have a valid declination, so do the conversion
-            self.degrees = self.dec_to_degrees(sign, hr, min, sec)
-
+        if self.units == 'arc': 
+            #Then we know its in seconds of arc
+            self.degrees = hr + (min/60) + (sec/60/60)
+            
+        else: 
+            #It must be in time
+            self.degrees = hr*(360/24)  +  min*(360/24/60)  +  sec*(360/24/60/60) 
+        
+        return self.degrees
 
 
     def in_degrees(self):
@@ -112,67 +112,37 @@ class Angle(object):
         return self.degrees
 
 
-
     def in_radians(self):
         '''Return the value of the angle in radians.'''
-        return radians(self.degrees)
+        return radians(self.degrees)    
+    
+    
+    def in_sexegesimal(self):
+        "Convert from degrees to sexegesimal"
+        
+        if self.units == 'arc':
+            total, degHrs  = self.degrees, int(self.degrees)
+            
+        else:
+            total, degHrs = self.degrees * (24/360), int(self.degrees * (24/360))
+            
+        allMin = (total - degHrs) * 60
+        min    = int(allMin)
+        sec    = (allMin - min) *60
+        
+        digits = [degHrs, min, sec]
+        
+        #Put in format to match the regex valid for from_sexegesimal
+        for i, item in enumerate(digits):
+            if ('.' in str(item)) and len(str(item).split('.')[0])<2 :
+                digits[i] = '0' + str(item)
+            if len(str(item)) < 2:
+                digits[i] = '0' + str(item)
+        
+        return "%s %s %s" %(digits[0], digits[1], digits[2]) 
+            
 
-
-
-    def validate_ra(self, sign, hr, min, sec):
-        '''Check the right ascension is valid (0 <= ra < 24 00 00).'''
-
-        # Forbid negative values
-        if ( sign == '-' ):
-            raise InvalidAngleError("RA cannot be negative")
-
-        # Hours must range from 0 to 23 inclusive
-        if ( hr > 23 ):
-            raise InvalidAngleError("'%d' is not a valid hour in RA" % hr)
-
-        # Minutes must range from 0 to 59 inclusive
-        if ( min > 60 ):
-            raise InvalidAngleError("'%d' is not a valid minute in RA" % min)
-
-        # Seconds must range from 0 to 59 inclusive
-        if ( sec > 60 ):
-            raise InvalidAngleError("'%d' is not a valid second in RA" % sec)
-
-        return True
-
-
-
-    def ra_to_degrees(self, hr, min, sec):
-        '''Convert an RA value (hr/min/sec) to degrees.'''
-
-        return hr*(360/24)  +  min*(360/24/60)  +  sec*(360/24/60/60)
-
-
-
-    def validate_dec(self, deg, min, sec):
-        '''Check the declination is valid (-90 <= dec <= +90).'''
-
-        # Treat the special case of the north and south poles
-        if ( deg == 90   or   deg == -90 ):
-            if ( min > 0   or   sec > 0 ):
-                raise InvalidAngleError("'%d %d %d' exceeds maximum allowable declination" % (deg, min, sec))
-
-        return True
-
-
-
-    def dec_to_degrees(self, sign, deg, min, sec):
-        '''Convert a declination value (+-deg/min/sec) to degrees.'''
-
-        if ( sign == '-' ):
-            deg = -1 * deg
-            min = -1 * min
-            sec = -1 * sec
-
-        return deg + (min/60) + (sec/60/60)
-
-
-
+        
 class InvalidAngleError(Exception):
     '''Error for out-of-range angles provided to the Angle class.'''
 
