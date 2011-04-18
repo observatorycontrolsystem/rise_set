@@ -29,7 +29,7 @@ class Angle(object):
             a = Angle(radians=12 20 34.5)
     '''
 
-    def __init__(self, degrees = None, radians = None, units = 'arc', **kwargs):
+    def __init__(self, degrees = None, radians = None, units = 'arc'):
         self.unit_mapping = {
                                 'degrees'     : self.from_degrees,
                                 'radians'     : self.from_radians,
@@ -84,7 +84,7 @@ class Angle(object):
         '''Convert from sexegesimal into degrees'''
 
        # Match sexegesimal with almost arbitrary delimiters
-        match = re.search('^([+-])?(\d\d)[^-\d]*(\d\d)[^-\d]*(\d\d(?:[.]\d+)?)$'
+        match = re.search('^([+-])?(\d*)[^-\d]+(\d\d?)[^-\d]+(\d\d?(?:[.]\d+)?)$'
                           ,sexegesimal)
 
         # Check we extracted three numbers
@@ -92,7 +92,7 @@ class Angle(object):
             sign = match.groups()[0]
             hr, min, sec = map(float, match.groups()[1:4])
         else:
-            error = ("Invalid sexagesimal format: Try colon or space delimiters"
+            error = ("Invalid sexegesimal format: Try colon or space delimiters"
                      + " instead (e.g. -12:34:56)")
             raise InvalidAngleError(error)
 
