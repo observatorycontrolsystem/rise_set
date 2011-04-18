@@ -1,16 +1,16 @@
 #!/usr/bin/python
 
-'''rise_set/rightAscension.py 
-Validates angles to store the RA values in the Angle class.
+'''rise_set/sky_coordinates.py 
+Validates angles to store the RA and Dec values in the Angle class.
 Michelle Becker for LCOGT
 April, 2011'''
 #___________________________________________________________
 #Imports 
 # Required for true (non-integer) division
 from __future__ import division
+
+#The angle class
 from angle import Angle, InvalidAngleError, AngleConfigError
-
-
 
 # Standard library imports
 from math import degrees, radians
@@ -21,8 +21,8 @@ import sys
 
 class RightAscension(Angle):
     
-    def __init__(self, sign = '+', degrees = None, radians = None, units = 'time', **kwargs):
-        Angle.__init__(self, degrees, radians, units, **kwargs)
+    def __init__(self, sign = '+', degrees = None, radians = None, units = 'time'):
+        Angle.__init__(self, degrees, radians, units)
         self.ra = self.in_sexegesimal()
         self.validate_ra(sign, self.ra[:2], self.ra[3:5], self.ra[6:])
 
@@ -48,7 +48,20 @@ class RightAscension(Angle):
 
         return True
         
-    '''def ra_to_degrees(self, hr, min, sec):
-        '''Convert an RA value (hr/min/sec) to degrees.'''
+class Declination(Angle):
+    
+    def __init__(self, degrees = None, radians = None, units = 'arc'):
+        Angle.__init__(self, degrees, radians, units)
+        self.dec = self.in_sexegesimal()
+        self.validate_dec(self.dec[:2], self.dec[3:5], self.dec[6:])
 
-        return hr*(360/24)  +  min*(360/24/60)  +  sec*(360/24/60/60)    '''   
+
+    def validate_dec(self, deg, min, sec):
+        '''Check the declination is valid (-90 <= dec <= +90).'''
+
+        # Treat the special case of the north and south poles
+        if ( deg == 90   or   deg == -90 ):
+            if ( min > 0   or   sec > 0 ):
+                raise InvalidAngleError("'%d %d %d' exceeds maximum allowable declination" % (deg, min, sec))
+
+        return True
