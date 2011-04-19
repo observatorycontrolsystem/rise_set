@@ -37,25 +37,23 @@ class Angle(object):
         self.units   = units            
         self.degrees = 0.0
         
-        #Check if the units entered were in time or arc
+        # Check if the units entered were in time or arc
         if self.units not in ['arc', 'time']:
             msg = (self.units + " not a valid unit. Please enter 'time' or 'arc'")
             raise AngleConfigError(msg)
         
-        #We expect to only get one item in the dictionary
-        # if we get more this means someone messed up, 
-        # only take the first on entered and run some validation
-        
-        if degrees:
+        # Must enter either degrees or radians
+        if degrees != None and radians == None:
             self.measurement = degrees
             key         = 'degrees'
-        elif radians:
+        elif radians != None and degrees == None:
             self.measurement = radians
             key         = 'radians'
         else:
             msg = ("Please specify an angle in either degrees or radians")
             raise AngleConfigError(msg)
-            
+        
+        # Is the angle value a string or a number?    
         if type(self.measurement) == str:
             self.from_sexegesimal(self.measurement)
         else:
@@ -104,6 +102,9 @@ class Angle(object):
             #It must be in time
             self.degrees = hr*(360/24)  +  min*(360/24/60)  +  sec*(360/24/60/60) 
         
+        if sign == '-':
+            self.degrees = self.degrees * -1
+            
         return self.degrees
 
 
@@ -119,25 +120,27 @@ class Angle(object):
     
     def in_sexegesimal(self):
         "Convert from degrees to sexegesimal"
+        negative = False
+        
+        if self.degrees < 0: 
+            #Make it positive, and apply negative at the end
+            self.degrees =  self.degrees * -1
+            negative = True
         
         if self.units == 'arc':
             total, degHrs  = self.degrees, int(self.degrees)
             
         else:
             total, degHrs = self.degrees * (24/360), int(self.degrees * (24/360))
-            
+           
         allMin = (total - degHrs) * 60
         min    = int(allMin)
         sec    = (allMin - min) *60
         
+        if negative:
+            degHrs = "-" + str(degHrs)
+            
         digits = [degHrs, min, sec]
-        
-        #Put in format to match the regex valid for from_sexegesimal
-        for i, item in enumerate(digits):
-            if ('.' in str(item)) and len(str(item).split('.')[0])<2 :
-                digits[i] = '0' + str(item)
-            if len(str(item)) < 2:
-                digits[i] = '0' + str(item)
         
         return "%s %s %s" %(digits[0], digits[1], digits[2]) 
             
