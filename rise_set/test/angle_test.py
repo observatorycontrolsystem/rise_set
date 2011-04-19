@@ -1,7 +1,7 @@
 #!/usr/bin/python
 from __future__ import division
 
-from nose.tools import eq_, assert_equal, assert_almost_equal, raises
+from nose.tools import assert_equal, assert_almost_equal, raises
 
 from math import pi
 
@@ -11,12 +11,6 @@ from rise_set.angle import Angle, AngleConfigError, InvalidAngleError
 
 class TestAngle(object):
     '''Unit tests for the angle.Angle class.'''
-
-    def setUp(self):
-        pass
-
-    def tearDown(self):
-        pass
 
     # Test constructor errors        
     @raises(AngleConfigError)
@@ -30,7 +24,10 @@ class TestAngle(object):
     @raises(AngleConfigError)
     def test_invalid_angle_units(self):
         self.angle = Angle(degrees = 45, units = 'kilos')   
-
+        
+    @raises(AngleConfigError)
+    def test_invalid_multiple_angles(self):
+        self.angle = Angle(degrees = 45, radians = pi/4)   
 
 
     # Test degree functionality
@@ -42,6 +39,11 @@ class TestAngle(object):
         self.angle = Angle(radians=pi)
         assert_equal(self.angle.in_degrees(), 180)
     
+    def test_in_degrees_negative(self):
+        self.angle = Angle(degrees = -37)
+        assert_equal(self.angle.in_degrees(), -37)
+    
+    
 
     # Test radian functionality
     def test_in_radians_rads_provided(self):
@@ -51,6 +53,10 @@ class TestAngle(object):
     def test_in_radians_degrees_provided(self):
         self.angle = Angle(degrees=180)
         assert_equal(self.angle.in_radians(), pi)
+        
+    def test_in_radians_negative(self):
+        self.angle = Angle(radians = -pi)
+        assert_equal(self.angle.in_radians(), -pi)
 
 
 
@@ -59,6 +65,10 @@ class TestAngle(object):
         self.angle = Angle(degrees='12:00:00', units= 'time')
         assert_equal(self.angle.in_degrees(), 180)
 
+    def test_from_sexegesimal_more_hrs_time(self): 
+        self.angle = Angle(degrees='120:00:00', units= 'time')
+        assert_equal(self.angle.in_degrees(), 1800)
+        
     def test_from_sexegesimal_hrs_mins_time(self):
         self.angle = Angle(degrees='12:30:00', units = 'time')
         assert_equal(self.angle.in_degrees(), 187.5)
@@ -70,13 +80,29 @@ class TestAngle(object):
     def test_from_sexegesimal_fractional_secs_time(self):
         self.angle = Angle(degrees='12:30:30.1', units = 'time')
         assert_equal(self.angle.in_degrees(), (187.625 + (360/24/36000)))
+    
+    def test_from_sexegesimal_negative_time(self):
+        self.angle = Angle(degrees='-12:00:00', units = 'time')
+        assert_equal(self.angle.in_degrees(), -180)
 
-
-
+    def test_from_sexegesimal_positive_time(self):
+        self.angle = Angle(degrees='+12:00:00', units = 'time')
+        assert_equal(self.angle.in_degrees(), 180)
+ 
+    def test_from_sexegesimal_zero_time(self):
+        self.angle = Angle(degrees='0 0 0', units = 'time')
+        assert_equal(self.angle.in_degrees(), 0.0)       
+        
+        
+        
     # Test valid sexegesimal->degrees conversion given units = arc
     def test_from_sexegesimal_hrs_arc(self):
         self.angle = Angle(degrees='12:00:00')
         assert_equal(self.angle.in_degrees(), 12)
+
+    def test_from_sexegesimal_more_hrs_arc(self):
+        self.angle = Angle(degrees='120:00:00')
+        assert_equal(self.angle.in_degrees(), 120)
 
     def test_from_sexegesimal_hrs_mins_arc(self):
         self.angle = Angle(degrees='12:30:00')
@@ -90,8 +116,20 @@ class TestAngle(object):
         self.angle = Angle(degrees='12:30:30.1')
         assert_almost_equal(self.angle.in_degrees(), (12.50836), 5)
         
-
-
+    def test_from_sexegesimal_negative_arc(self):
+        self.angle = Angle(degrees='-12:00:00')
+        assert_equal(self.angle.in_degrees(), -12.0)
+        
+    def test_from_sexegesimal_positive_arc(self):
+        self.angle = Angle(degrees='+12:00:00')
+        assert_equal(self.angle.in_degrees(), 12.0)
+    
+    def test_from_sexegesimal_zero_arc(self):
+        self.angle = Angle(degrees='0 0 0')
+        assert_equal(self.angle.in_degrees(), 0.0)
+        
+        
+        
     # Test various valid input forms for sexegesimal
     def test_from_sexegesimal_valid_format_colons(self):
         self.angle = Angle(degrees='12:30:30', units = 'time')
@@ -112,136 +150,96 @@ class TestAngle(object):
 
 
     # Test sexegesimal validation on various illegal inputs
-    def test_from_sexegesimal_invalid_no_delimiters(self):###
-        try:
-            self.angle = Angle(degrees = '123030')
-            assert False
-        except InvalidAngleError as e:
-            expected_message = ("Invalid sexegesimal format: Try colon or space"
-                                " delimiters instead (e.g. -12:34:56)")
-            assert_equal(e.value, expected_message)
-
-    def test_from_sexegesimal_invalid_format_minuses(self):
-        try:
-            self.angle = Angle(degrees = '12-30-30', units = 'time')
-            assert False
-        except InvalidAngleError as e:
-            expected_message = ("Invalid sexegesimal format: Try colon or space"
-                                " delimiters instead (e.g. -12:34:56)")
-            assert_equal(e.value, expected_message)
-
-
-    # Test returning degrees in sexegesimal
-    def test_in_sexegesimal_degree_string_provided_arc(self):
-        self.angle = Angle(degrees = '12 30 30')
-        assert_equal(self.angle.in_sexegesimal(), '12 30 30.0')
-    
-    def test_in_sexegesimal_degree_number_provided_arc(self):
-        self.angle = Angle(degrees = 45)
-        assert_equal(self.angle.in_sexegesimal(), '45 00 00')
-        
-    def test_in_sexegesimal_degree_string_provided_time(self):
-        self.angle = Angle(degrees = '12 30 30', units = 'time')
-        assert_equal(self.angle.in_sexegesimal(), '12 30 30.0')
-        
-    def test_in_sexegesimal_degree_number_provided_time(self):
-        self.angle = Angle(degrees = 45, units = 'time')
-        assert_equal(self.angle.in_sexegesimal(), '03 00 00.0')
-        
-    
-    # Test returning radians in sexegesimal
-    def test_in_sexegesimal_radians_string_provided_arc(self):
-        self.angle = Angle(radians = '12 30 30')
-        assert_equal(self.angle.in_sexegesimal(), '12 30 30.0')
-        
-    def test_in_sexegesimal_radians_number_provided_arc(self):
-        self.angle = Angle(radians = pi)
-        assert_equal(self.angle.in_sexegesimal(), '180 00 00.0')            
-        
-    def test_in_sexegesimal_radians_string_provided_time(self):
-        self.angle = Angle(radians = '12 30 30', units = 'time')
-        assert_equal(self.angle.in_sexegesimal(), '12 30 30.0')
-        
-    def test_in_sexegesimal_radians_number_provided_time(self):
-        self.angle = Angle(radians = pi, units = 'time')
-        assert_equal(self.angle.in_sexegesimal(), '12 00 00.0') 
-        
-
-    '''# Test sexegesimal RA validation
-    @raises(InvalidAngleError)
-    def test_from_sexegesimal_invalid_format_number_hrs_too_long(self):
-        self.angle = Angle(ra='1222:12:00')
-
     @raises(InvalidAngleError)
     def test_from_sexegesimal_invalid_format_number_mins_too_long(self):
-        self.angle = Angle(ra='12:0120:00')
+        self.angle = Angle(degrees='12:0120:00')
 
     @raises(InvalidAngleError)
     def test_from_sexegesimal_invalid_format_secs_too_long(self):
-        self.angle = Angle(ra='12:00:0032')
+        self.angle = Angle(degrees='12:00:0032')
+    
+    @raises(InvalidAngleError)
+    def test_from_sexegesimal_invalid_format_min_too_small(self):
+        self.angle = Angle(degrees='12:-1:00')
+    
+    @raises(InvalidAngleError)
+    def test_from_sexegesimal_invalid_format_sec_too_small(self):
+        self.angle = Angle(degrees='12:00:-1.0')
 
     @raises(InvalidAngleError)
-    def test_from_sexegesimal_invalid_hr_too_small(self):
-        self.angle = Angle(ra='-12:00:00')
-
+    def test_from_sexegesimal_invalid_fomrmat_no_delimiters(self):
+        self.angle = Angle(degrees = '123030')
+    
     @raises(InvalidAngleError)
-    def test_from_sexegesimal_invalid_hr_too_big(self):
-        self.angle = Angle(ra='24:00:00')
+    def test_from_sexegesimal_invalid_format_minuses(self):
+        self.angle = Angle(degrees = '12-30-30', units = 'time')
 
-    @raises(InvalidAngleError)
-    def test_from_sexegesimal_invalid_min_too_big(self):
-        self.angle = Angle(ra='12:75:00')
+            
 
-    @raises(InvalidAngleError)
-    def test_from_sexegesimal_invalid_min_too_small(self):
-        self.angle = Angle(ra='12:-10:00')
+    # Test returning degrees in sexegesimal
+    def test_in_sexegesimal_degrees_str_arc(self):
+        self.angle = Angle(degrees = '12 30 30')
+        assert_equal(self.angle.in_sexegesimal(), '12 30 30.0')
+    
+    def test_in_sexegesimal_degrees_num_arc(self):
+        self.angle = Angle(degrees = 45)
+        assert_equal(self.angle.in_sexegesimal(), '45 0 0')
+        
+    def test_in_sexegesimal_degrees_negative_num_arc(self):
+        self.angle = Angle(degrees = -90)
+        assert_equal(self.angle.in_sexegesimal(), '-90 0 0')
 
-    @raises(InvalidAngleError)
-    def test_from_sexegesimal_invalid_sec_too_big(self):
-        self.angle = Angle(ra='12:00:99')
+    def test_in_sexegesimal_degrees_negative_str_arc(self):
+        self.angle = Angle(degrees = '-12 00 00')
+        assert_equal(self.angle.in_sexegesimal(), '-12 0 0.0')
+                
+    def test_in_sexegesimal_degrees_str_time(self):
+        self.angle = Angle(degrees = '12 30 30', units = 'time')
+        assert_equal(self.angle.in_sexegesimal(), '12 30 30.0')
+        
+    def test_in_sexegesimal_degrees_num_time(self):
+        self.angle = Angle(degrees = 45, units = 'time')
+        assert_equal(self.angle.in_sexegesimal(), '3 0 0.0')
+    
+    def test_in_sexegesimal_degrees_negative_num_time(self):
+        self.angle = Angle(degrees = -90, units = 'time')
+        assert_equal(self.angle.in_sexegesimal(), '-6 0 0.0')
+        
+    def test_in_sexegesimal_degrees_negative_str_time(self):
+        self.angle = Angle(degrees = '-12 00 00', units = 'time')
+        assert_equal(self.angle.in_sexegesimal(), '-12 0 0.0')
+    
+    
+    
+    # Test returning radians in sexegesimal
+    def test_in_sexegesimal_radians_str_arc(self):
+        self.angle = Angle(radians = '12 30 30')
+        assert_equal(self.angle.in_sexegesimal(), '12 30 30.0')
+        
+    def test_in_sexegesimal_radians_num_arc(self):
+        self.angle = Angle(radians = pi)
+        assert_equal(self.angle.in_sexegesimal(), '180 0 0.0')    
 
-    @raises(InvalidAngleError)
-    def test_from_sexegesimal_invalid_sec_too_small(self):
-        self.angle = Angle(ra='12:00:-19')'''
+    def test_in_sexegesimal_radians_negative_num_arc(self):
+        self.angle = Angle(radians = -2*pi)
+        assert_equal(self.angle.in_sexegesimal(), '-360 0 0.0')
+         
+    def test_in_sexegesimal_radians_negative_str_arc(self):
+        self.angle = Angle(radians = '-2 00 00')
+        assert_equal(self.angle.in_sexegesimal(), '-2 0 0.0')   
+        
+    def test_in_sexegesimal_radians_str_time(self):
+        self.angle = Angle(radians = '12 30 30', units = 'time')
+        assert_equal(self.angle.in_sexegesimal(), '12 30 30.0')
+        
+    def test_in_sexegesimal_radians_num_time(self):
+        self.angle = Angle(radians = pi, units = 'time')
+        assert_equal(self.angle.in_sexegesimal(), '12 0 0.0') 
 
-
-    '''# Test various valid declination inputs
-    def test_from_sexegesimal_dec_north_pole(self):
-        self.angle = Angle(dec='+90:00:00')
-        assert_equal(self.angle.in_degrees(), 90)
-
-    def test_from_sexegesimal_dec_south_pole(self):
-        self.angle = Angle(dec='-90:00:00')
-        assert_equal(self.angle.in_degrees(), -90)
-
-    def test_from_sexegesimal_dec_positive_number(self):
-        self.angle = Angle(dec='30:30:01')
-        assert_equal(self.angle.in_degrees(), (30.5 + 1/3600))
-
-    def test_from_sexegesimal_dec_negative_number(self):
-        self.angle = Angle(dec='-30:30:01')
-        assert_equal(self.angle.in_degrees(), (-30.5 - 1/3600))
-
-    def test_from_sexegesimal_dec_small_positive_number(self):
-        self.angle = Angle(dec='00:06:01')
-        assert_equal(self.angle.in_degrees(), (0.1 + 1/3600))
-
-    def test_from_sexegesimal_dec_small_negative_number(self):
-        self.angle = Angle(dec='-00:06:01')
-        assert_equal(self.angle.in_degrees(), (-0.1 - 1/3600))
-
-
-    # Test sexegesimal dec validation
-    def test_from_sexegesimal_invalid_format_number_too_big_mins(self):
-        try:
-            self.angle = Angle(dec='90:10:00')
-            assert False
-        except InvalidAngleError as e:
-            expected_message = ("'90 10 0' exceeds maximum allowable"
-                                " declination")
-            assert_equal(e.value, expected_message)
-
-
-    @raises(InvalidAngleError)
-    def test_from_sexegesimal_invalid_format_number_too_big_secs(self):
-        self.angle = Angle(dec='90:00:01')'''
+    def test_in_sexegesimal_radians_negative_num_time(self):
+        self.angle = Angle(radians = -2*pi, units = 'time')
+        assert_equal(self.angle.in_sexegesimal(), '-24 0 0.0')
+        
+    def test_in_sexegesimal_radians_negative_str_time(self):
+        self.angle = Angle(radians = '-2 00 00', units = 'time')
+        assert_equal(self.angle.in_sexegesimal(), '-2 0 0.0')
