@@ -18,11 +18,11 @@ class TestCoordinateSystem(object):
     # Test invalid inputs for RA
     @raises(InvalidAngleError)
     def test_validate_ra_invalid_hr_too_small(self):
-        self.angle = RightAscension(degrees='-12:00:00')
+        self.angle = RightAscension(degrees = '-12:00:00')
 
     @raises(InvalidAngleError)
     def test_validate_ra_invalid_hr_too_big(self):
-        self.angle = RightAscension(degrees='24:00:00')
+        self.angle = RightAscension(degrees = '24:00:00')
     
     @raises(InvalidAngleError)
     def test_validate_ra_invalid_hr_too_big_rad(self):
@@ -30,18 +30,18 @@ class TestCoordinateSystem(object):
 
     @raises(InvalidAngleError)
     def test_validate_ra_invalid_min_too_big(self):
-        self.angle = RightAscension(degrees='23:61:00')
+        self.angle = RightAscension(degrees = '23:61:00')
 
 
 
     # Test invalid inputs for Dec
     @raises(InvalidAngleError)
     def test_validate_dec_invalid_deg_too_small(self):
-        self.angle = Declination(degrees=-91)
+        self.angle = Declination(degrees = -91)
 
     @raises(InvalidAngleError)
     def test_validate_dec_invalid_deg_too_big(self):
-        self.angle = Declination(degrees=91)
+        self.angle = Declination(degrees = 91)
     
     @raises(InvalidAngleError)
     def test_validate_dec_invalid_deg_too_big_rad(self):
@@ -49,7 +49,7 @@ class TestCoordinateSystem(object):
 
     @raises(InvalidAngleError)
     def test_validate_dec_invalid_min_too_big(self):
-        self.angle = Declination(degrees='89:61:00')
+        self.angle = Declination(degrees = '89:61:00')
 
 
 
@@ -63,7 +63,7 @@ class TestCoordinateSystem(object):
         assert(self.angle.validate_ra())
 
     def test_validate_ra_valid_at_middle_rad(self):
-        self.angle = RightAscension(radians=pi)
+        self.angle = RightAscension(radians = pi)
         assert(self.angle.validate_ra())
 
 
