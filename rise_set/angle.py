@@ -5,8 +5,8 @@
 This package provides the Angle() class, which provides a simple way to specify
 an angle in degrees, radians, RA or Dec, and to transform between these.
 
-Author: Eric Saunders (esaunders@lcogt.net)
-Co-Author: Michelle Becker
+Authors: Eric Saunders (esaunders@lcogt.net)
+         Michelle Becker (mbecker@lcogt.net)
 
 May 2010
 April 2011
@@ -37,9 +37,9 @@ class Angle(object):
         if self.units not in ['arc', 'time']:
             msg = (self.units + " not a valid unit. Try 'time' or 'arc'.")
             raise AngleConfigError(msg)
-        
+
         # Complain if none or both are specified
-        if not bool(degrees) ^ bool(radians):
+        if not (bool(degrees) ^ bool(radians)) and (degrees != 0) and (radians != 0):
             msg = ("Specify an angle in either degrees or radians.")
             raise AngleConfigError(msg)
         
