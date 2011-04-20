@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 '''rise_set/sky_coordinates.py 
 Validated representations of RA and Dec.
