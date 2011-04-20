@@ -28,54 +28,52 @@ class Angle(object):
             a = Angle(degrees=45)
             a = Angle(radians=12 20 34.5)
     '''
-
+        
     def __init__(self, degrees = None, radians = None, units = 'arc'):
-        self.unit_mapping = {
-                                'degrees'     : self.from_degrees,
-                                'radians'     : self.from_radians,
-                             }
         self.units   = units            
         self.degrees = 0.0
         
         # Check if the units entered were in time or arc
         if self.units not in ['arc', 'time']:
-            msg = (self.units + " not a valid unit. Please enter 'time' or 'arc'")
+            msg = (self.units + " not a valid unit. Try 'time' or 'arc'.")
+            raise AngleConfigError(msg)
+        
+        # Complain if none or both are specified
+        if not bool(degrees) ^ bool(radians):
+            msg = ("Specify an angle in either degrees or radians.")
             raise AngleConfigError(msg)
         
         # Must enter either degrees or radians
-        if degrees != None and radians == None:
-            self.measurement = degrees
-            key         = 'degrees'
-        elif radians != None and degrees == None:
-            self.measurement = radians
-            key         = 'radians'
-        else:
-            msg = ("Please specify an angle in either degrees or radians")
-            raise AngleConfigError(msg)
-        
-        # Is the angle value a string or a number?    
-        if type(self.measurement) == str:
-            self.from_sexegesimal(self.measurement)
-        else:
-            try:
-                self.unit_mapping[key](self.measurement)
+        if degrees:
+            self.from_degrees(degrees)
+            
+        elif radians:
+            self.units = 'arc'
+            self.from_radians(radians)
 
-            except KeyError as e:
-                msg = ("Error constructing Angle: " + str(e)
-                      + " is not a valid unit. Try 'degrees', 'radians' instead.")
-
-                raise AngleConfigError(msg)
-        
-
+            
+                
     def from_degrees(self, degrees):
         '''Set the Angle using a value provided in degrees.'''
-
-        self.degrees = degrees
+        
+        if type(degrees) == str:
+            self.degrees = self.from_sexegesimal(degrees)
+        else:
+            if self.units == 'time':
+                self.degrees = degrees * 360/24 
+            else:    
+                self.degrees = degrees
+        
 
 
     def from_radians(self, radians):
         '''Set the Angle using a value provided in radians.'''
+        
+        if type(radians) == str:
+            radians = self.from_sexegesimal(radians)
+
         self.degrees = degrees(radians)
+
 
 
     def from_sexegesimal(self, sexegesimal):
@@ -96,16 +94,16 @@ class Angle(object):
 
         if self.units == 'arc': 
             #Then we know its in seconds of arc
-            self.degrees = hr + (min/60) + (sec/60/60)
+            decimal_value = hr + (min/60) + (sec/60/60)
             
         else: 
             #It must be in time
-            self.degrees = hr*(360/24)  +  min*(360/24/60)  +  sec*(360/24/60/60) 
+            decimal_value = hr*(360/24)  +  min*(360/24/60)  +  sec*(360/24/60/60) 
         
-        if sign == '-':
-            self.degrees = self.degrees * -1
+        if sign == '-': decimal_value *= -1
             
-        return self.degrees
+        return decimal_value
+
 
 
     def in_degrees(self):
@@ -113,36 +111,44 @@ class Angle(object):
         return self.degrees
 
 
+
     def in_radians(self):
         '''Return the value of the angle in radians.'''
         return radians(self.degrees)    
     
     
-    def in_sexegesimal(self):
-        "Convert from degrees to sexegesimal"
-        negative = False
+    
+    def in_sexegesimal(self, radians = False):
+        "Convert from degrees to sexegesimal degrees"
         
-        if self.degrees < 0: 
-            #Make it positive, and apply negative at the end
-            self.degrees =  self.degrees * -1
+        negative = False
+        decimal_value = self.degrees
+        
+        if radians:
+            self.units = 'arc'
+            decimal_value = self.in_radians()
+
+        if decimal_value < 0: 
+            # Make it positive, and apply negative at the end
+            decimal_value *= -1
             negative = True
         
         if self.units == 'arc':
-            total, degHrs  = self.degrees, int(self.degrees)
-            
+            total, deg_hrs  = decimal_value, int(decimal_value)
+        
         else:
-            total, degHrs = self.degrees * (24/360), int(self.degrees * (24/360))
-           
-        allMin = (total - degHrs) * 60
-        min    = int(allMin)
-        sec    = (allMin - min) *60
+            # Convert into time format and pull out the int part - the remainder is the minutes
+            total, deg_hrs = decimal_value * (24/360), int(decimal_value * (24/360))
+        
+        # Construct the minutes and seconds from the decimal part
+        all_min = (total - deg_hrs) * 60
+        min     = int(all_min)
+        sec     = (all_min - min) *60
         
         if negative:
-            degHrs = "-" + str(degHrs)
+            deg_hrs = "-" + str(deg_hrs)
             
-        digits = [degHrs, min, sec]
-        
-        return "%s %s %s" %(digits[0], digits[1], digits[2]) 
+        return "%s %s %s" %(deg_hrs, min, sec) 
             
 
         

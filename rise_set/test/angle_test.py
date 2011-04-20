@@ -1,4 +1,5 @@
-#!/usr/bin/python
+#!/usr/bin/env python
+
 from __future__ import division
 
 from nose.tools import assert_equal, assert_almost_equal, raises
@@ -114,7 +115,7 @@ class TestAngle(object):
 
     def test_from_sexegesimal_fractional_secs_arc(self):
         self.angle = Angle(degrees='12:30:30.1')
-        assert_almost_equal(self.angle.in_degrees(), (12.50836), 5)
+        assert_almost_equal(self.angle.in_degrees(), 12.50836, 5)
         
     def test_from_sexegesimal_negative_arc(self):
         self.angle = Angle(degrees='-12:00:00')
@@ -198,12 +199,12 @@ class TestAngle(object):
         assert_equal(self.angle.in_sexegesimal(), '12 30 30.0')
         
     def test_in_sexegesimal_degrees_num_time(self):
-        self.angle = Angle(degrees = 45, units = 'time')
-        assert_equal(self.angle.in_sexegesimal(), '3 0 0.0')
+        self.angle = Angle(degrees = 12.5, units = 'time')
+        assert_equal(self.angle.in_sexegesimal(), '12 30 0.0')
     
     def test_in_sexegesimal_degrees_negative_num_time(self):
-        self.angle = Angle(degrees = -90, units = 'time')
-        assert_equal(self.angle.in_sexegesimal(), '-6 0 0.0')
+        self.angle = Angle(degrees = -12.5, units = 'time')
+        assert_equal(self.angle.in_sexegesimal(), '-12 30 0.0')
         
     def test_in_sexegesimal_degrees_negative_str_time(self):
         self.angle = Angle(degrees = '-12 00 00', units = 'time')
@@ -214,32 +215,52 @@ class TestAngle(object):
     # Test returning radians in sexegesimal
     def test_in_sexegesimal_radians_str_arc(self):
         self.angle = Angle(radians = '12 30 30')
-        assert_equal(self.angle.in_sexegesimal(), '12 30 30.0')
-        
-    def test_in_sexegesimal_radians_num_arc(self):
-        self.angle = Angle(radians = pi)
-        assert_equal(self.angle.in_sexegesimal(), '180 0 0.0')    
-
-    def test_in_sexegesimal_radians_negative_num_arc(self):
-        self.angle = Angle(radians = -2*pi)
-        assert_equal(self.angle.in_sexegesimal(), '-360 0 0.0')
-         
+        assert_equal(self.angle.in_sexegesimal(radians = True), '12 30 30.0')
+                 
     def test_in_sexegesimal_radians_negative_str_arc(self):
         self.angle = Angle(radians = '-2 00 00')
-        assert_equal(self.angle.in_sexegesimal(), '-2 0 0.0')   
+        assert_equal(self.angle.in_sexegesimal(radians = True), '-2 0 0.0')   
         
     def test_in_sexegesimal_radians_str_time(self):
         self.angle = Angle(radians = '12 30 30', units = 'time')
-        assert_equal(self.angle.in_sexegesimal(), '12 30 30.0')
-        
-    def test_in_sexegesimal_radians_num_time(self):
-        self.angle = Angle(radians = pi, units = 'time')
-        assert_equal(self.angle.in_sexegesimal(), '12 0 0.0') 
-
-    def test_in_sexegesimal_radians_negative_num_time(self):
-        self.angle = Angle(radians = -2*pi, units = 'time')
-        assert_equal(self.angle.in_sexegesimal(), '-24 0 0.0')
+        assert_equal(self.angle.in_sexegesimal(radians = True), '12 30 30.0')
         
     def test_in_sexegesimal_radians_negative_str_time(self):
-        self.angle = Angle(radians = '-2 00 00', units = 'time')
-        assert_equal(self.angle.in_sexegesimal(), '-2 0 0.0')
+        self.angle = Angle(radians = '-3 00 00', units = 'time')
+        assert_equal(self.angle.in_sexegesimal(radians = True), '-3 0 0.0')
+
+
+
+    # Test converting degrees to radians sexegesimal
+    def test_in_sexegesimal_degrees_to_radians_arc(self):
+        self.angle = Angle(degrees = 180)
+        assert_equal(self.angle.in_sexegesimal(radians = True), '3 8 29.7335529233')
+
+    def test_in_sexegesimal__negative_degrees_to_radians_arc(self):
+        self.angle = Angle(degrees = -180)
+        assert_equal(self.angle.in_sexegesimal(radians = True), '-3 8 29.7335529233')
+
+    def test_in_sexegesimal_degrees_to_radians_time(self):
+        self.angle = Angle(degrees = 12, units = 'time')
+        assert_equal(self.angle.in_sexegesimal(radians = True), '3 8 29.7335529233')
+        
+    def test_in_sexegesimal_negative_degrees_to_radians_Time(self):
+        self.angle = Angle(degrees = -12, units = 'time')
+        assert_equal(self.angle.in_sexegesimal(radians = True), '-3 8 29.7335529233')
+        
+    def test_in_sexegesimal_radians_to_degrees_arc(self):
+        self.angle = Angle(radians = pi)
+        assert_equal(self.angle.in_sexegesimal(), '180 0 0.0')    
+
+    def test_in_sexegesimal_negative_radians_to_degrees_arc(self):
+        self.angle = Angle(radians = -2*pi)
+        assert_equal(self.angle.in_sexegesimal(), '-360 0 0.0')
+        
+    def test_in_sexegesimal_radians_to_degrees_time(self):
+        self.angle = Angle(radians = pi, units = 'time')
+        assert_equal(self.angle.in_sexegesimal(), '180 0 0.0') 
+
+    def test_in_sexegesimal_negative_radians_to_degrees_time(self):
+        self.angle = Angle(radians = -2*pi, units = 'time')
+        assert_equal(self.angle.in_sexegesimal(), '-360 0 0.0')
+        
