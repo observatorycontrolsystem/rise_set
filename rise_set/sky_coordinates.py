@@ -1,9 +1,12 @@
 #!/usr/bin/python
 
 '''rise_set/sky_coordinates.py 
-Validates angles to store the RA and Dec values in the Angle class.
-Michelle Becker for LCOGT
-April, 2011'''
+Validated representations of RA and Dec.
+
+Author: Michelle Becker (mbecker@lcogt.net)
+April 2011
+'''
+
 #___________________________________________________________
 #Imports 
 # Required for true (non-integer) division
@@ -21,8 +24,17 @@ import sys
 
 class RightAscension(Angle):
     
-    def __init__(self, degrees = None, radians = None, units = 'time'):
-        Angle.__init__(self, degrees, radians, units)
+    def __init__(self, time = None, degrees = None, radians = None, units = 'time'):
+        
+        angle_degrees = time
+        angle_radians = radians
+        angle_units   = units
+        
+        if degrees != None:
+            angle_degrees = degrees
+            angle_units   = 'arc' 
+        
+        Angle.__init__(self, angle_degrees, angle_radians, angle_units)
 
         # Check input
         self.validate_ra()
@@ -46,8 +58,6 @@ class Declination(Angle):
         
         # Check input
         self.validate_dec()
-        
-        
         
     def validate_dec(self):
         '''Check the declination is valid (-90 <= dec <= +90).'''
