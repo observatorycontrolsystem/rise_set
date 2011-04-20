@@ -54,6 +54,11 @@ class TestAngle(object):
     def test_in_radians_degrees_provided(self):
         self.angle = Angle(degrees=180)
         assert_equal(self.angle.in_radians(), pi)
+ 
+    def test_in_radians_degrees_provided_time(self):
+        self.angle = Angle(degrees=12, units = 'time')
+        assert_equal(self.angle.in_radians(), pi)   
+    
         
     def test_in_radians_negative(self):
         self.angle = Angle(radians = -pi)

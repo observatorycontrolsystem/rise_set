@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 '''rise_set/angle.py - multi-unit Angle representation.
 
@@ -114,6 +114,7 @@ class Angle(object):
 
     def in_radians(self):
         '''Return the value of the angle in radians.'''
+            
         return radians(self.degrees)    
     
     
