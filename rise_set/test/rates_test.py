@@ -2,7 +2,7 @@
 
 from __future__ import division
 
-from nose.tools import eq_, assert_equal, assert_almost_equal, raises, nottest
+from nose.tools import assert_equal, assert_almost_equal, raises
 from math import pi
 
 #Import the module to test
@@ -12,6 +12,14 @@ from rise_set.sky_coordinates import RightAscension, Declination
 
 class TestProperMotion(object):
     '''Unit tests for the ProperMotion object.'''
+    
+    #Test that conifg errors are raised if wrong key words are inputted
+    @raises(RatesConfigError)
+    def test_configuration(self):
+        ra = RightAscension(degrees = 90)
+        proper_motion = ProperMotion(ra, units = 'millennia')
+    
+
 
     # Generate proper motion for right ascension of degrees in arc
     # Return in same time units as entered
@@ -181,7 +189,7 @@ class TestProperMotion(object):
         
         
         
-    # Generate proper motion for right ascension of degrees in arc
+    # Generate proper motion for declination of degrees in arc
     # Return in different time units as entered
     def test_in_radians_per_year_from_century_dec_deg_arc(self):
         dec  = Declination(degrees = 90)
@@ -205,7 +213,7 @@ class TestProperMotion(object):
     
     
     
-    # Generate proper motion for right ascension of degrees in time
+    # Generate proper motion for declination of degrees in time
     # Return in same time units as entered
     def test_in_radians_per_year_dec_time(self):
         dec  = Declination(degrees = 6, units = 'time')
@@ -229,7 +237,7 @@ class TestProperMotion(object):
         
         
         
-    # Generate proper motion for right ascension of degrees in time
+    # Generate proper motion for declination of degrees in time
     # Return in different time units as entered
     def test_in_radians_per_year_from_century_dec_time(self):
         dec  = Declination(degrees = 6, units = 'time')
@@ -253,7 +261,7 @@ class TestProperMotion(object):
 
 
 
-    # Generate proper motion for right ascension of degrees in radians
+    # Generate proper motion for declination of degrees in radians
     # Return in same time units as entered
     def test_in_radians_per_year_dec_radians(self):
         dec  = Declination(radians = pi/4)
@@ -277,7 +285,7 @@ class TestProperMotion(object):
         
         
         
-    # Generate proper motion for right ascension of degrees in radians
+    # Generate proper motion for declination of degrees in radians
     # Return in different time units as entered
     def test_in_radians_per_year_from_century_dec_radians(self):
         dec  = Declination(radians = pi/4)
