@@ -60,13 +60,13 @@ class TestVenusRiseTransitSet(object):
 
     def setUp(self):
         self.boston = {
-           'latitude'  : 42.3333,
-           'longitude' : -71.0833
+           'latitude'  : Angle(degrees = 42.3333),
+           'longitude' : Angle(degrees = -71.0833)
         }
 
-        self.app_sidereal_time = Angle(ra='11 50 58.10')
-        self.alpha_2 = Angle(ra='02 46 55.51')
-        self.delta_2 = Angle(dec='18 26 27.3')
+        self.app_sidereal_time = Angle(degrees = '11 50 58.10', units = 'time')
+        self.alpha_2 = Angle(degrees = '02 46 55.51', units = 'time')
+        self.delta_2 = Angle(degrees = '18 26 27.3')
 
         self.std_alt = Angle(degrees=-0.5667)
 
@@ -116,10 +116,10 @@ class TestDenebFromMaui(object):
         # Target
         # Note: Aladin units are mas/yr...
         self.deneb = {
-                       'ra'                : Angle(ra='20 41 25.91'),
-                       'dec'               : Angle(dec='+45 16 49.22'),
-                       'ra_proper_motion'  : Angle(ra='00 00 00.00156'),
-                       'dec_proper_motion' : Angle(dec='00 00 00.00155'),
+                       'ra'                : RightAscension('20 41 25.91'),
+                       'dec'               : Declination('+45 16 49.22'),
+                       'ra_proper_motion'  : ProperMotion(RightAscension('00 00 00.00156')),
+                       'dec_proper_motion' : ProperMotion(Declination('00 00 00.00155')),
                        'parallax'          : 0.00101,  # Units: arcsec
                        'rad_vel'           : -4.5,  # Units: km/s (-ve approaches)
                        'epoch'             : 2000,
@@ -127,8 +127,8 @@ class TestDenebFromMaui(object):
 
         # Site (East +ve longitude)
         self.maui = {
-           'latitude'  : 20.7069444444,
-           'longitude' : -156.258055556
+           'latitude'  : Angle(degrees = 20.7069444444),
+           'longitude' : Angle(degrees = -156.258055556)
         }
 
         # Date
@@ -189,10 +189,10 @@ class TestCanopusFromSidingSpring(object):
         # Target
         # Note: Aladin units are mas/yr...
         self.canopus = {
-                         'ra'                : Angle(ra='06 23 57.11'),
-                         'dec'               : Angle(dec='-52 40 03.5'),
-                         'ra_proper_motion'  : Angle(ra='00 00 00.01999'),
-                         'dec_proper_motion' : Angle(dec='00 00 00.02367'),
+                         'ra'                : RightAscension('06 23 57.11'),
+                         'dec'               : Declination('-52 40 03.5'),
+                         'ra_proper_motion'  : ProperMotion(RightAscension('00 00 00.01999')),
+                         'dec_proper_motion' : ProperMotion(Declination('00 00 00.02367')),
                          'parallax'          : 0.01043,   # Units: arcsec
                          'rad_vel'           : 20.5,      # Units: km/s (-ve approaches)
                          'epoch'             : 2000,
@@ -200,8 +200,8 @@ class TestCanopusFromSidingSpring(object):
 
         # Site (East +ve longitude)
         self.siding_spring = {
-            'latitude'  : -31.273,
-            'longitude' : 149.070593
+            'latitude'  : Angle(degrees = -31.273),
+            'longitude' : Angle(degrees = 149.070593)
         }
 
         # Date
@@ -263,10 +263,10 @@ class TestCanopusFromStAndrews(object):
         # Target
         # Note: Aladin units are mas/yr...
         self.canopus = {
-                         'ra'                : Angle(ra='06 23 57.11'),
-                         'dec'               : Angle(dec='-52 40 03.5'),
-                         'ra_proper_motion'  : Angle(ra='00 00 00.01999'),
-                         'dec_proper_motion' : Angle(dec='00 00 00.02367'),
+                         'ra'                : RightAscension('06 23 57.11'),
+                         'dec'               : Declination('-52 40 03.5'),
+                         'ra_proper_motion'  : ProperMotion(RightAscension('00 00 00.01999')),
+                         'dec_proper_motion' : ProperMotion(Declination('00 00 00.02367')),
                          'parallax'          : 0.01043,   # Units: arcsec
                          'rad_vel'           : 20.5,      # Units: km/s (-ve approaches)
                          'epoch'             : 2000,
@@ -275,8 +275,8 @@ class TestCanopusFromStAndrews(object):
         # Site (East +ve longitude)
         # Very rough St. Andrews coords, for easy almanac comparison
         self.st_andrews = {
-            'latitude'  : 56,
-            'longitude' : 3
+            'latitude'  : Angle(degrees = 56),
+            'longitude' : Angle(degrees =  3)
         }
 
         # Date
@@ -305,10 +305,10 @@ class TestCapellaFromStAndrews(object):
         # Target
         # Note: Aladin units for proper motion are mas/yr...
         self.capella = {
-                         'ra'                : Angle(ra='05 16 41.36'),
-                         'dec'               : Angle(dec='+45 59 52.8'),
-                         'ra_proper_motion'  : Angle(ra='00 00 00.07552'),
-                         'dec_proper_motion' : Angle(dec='-00 00 00.42711'),
+                         'ra'                : RightAscension('05 16 41.36'),
+                         'dec'               : Declination('+45 59 52.8'),
+                         'ra_proper_motion'  : ProperMotion(RightAscension('00 00 00.07552')),
+                         'dec_proper_motion' : ProperMotion(Declination('-00 00 00.42711')),
                          'parallax'          : 0.07729,   # Units: arcsec
                          'rad_vel'           : 30.2,      # Units: km/s (-ve approaches)
                          'epoch'             : 2000,
@@ -317,8 +317,8 @@ class TestCapellaFromStAndrews(object):
         # Site (East +ve longitude)
         # Very rough St. Andrews coords, for easy almanac comparison
         self.st_andrews = {
-            'latitude'  : 56,
-            'longitude' : 3
+            'latitude'  : Angle(degrees = 56),
+            'longitude' : Angle(degrees =  3)
         }
 
         # Date
@@ -350,15 +350,15 @@ class TestPolarisFromSidingSpring(object):
         # Target
         # Note: Aladin units for proper motion are mas/yr...
         self.polaris = {
-                         'ra'                : Angle(ra='02 31 49.09'),
-                         'dec'               : Angle(dec='+89 15 50.8'),
+                         'ra'                : RightAscension('02 31 49.09'),
+                         'dec'               : Declination('+89 15 50.8'),
                        }
 
 
         # Site (East +ve longitude)
         self.siding_spring = {
-            'latitude'  : -31.273,
-            'longitude' : 149.070593
+            'latitude'  : Angle(degrees = -31.273),
+            'longitude' : Angle(degrees = 149.070593)
         }
 
         # Date
@@ -390,15 +390,15 @@ class TestMimosaFromSidingSpring(object):
         # Target
         # Note: Aladin units for proper motion are mas/yr...
         self.mimosa = {
-                         'ra'                : Angle(ra='12 47 43.26'),
-                         'dec'               : Angle(dec='-59 41 19.549'),
+                         'ra'                : RightAscension('12 47 43.26'),
+                         'dec'               : Declination('-59 41 19.549'),
                        }
 
         # Site (East +ve longitude)
         # Very rough St. Andrews coords, for easy almanac comparison
         self.siding_spring = {
-            'latitude'  : -31.273,
-            'longitude' : 149.070593
+            'latitude'  : Angle(degrees = -31.273),
+            'longitude' : Angle(degrees = 149.070593)
         }
 
         # Date
