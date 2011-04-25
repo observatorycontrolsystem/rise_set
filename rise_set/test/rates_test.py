@@ -6,7 +6,7 @@ from nose.tools import assert_equal, assert_almost_equal, raises
 from math import pi
 
 #Import the module to test
-from rise_set.rates import ProperMotion
+from rise_set.rates import ProperMotion, RatesConfigError
 from rise_set.sky_coordinates import RightAscension, Declination
 
 
@@ -23,6 +23,11 @@ class TestProperMotion(object):
 
     # Generate proper motion for right ascension of degrees in arc
     # Return in same time units as entered
+    def test_in_degrees_per_year_ra_deg_milliarcseconds(self):
+        ra = RightAscension(degrees = '0 0 0.001')
+        proper_motion = ProperMotion(ra)
+        assert_almost_equal(proper_motion.in_degrees_per_year(),  2.77778e-07, 5)
+    
     def test_in_radians_per_year_ra_deg_arc(self):
         ra  = RightAscension(degrees = 90)
         proper_motion = ProperMotion(ra)
