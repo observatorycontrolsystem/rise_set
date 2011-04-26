@@ -6,7 +6,7 @@ from math import pi
 from nose.tools import eq_
 
 def test_from_degrees():
-    a = angle.Angle()
+    a = angle.Angle(degrees = 0)
     a.from_degrees(37)
     eq_(a.in_degrees(), 37)
 
@@ -14,7 +14,7 @@ def test_from_degrees():
 
 class some_test_class_i_just_made_up(object):
     def setup(self):
-        self.angle = angle.Angle()
+        self.angle = angle.Angle(degrees = 0)
         print "Hello"
 
     def test_from_degrees(self):
