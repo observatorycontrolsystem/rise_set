@@ -55,7 +55,7 @@ class TestIntervals(object):
 
         self.sun        = 'sun'
         self.bpl        = {
-                          'latitude'  : Angle(degrees = 34.4332222222), 
+                          'latitude'  : Angle(degrees = 34.4332222222),
                           'longitude' : Angle(degrees = -119.863045833)
                           }
         self.dt         = datetime.datetime(year=2011, month=2, day=9)

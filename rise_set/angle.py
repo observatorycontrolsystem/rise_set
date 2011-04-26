@@ -28,11 +28,11 @@ class Angle(object):
             a = Angle(degrees=45)
             a = Angle(radians=12 20 34.5)
     '''
-        
+
     def __init__(self, degrees = None, radians = None, units = 'arc'):
-        self.units   = units            
+        self.units   = units
         self.degrees = 0.0
-        
+
         # Check if the units entered were in time or arc
         if self.units not in ['arc', 'time']:
             msg = (self.units + " not a valid unit. Try 'time' or 'arc'.")
@@ -42,33 +42,33 @@ class Angle(object):
         if not (bool(degrees) ^ bool(radians)) and (degrees != 0) and (radians != 0):
             msg = ("Specify an angle in either degrees or radians.")
             raise AngleConfigError(msg)
-        
+
         # Must enter either degrees or radians
         if degrees:
             self.from_degrees(degrees)
-            
+
         elif radians:
             self.units = 'arc'
             self.from_radians(radians)
 
-            
-                
+
+
     def from_degrees(self, degrees):
         '''Set the Angle using a value provided in degrees.'''
-        
+
         if type(degrees) == str:
             self.degrees = self.from_sexegesimal(degrees)
         else:
             if self.units == 'time':
-                self.degrees = degrees * 360/24 
-            else:    
+                self.degrees = degrees * 360/24
+            else:
                 self.degrees = degrees
-        
+
 
 
     def from_radians(self, radians):
         '''Set the Angle using a value provided in radians.'''
-        
+
         if type(radians) == str:
             radians = self.from_sexegesimal(radians)
 
@@ -92,16 +92,16 @@ class Angle(object):
                      + " instead (e.g. -12:34:56)")
             raise InvalidAngleError(error)
 
-        if self.units == 'arc': 
+        if self.units == 'arc':
             #Then we know its in seconds of arc
             decimal_value = hr + (min/60) + (sec/60/60)
-            
-        else: 
+
+        else:
             #It must be in time
-            decimal_value = hr*(360/24)  +  min*(360/24/60)  +  sec*(360/24/60/60) 
-        
+            decimal_value = hr*(360/24)  +  min*(360/24/60)  +  sec*(360/24/60/60)
+
         if sign == '-': decimal_value *= -1
-            
+
         return decimal_value
 
 
@@ -114,45 +114,45 @@ class Angle(object):
 
     def in_radians(self):
         '''Return the value of the angle in radians.'''
-            
-        return radians(self.degrees)    
-    
-    
-    
+
+        return radians(self.degrees)
+
+
+
     def in_sexegesimal(self, radians = False):
         "Convert from degrees to sexegesimal degrees"
-        
+
         negative = False
         decimal_value = self.degrees
-        
+
         if radians:
             self.units = 'arc'
             decimal_value = self.in_radians()
 
-        if decimal_value < 0: 
+        if decimal_value < 0:
             # Make it positive, and apply negative at the end
             decimal_value *= -1
             negative = True
-        
+
         if self.units == 'arc':
             total, deg_hrs  = decimal_value, int(decimal_value)
-        
+
         else:
             # Convert into time format and pull out the int part - the remainder is the minutes
             total, deg_hrs = decimal_value * (24/360), int(decimal_value * (24/360))
-        
+
         # Construct the minutes and seconds from the decimal part
         all_min = (total - deg_hrs) * 60
         min     = int(all_min)
         sec     = (all_min - min) *60
-        
+
         if negative:
             deg_hrs = "-" + str(deg_hrs)
-            
-        return "%s %s %s" %(deg_hrs, min, sec) 
-            
 
-        
+        return "%s %s %s" %(deg_hrs, min, sec)
+
+
+
 class InvalidAngleError(Exception):
     '''Error for out-of-range angles provided to the Angle class.'''
 
