@@ -7,6 +7,8 @@ from nose.tools import assert_equal
 
 # Module imports
 from rise_set.angle import Angle
+from rise_set.sky_coordinates import RightAscension, Declination
+from rise_set.rates import ProperMotion
 
 #Import the module to test
 from rise_set.telescope import Telescope
@@ -29,18 +31,18 @@ class TestCanopusFromSidingSpring(object):
         # Target
         # Note: Aladin units are mas/yr...
         self.canopus = {
-                         'ra'                : Angle(ra='06 23 57.11'),
-                         'dec'               : Angle(dec='-52 40 03.5'),
-                         'ra_proper_motion'  : Angle(ra='00 00 00.01999'),
-                         'dec_proper_motion' : Angle(dec='00 00 00.02367'),
+                         'ra'                : RightAscension('06 23 57.11'),
+                         'dec'               : Declination('-52 40 03.5'),
+                         'ra_proper_motion'  : ProperMotion(RightAscension('00 00 00.01999')),
+                         'dec_proper_motion' : ProperMotion(Declination('00 00 00.02367')),
                          'parallax'          : 0.01043,   # Units: arcsec
                          'rad_vel'           : 20.5,      # Units: km/s (-ve approaches)
                          'epoch'             : 2000,
                        }
 
         # Site (East +ve longitude)
-        self.siding_spring = Telescope(latitude=-31.273,
-                                       longitude=149.070593)
+        self.siding_spring = Telescope(latitude  = Angle(degrees = -31.273),
+                                       longitude = Angle(degrees = 149.070593))
 
         # Date
         self.date = datetime.date(year = 2010, month = 3, day = 12)
