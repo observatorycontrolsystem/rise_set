@@ -30,6 +30,8 @@ import slalib as sla
 
 # Internal imports
 from angle import Angle
+from sky_coordinates import RightAscension, Declination
+from rates import ProperMotion
 
 # Import logging modules
 import logging
@@ -103,16 +105,16 @@ def mean_to_apparent(target, tdb):
 
 
     # Fill the extra fields required by slalib with defaults, as necessary
-    target.setdefault('ra_proper_motion', Angle())
-    target.setdefault('dec_proper_motion', Angle())
+    target.setdefault('ra_proper_motion', ProperMotion(RightAscension(0)))
+    target.setdefault('dec_proper_motion', ProperMotion(Declination(0)))
     target.setdefault('parallax', 0.0)
     target.setdefault('rad_vel', 0.0)
     target.setdefault('epoch', 2000)
 
     (ra_app_rads, dec_app_rads) = sla.sla_map(target['ra'].in_radians(),
                                               target['dec'].in_radians(),
-                                              target['ra_proper_motion'].in_radians(),
-                                              target['dec_proper_motion'].in_radians(),
+                                              target['ra_proper_motion'].in_radians_per_year(),
+                                              target['dec_proper_motion'].in_radians_per_year(),
                                               target['parallax'],
                                               target['rad_vel'],
                                               target['epoch'],
@@ -125,7 +127,7 @@ def mean_to_apparent(target, tdb):
 
 
 
-def calc_rise_set_hour_angle(latitude_degs, dec_apparent, std_altitude):
+def calc_rise_set_hour_angle(latitude, dec_apparent, std_altitude):
     '''Find the hour angle H_0 corresponding to the time of rise or set of
        a  celestial body, according to
 
@@ -135,7 +137,6 @@ def calc_rise_set_hour_angle(latitude_degs, dec_apparent, std_altitude):
     '''
 
 
-    latitude = Angle(degrees=latitude_degs)
 
     # Evaluate the numerator
     top    = ( sin(std_altitude.in_radians())
@@ -167,7 +168,7 @@ def calc_rise_set_hour_angle(latitude_degs, dec_apparent, std_altitude):
 
 
 
-def calc_transit_day_fraction(ra, longitude_in_degrees, app_sidereal_time):
+def calc_transit_day_fraction(ra, longitude, app_sidereal_time):
     '''Find the time, expressed as a fraction of a day, when the transit occurs.
 
        Note: Sign of longitude is reversed relative to Astro Alg., p.98, because
@@ -179,7 +180,7 @@ def calc_transit_day_fraction(ra, longitude_in_degrees, app_sidereal_time):
                       360
     '''
 
-    m_0 = (ra.in_degrees() - longitude_in_degrees
+    m_0 = (ra.in_degrees() - longitude.in_degrees()
             - app_sidereal_time.in_degrees()) / 360
 
     m_0 = normalise_day(m_0)
@@ -340,8 +341,8 @@ def apparent_planet_pos(planet_name, tdb, site):
        Thin wrapper for SLA_RDPLAN.
     '''
 
-    latitude  = Angle(degrees=site['latitude'])
-    longitude = Angle(degrees=site['longitude'])
+    latitude  = site['latitude']
+    longitude = site['longitude']
 
     # TODO: Raise an error if an invalid body is provided.
 
@@ -362,7 +363,7 @@ def apparent_planet_pos(planet_name, tdb, site):
     (app_ra_rads, app_dec_rads, ang_diameter) = sla.sla_rdplan(tdb,
                                                         planet[planet_name],
                                                         longitude.in_radians(),
-                                                         latitude.in_radians())
+                                                        latitude.in_radians())
 
     app_ra  = Angle(radians=app_ra_rads)
     app_dec = Angle(radians=app_dec_rads)
@@ -480,13 +481,13 @@ def refine_day_fraction(app_sidereal_time, m_0, m_1, m_2, tdb, target, site,
 
     # Calculate the local hour angle (in degrees)
     local_hour_angle_transit = (sidereal_time_transit 
-                                 + site['longitude']
+                                 + site['longitude'].in_degrees()
                                  - interp_alpha_2_transit)
 
-    local_hour_angle_rise = (sidereal_time_rise + site['longitude']
+    local_hour_angle_rise = (sidereal_time_rise + site['longitude'].in_degrees()
                                  - interp_alpha_2_rise)
 
-    local_hour_angle_set = (sidereal_time_set + site['longitude']
+    local_hour_angle_set = (sidereal_time_set + site['longitude'].in_degrees()
                                  - interp_alpha_2_set)
 
 
@@ -497,10 +498,10 @@ def refine_day_fraction(app_sidereal_time, m_0, m_1, m_2, tdb, target, site,
 
     refined_m_0 = correct_transit(m_0, local_hour_angle_transit)
 
-    refined_m_1 = correct_rise_set(m_1, site['latitude'], interp_delta_2_rise,
+    refined_m_1 = correct_rise_set(m_1, site['latitude'].in_degrees(), interp_delta_2_rise,
                                    local_hour_angle_rise, std_altitude)
 
-    refined_m_2 = correct_rise_set(m_2, site['latitude'], interp_delta_2_set,
+    refined_m_2 = correct_rise_set(m_2, site['latitude'].in_degrees(), interp_delta_2_set,
                                    local_hour_angle_set, std_altitude)
 
 
