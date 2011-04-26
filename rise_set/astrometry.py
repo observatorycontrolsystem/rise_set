@@ -291,7 +291,7 @@ def calc_sunrise_set(site, date, twilight):
     target = dict(planet = 'sun')
     (app_ra, app_dec) = apparent_planet_pos(target['planet'], tdb, site)
 
-    _log.info("RA, Dec (apparent, degrees) for %s: (%s, %s)" 
+    _log.info("RA, Dec (apparent, degrees) for %s: (%s, %s)"
                  % (target['planet'], app_ra.in_degrees(), app_dec.in_degrees()))
 
     app_sidereal_time = calc_apparent_sidereal_time(date)
@@ -480,7 +480,7 @@ def refine_day_fraction(app_sidereal_time, m_0, m_1, m_2, tdb, target, site,
     _log.debug('interpolated_delta_2_set: %s' % interp_delta_2_set)
 
     # Calculate the local hour angle (in degrees)
-    local_hour_angle_transit = (sidereal_time_transit 
+    local_hour_angle_transit = (sidereal_time_transit
                                  + site['longitude'].in_degrees()
                                  - interp_alpha_2_transit)
 
@@ -617,9 +617,9 @@ class RiseSetError(Exception):
 
 class IncompleteTargetError(Exception):
     '''Raised when a target is missing a key value (RA, Dec).'''
-    
+
     def __init__(self, value):
         self.value = value
-        
+
     def __str__(self):
         return self.value

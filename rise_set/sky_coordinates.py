@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-'''rise_set/sky_coordinates.py 
+'''rise_set/sky_coordinates.py
 Validated representations of RA and Dec.
 
 Author: Michelle Becker (mbecker@lcogt.net)
@@ -8,7 +8,7 @@ April 2011
 '''
 
 #___________________________________________________________
-#Imports 
+#Imports
 # Required for true (non-integer) division
 from __future__ import division
 
@@ -23,45 +23,45 @@ import sys
 
 
 class RightAscension(Angle):
-    
+
     def __init__(self, time = None, degrees = None, radians = None, units = 'time'):
-        
+
         angle_degrees = time
         angle_radians = radians
         angle_units   = units
-        
+
         if degrees != None:
             angle_degrees = degrees
-            angle_units   = 'arc' 
-        
+            angle_units   = 'arc'
+
         Angle.__init__(self, angle_degrees, angle_radians, angle_units)
 
         # Check input
         self.validate_ra()
 
-         
+
     def validate_ra(self):
         '''Check the right ascension is valid (0 <= ra < 24 00 00).'''
-        
+
         # RA cannot be greater than one circle in size
         if ( self.degrees >= 360 or self.degrees < 0 ) :
             raise InvalidAngleError("'%s' is not within allowable RA range(0 <= ra < 360 degrees)." % (str(self.degrees)))
-            
+
         return True
-        
-        
-        
+
+
+
 class Declination(Angle):
-    
+
     def __init__(self, degrees = None, radians = None, units = 'arc'):
         Angle.__init__(self, degrees, radians, units)
-        
+
         # Check input
         self.validate_dec()
-        
+
     def validate_dec(self):
         '''Check the declination is valid (-90 <= dec <= +90).'''
-        
+
         # Treat the special case of the north and south poles
         if ( self.degrees > 90   or   self.degrees < -90 ):
             raise InvalidAngleError("'%s' is not within allowable Dec range(-90 <= dec <= +90 degrees)." % (str(self.degrees)))
