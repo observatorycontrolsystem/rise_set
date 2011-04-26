@@ -10,6 +10,8 @@ from rise_set.visibility import Visibility
 
 # Additional support modules
 from rise_set.angle import Angle
+from rise_set.sky_coordinates import RightAscension, Declination
+from rise_set.rates import ProperMotion
 
 
 class TestIntervals(object):
@@ -52,7 +54,10 @@ class TestIntervals(object):
             ]
 
         self.sun        = 'sun'
-        self.bpl        = dict(latitude = 34.4332222222, longitude = -119.863045833)
+        self.bpl        = {
+                          'latitude'  : Angle(degrees = 34.4332222222), 
+                          'longitude' : Angle(degrees = -119.863045833)
+                          }
         self.dt         = datetime.datetime(year=2011, month=2, day=9)
         self.start_date = datetime.datetime(year=2011, month=2, day=9)
         self.end_date   = datetime.datetime(year=2011, month=2, day=11)
@@ -60,22 +65,15 @@ class TestIntervals(object):
 
 
         self.capella    = {
-                     'ra'                : Angle(),
-                     'dec'               : Angle(),
-                     'ra_proper_motion'  : Angle(),
-                     'dec_proper_motion' : Angle(),
+                     'ra'                : RightAscension('05 16 41.36'),
+                     'dec'               : Declination('+45 59 52.8'),
+                     'ra_proper_motion'  : ProperMotion(RightAscension('00 00 00.07552')),
+                     'dec_proper_motion' : ProperMotion(Declination('-00 00 00.42711')),
                      'parallax'          : 0.07729,   # Units: arcsec
                      'rad_vel'           : 30.2,      # Units: km/s (-ve approaches)
                      'epoch'             : 2000,
                    }
 
-        self.capella['ra'].from_sexegesimal('05 16 41.36', ra=True)
-        self.capella['dec'].from_sexegesimal('+45 59 52.8', dec=True)
-
-
-        # Aladin units are mas/yr...
-        self.capella['ra_proper_motion'].from_sexegesimal('00 00 00.07552', ra=True)
-        self.capella['dec_proper_motion'].from_sexegesimal('-00 00 00.42711', dec=True)
 
         self.visibility = Visibility(self.bpl, self.start_date, self.end_date,
                                      self.twilight)
