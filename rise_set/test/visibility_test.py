@@ -89,8 +89,11 @@ class TestIntervals(object):
     def test_can_get_sun_up_intervals(self):
 
         expected = [
-                     (self.dt, self.dt.replace(hour=1, minute=36, second=2)),
-                     (self.dt.replace(hour=14, minute=50, second=43),
+                     (self.dt,
+                      self.dt.replace(hour=1,    minute=36,
+                                      second=1,  microsecond=743923)),
+                     (self.dt.replace(hour=14,   minute=50,
+                                      second=42, microsecond=912323),
                       self.dt.replace(day=10))
                     ]
         received = self.visibility.find_when_target_is_up(self.sun, self.dt)
@@ -101,8 +104,10 @@ class TestIntervals(object):
     def test_can_get_sun_down_intervals(self):
 
         expected = [
-                    (self.dt.replace(hour=1, minute=36, second=2),
-                     self.dt.replace(hour=14, minute=50, second=43))
+                    (self.dt.replace(hour=1,   minute=36,
+                                     second=1, microsecond=743923),
+                     self.dt.replace(hour=14,   minute=50,
+                                     second=42, microsecond=912323))
                     ]
         received = self.visibility.find_when_target_is_down(self.sun, self.dt)
 
@@ -114,12 +119,12 @@ class TestIntervals(object):
 
         expected = [
                      (
-                       datetime.datetime(2011, 2, 9, 1, 36, 2),
-                       datetime.datetime(2011, 2, 9, 14, 50, 43)
+                       datetime.datetime(2011, 2, 9, 1, 36, 1, 743923),
+                       datetime.datetime(2011, 2, 9, 14, 50, 42, 912323)
                      ),
                      (
-                       datetime.datetime(2011, 2, 10, 1, 37),
-                       datetime.datetime(2011, 2, 10, 14, 49, 47)
+                       datetime.datetime(2011, 2, 10, 1, 37, 0, 294325),
+                       datetime.datetime(2011, 2, 10, 14, 49, 47, 105564)
                      )
                    ]
         received = self.visibility.get_dark_intervals()
@@ -132,29 +137,18 @@ class TestIntervals(object):
         expected = [
                      (
                        datetime.datetime(2011, 2, 9, 0, 0),
-                       datetime.datetime(2011, 2, 9, 13, 6, 34)
+                       datetime.datetime(2011, 2, 9, 13, 6, 34, 127859)
                      ),
                      (
-                       datetime.datetime(2011, 2, 9, 18, 52, 16),
-                       datetime.datetime(2011, 2, 10, 13, 2, 38)
+                       datetime.datetime(2011, 2, 9, 18, 52, 15, 778256),
+                       datetime.datetime(2011, 2, 10, 13, 2, 38, 213278)
                      ),
                      (
-                       datetime.datetime(2011, 2, 10, 18, 48, 20),
+                       datetime.datetime(2011, 2, 10, 18, 48, 19, 841582),
                        datetime.datetime(2011, 2, 11, 0, 0)
                      )
                    ]
 
         received = self.visibility.get_target_intervals(self.capella, up=True)
-
-        assert_equal(received, expected)
-
-
-    def test_time_tuple_to_datetime(self):
-
-        time_tuple = (11.0, 45.0, 39.329936620018202)
-        expected = datetime.datetime(year=2011, month=2, day=9,
-                                     hour=11, minute=45, second=39)
-
-        received = self.visibility.time_tuple_to_datetime(time_tuple, self.dt)
 
         assert_equal(received, expected)

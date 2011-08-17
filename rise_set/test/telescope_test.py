@@ -45,7 +45,7 @@ class TestCanopusFromSidingSpring(object):
                                        longitude = Angle(degrees = 149.070593))
 
         # Date
-        self.date = datetime.date(year = 2010, month = 3, day = 12)
+        self.date = datetime.datetime(year = 2010, month = 3, day = 12)
 
         self.siding_spring.set_date(self.date)
 
@@ -63,24 +63,30 @@ class TestCanopusFromSidingSpring(object):
         exp_t_hr  = 9
         exp_t_min = 8
 
-        assert_equal(transit[0], exp_t_hr)
-        assert_equal(transit[1], exp_t_min)
-        assert transit[2] <= exp_secs, '%r !> %r' % (transit[2], exp_secs)
+        transit_time = transit + self.date
+
+        assert_equal(transit_time.hour, exp_t_hr)
+        assert_equal(transit_time.minute, exp_t_min)
+        assert transit_time.second <= exp_secs, '%r !> %r' % (transit_time.second, exp_secs)
 
 
         # Rise
         exp_r_hr  = 23
         exp_r_min = 27
 
-        assert_equal(rise[0], exp_r_hr)
-        assert_equal(rise[1], exp_r_min)
-        assert rise[2] <= exp_secs, '%r !> %r' % (rise[2], exp_secs)
+        rise_time = rise + self.date
+
+        assert_equal(rise_time.hour, exp_r_hr)
+        assert_equal(rise_time.minute, exp_r_min)
+        assert rise_time.second <= exp_secs, '%r !> %r' % (rise_time.second, exp_secs)
 
 
         # Set
         exp_s_hr  = 18
         exp_s_min = 45    # USNO actually gives 18.46, but let's not worry...
 
-        assert_equal(set[0], exp_s_hr)
-        assert_equal(set[1], exp_s_min)
-        assert set[2] <= exp_secs, '%r !< %r' % (set[2], exp_secs)
+        set_time = set + self.date
+
+        assert_equal(set_time.hour, exp_s_hr)
+        assert_equal(set_time.minute, exp_s_min)
+        assert set_time.second <= exp_secs, '%r !< %r' % (set_time.second, exp_secs)
