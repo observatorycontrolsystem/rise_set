@@ -163,11 +163,11 @@ class Visibility(object):
         if (rise > transit) and (set > transit):
 
             # Store the first interval - start of day until target set
-            absolute_set = self.time_tuple_to_datetime(set, dt)
+            absolute_set = set + dt
             intervals.append((dt, absolute_set))
 
             # Store the second interval - target rise until end of day
-            absolute_rise = self.time_tuple_to_datetime(rise, dt)
+            absolute_rise = rise + dt
             intervals.append((absolute_rise, dt + ONE_DAY))
 
 
@@ -182,8 +182,8 @@ class Visibility(object):
         #         0hr   Rise           Transit          Set   24hr
         elif (rise < transit) and (set > transit):
             # Only one interval - rise until target set
-            absolute_rise = self.time_tuple_to_datetime(rise, dt)
-            absolute_set  = self.time_tuple_to_datetime(set, dt)
+            absolute_rise = rise + dt
+            absolute_set  = set + dt
             intervals.append(absolute_rise, absolute_set)
 
 
@@ -198,11 +198,11 @@ class Visibility(object):
         elif (rise < transit) and (set < transit):
             # Same code as case 1!
             # Store the first interval - start of day until target set
-            absolute_set = self.time_tuple_to_datetime(set, dt)
+            absolute_set = set + dt
             intervals.append((dt, absolute_set))
 
             # Store the second interval - target rise until end of day
-            absolute_rise = self.time_tuple_to_datetime(rise, dt)
+            absolute_rise = rise + dt
             intervals.append((absolute_rise, dt + ONE_DAY))
 
 
@@ -227,19 +227,6 @@ class Visibility(object):
 
         return coalesced_intervals
 
-
-    def time_tuple_to_datetime(self, time_tuple, dt):
-        '''Convert a 3-tuple of hour, minute, second and a starting datetime into the
-           corresponding datetime.
-        '''
-
-        absolute_time = dt.replace(
-                                   hour   = int(round(time_tuple[0])),
-                                   minute = int(round(time_tuple[1])),
-                                   second = int(round(time_tuple[2])),
-                                  )
-
-        return absolute_time
 
 
     def dark_and_up(self):

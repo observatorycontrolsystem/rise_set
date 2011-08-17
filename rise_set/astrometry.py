@@ -20,7 +20,7 @@ from __future__ import division
 # Standard library imports
 # Trigonometry functions
 from math import sin, cos, asin, acos, radians, degrees, modf
-import datetime
+from datetime import timedelta
 
 # API for accessing data files after deployment, within an egg
 from pkg_resources import resource_stream
@@ -238,8 +238,8 @@ def normalise_day(day_frac):
 
 
 def calc_rise_set(target, site, date):
-    '''Return a string tuple (transit, rise, set) of times. Each time is a tuple
-       of (hour, minute, second) values.
+    '''Return a tuple (transit, rise, set) of timedelta objects, describing the
+       time offset for each event from the start of the provided date.
     '''
 
     std_alt_of_stars = Angle(degrees=-0.5667)
@@ -271,9 +271,9 @@ def calc_rise_set(target, site, date):
     (m_0, m_1, m_2) = refine_day_fraction(app_sidereal_time, m_0, m_1, m_2, tdb,
                                          target, site, std_alt_of_stars)
 
-    transit = day_frac_to_hms(m_0)
-    rise    = day_frac_to_hms(m_1)
-    set     = day_frac_to_hms(m_2)
+    transit = timedelta(days=m_0)
+    rise    = timedelta(days=m_1)
+    set     = timedelta(days=m_2)
 
 
     return (transit, rise, set)
@@ -281,8 +281,8 @@ def calc_rise_set(target, site, date):
 
 
 def calc_sunrise_set(site, date, twilight):
-    '''Return a string tuple (transit, rise, set) of times. Each time is a tuple
-       of (hour, minute, second) values.
+    '''Return a tuple (transit, rise, set) of timedelta objects, describing the
+       time offset for each event from the start of the provided date.
     '''
 
     ut_mjd = gregorian_to_ut_mjd(date)
@@ -326,11 +326,10 @@ def calc_sunrise_set(site, date, twilight):
     (m_0, m_1, m_2) = refine_day_fraction(app_sidereal_time, m_0, m_1, m_2, tdb,
                                           target, site, sun_std_alt[twilight])
 
-    transit = day_frac_to_hms(m_0)
-    rise    = day_frac_to_hms(m_1)
-    set     = day_frac_to_hms(m_2)
-
-
+    transit = timedelta(days=m_0)
+    rise    = timedelta(days=m_1)
+    set     = timedelta(days=m_2)
+    
     return (transit, rise, set)
 
 
