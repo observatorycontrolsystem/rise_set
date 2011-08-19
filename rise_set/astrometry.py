@@ -326,6 +326,10 @@ def calc_sunrise_set(site, date, twilight):
     (m_0, m_1, m_2) = refine_day_fraction(app_sidereal_time, m_0, m_1, m_2, tdb,
                                           target, site, sun_std_alt[twilight])
 
+    print "m_0", m_0
+    print "m_1", m_1
+    print "m_2", m_2
+
     transit = timedelta(days=m_0)
     rise    = timedelta(days=m_1)
     set     = timedelta(days=m_2)
@@ -436,8 +440,16 @@ def refine_day_fraction(app_sidereal_time, m_0, m_1, m_2, tdb, target, site,
     _log.debug('alpha_3 (tomorrow): %s' % alpha_3.in_degrees())
 
 
-    # TODO: Handle wrapping across 24 hr boundary
-
+    # Handle wrapping across 24 hr boundary
+    if alpha_2.in_degrees() < alpha_1.in_degrees():
+        if alpha_2.in_degrees() - alpha_1.in_degrees() < -350:
+            norm_alpha2 = alpha_2.in_degrees() + 360
+            alpha_2 = Angle(degrees=norm_alpha2)
+    
+    if alpha_3.in_degrees() < alpha_1.in_degrees():
+        if alpha_3.in_degrees() - alpha_1.in_degrees() < -350:
+            norm_alpha3 = alpha_3.in_degrees() + 360
+            alpha_3 = Angle(degrees=norm_alpha3)
 
 
     # Construct the first and second differences
