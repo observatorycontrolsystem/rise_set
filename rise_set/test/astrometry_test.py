@@ -197,10 +197,14 @@ class TestCanopusFromSidingSpring(object):
         self.canopus = {
                          'ra'                : RightAscension('06 23 57.11'),
                          'dec'               : Declination('-52 40 03.5'),
-                         'ra_proper_motion'  : ProperMotion(RightAscension('00 00 00.01999')),
-                         'dec_proper_motion' : ProperMotion(Declination('00 00 00.02367')),
-                         'parallax'          : 0.01043,   # Units: arcsec
-                         'rad_vel'           : 20.5,      # Units: km/s (-ve approaches)
+                         #'ra_proper_motion'  : ProperMotion(RightAscension('00 00 00.01999')),
+                         #'dec_proper_motion' : ProperMotion(Declination('00 00 00.02367')),
+                         'ra_proper_motion'  : ProperMotion(RightAscension('00 00 00.0')),
+                         'dec_proper_motion' : ProperMotion(Declination('00 00 00.0')),
+                         #'parallax'          : 0.01043,   # Units: arcsec
+                         'parallax'          : 0.0,   # Units: arcsec
+                         #'rad_vel'           : 20.5,      # Units: km/s (-ve approaches)
+                         'rad_vel'           : 0.0,      # Units: km/s (-ve approaches)
                          'epoch'             : 2000,
                        }
 

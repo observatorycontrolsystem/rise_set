@@ -97,7 +97,16 @@ class Visibility(object):
         dt = dt.replace(hour=0, minute=0, second=0, microsecond=0)
 
         # We will calculate down intervals as the inverse of the up intervals
+        print "dt:", dt
         up_intervals = self.find_when_target_is_up(target, dt)
+        for i in up_intervals:
+            print "up interval:", i
+
+        if not up_intervals:
+            print "Got no up intervals!"
+            print "dt was:", dt
+            print "target was:", target
+            exit()
 
         down_intervals = []
 
@@ -151,6 +160,14 @@ class Visibility(object):
             (transit, rise, set) = calc_rise_set(target, self.site, dt)
 
         intervals = []
+
+        print "latitude", self.site['latitude'].in_degrees()
+        print "longitude", self.site['longitude'].in_degrees()
+        print "twilight", self.twilight
+        print "dt", dt
+        print "rise:", rise, dt + rise
+        print "transit:", transit, dt + transit
+        print "set:", set, dt + set
 
         # Case 1: Overlapping start of day boundary
         # Target rose yesterday, and sets today. Rises again later today.
