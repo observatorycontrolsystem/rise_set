@@ -1,0 +1,22 @@
+The rise_set package provides Python routines for finding the positions of
+astronomical bodies to reasonable precision. It can be used to calculate target
+uptime and sunrise, sunset and twilight times, accurate to 30s-1m.
+
+The code uses Fortran SLALIB for the heavy lifting. The rise/set/transit algorithms
+here are implementations of Astronomical Algorithms, Ch. 14 (Jean Meeus).
+
+****Use this library at your own risk! This library is an alpha support library for
+the LCOGT scheduling system. The API is volatile, not particularly pleasant, and
+subject to change without notice.****
+
+Please report bugs to Eric Saunders (esaunders@lcogt.net). The issues page for this
+project is http://issues.lco.gtn/projects/show/python-rise-set.
+
+v 0.2.1 - Generalised Angle class (#2272)
+        - Implemented proper motion support (#2272)
+        - Fixed sign error in transit refinement code (#1993)
+        - Fixed rounding errors for second overflow (#3166)
+        - Fixed broken interpolation over 24 hr RA boundaries (#3165)
+
+Eric Saunders
+August 2012

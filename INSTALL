@@ -1,0 +1,40 @@
+The rise_set package should be installed using the provided setup.py file. As well
+as installation, this handles the Fortran SLALIB and pyslalib dependencies.
+
+* You must have installed numpy before beginning this process.
+* You must have a working Fortran compiler on your path. I use gfortran.
+
+
+The steps are straightforward.
+
+1) Grab the bundled source-code release:
+
+wget http://pluto.lco.gtn/rise_set-VERSION.tar.gz
+
+
+2) Extract the source:
+
+tar xvzf rise_set-VERSION.tar.gz
+
+
+3) cd into the top level:
+
+cd rise_set-VERSION
+
+
+4) Install. It is recommended you install this to a virtualenv. If you are not
+installing to a virtualenv, then you probably want this to install to EPD. That
+means running as root, and replacing the 'python' below with '/opt/epd/bin/python'
+(or wherever you have EPD installed):
+
+python setup.py install
+
+
+5) Now, as a normal user (with EPD or preferred Python on your path), you should
+be able to use the module. Try running the example script, found in this directory:
+
+python example_rise_set.py
+
+
+6) If that works, congratulations! You can delete the tarball and the unpacked
+directory, and being using the package in your own code.
