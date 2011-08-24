@@ -17,7 +17,7 @@ class TestProperMotion(object):
     @raises(RatesConfigError)
     def test_configuration(self):
         ra = RightAscension(degrees = 90)
-        proper_motion = ProperMotion(ra, units = 'millennia')
+        proper_motion = ProperMotion(ra, time = 'millennia')
 
 
 
@@ -40,12 +40,12 @@ class TestProperMotion(object):
 
     def test_in_radians_per_century_ra_deg_arc(self):
         ra  = RightAscension(degrees = 90)
-        proper_motion = ProperMotion(ra, units = 'century')
+        proper_motion = ProperMotion(ra, time = 'century')
         assert_equal(proper_motion.in_radians_per_century(), pi/2)
 
     def test_in_degrees_per_century_ra_deg_arc(self):
         ra  = RightAscension(degrees = 90)
-        proper_motion = ProperMotion(ra, units = 'century')
+        proper_motion = ProperMotion(ra, time = 'century')
         assert_equal(proper_motion.in_degrees_per_century(), 90)
 
 
@@ -54,12 +54,12 @@ class TestProperMotion(object):
     # Return in different time units as entered
     def test_in_radians_per_year_from_century_ra_deg_arc(self):
         ra  = RightAscension(degrees = 90)
-        proper_motion = ProperMotion(ra, units = 'century')
+        proper_motion = ProperMotion(ra, time = 'century')
         assert_equal(proper_motion.in_radians_per_year(), pi/2 / 100 )
 
     def test_in_degrees_per_year_from_century_ra_deg_arc(self):
         ra  = RightAscension(degrees = 90)
-        proper_motion = ProperMotion(ra, units = 'century')
+        proper_motion = ProperMotion(ra, time = 'century')
         assert_equal(proper_motion.in_degrees_per_year(), 90 / 100)
 
     def test_in_radians_per_century_from_year_ra_deg_arc(self):
@@ -88,12 +88,12 @@ class TestProperMotion(object):
 
     def test_in_radians_per_century_ra_time(self):
         ra  = RightAscension('12:00:00')
-        proper_motion = ProperMotion(ra, units = 'century')
+        proper_motion = ProperMotion(ra, time = 'century')
         assert_equal(proper_motion.in_radians_per_century(), pi)
 
     def test_in_degrees_per_century_ra_time(self):
         ra  = RightAscension('12:00:00')
-        proper_motion = ProperMotion(ra, units = 'century')
+        proper_motion = ProperMotion(ra, time = 'century')
         assert_equal(proper_motion.in_degrees_per_century(), 180)
 
 
@@ -102,12 +102,12 @@ class TestProperMotion(object):
     # Return in different time units as entered
     def test_in_radians_per_year_from_century_ra_time(self):
         ra  = RightAscension('12:00:00')
-        proper_motion = ProperMotion(ra, units = 'century')
+        proper_motion = ProperMotion(ra, time = 'century')
         assert_equal(proper_motion.in_radians_per_year(), pi / 100 )
 
     def test_in_degrees_per_year_from_century_ra_time(self):
         ra  = RightAscension('12:00:00')
-        proper_motion = ProperMotion(ra, units = 'century')
+        proper_motion = ProperMotion(ra, time = 'century')
         assert_equal(proper_motion.in_degrees_per_year(), 180 / 100)
 
     def test_in_radians_per_century_from_year_ra_time(self):
@@ -136,12 +136,12 @@ class TestProperMotion(object):
 
     def test_in_radians_per_century_ra_radians(self):
         ra  = RightAscension(radians = pi/2)
-        proper_motion = ProperMotion(ra, units = 'century')
+        proper_motion = ProperMotion(ra, time = 'century')
         assert_equal(proper_motion.in_radians_per_century(), pi/2)
 
     def test_in_degrees_per_century_ra_radians(self):
         ra  = RightAscension(radians = pi/2)
-        proper_motion = ProperMotion(ra, units = 'century')
+        proper_motion = ProperMotion(ra, time = 'century')
         assert_equal(proper_motion.in_degrees_per_century(), 90)
 
 
@@ -150,12 +150,12 @@ class TestProperMotion(object):
     # Return in different time units as entered
     def test_in_radians_per_year_from_century_ra_radians(self):
         ra  = RightAscension(radians = pi/2)
-        proper_motion = ProperMotion(ra, units = 'century')
+        proper_motion = ProperMotion(ra, time = 'century')
         assert_equal(proper_motion.in_radians_per_year(), pi/2 / 100 )
 
     def test_in_degrees_per_year_from_century_ra_radians(self):
         ra  = RightAscension(radians = pi/2)
-        proper_motion = ProperMotion(ra, units = 'century')
+        proper_motion = ProperMotion(ra, time = 'century')
         assert_equal(proper_motion.in_degrees_per_year(), 90 / 100)
 
     def test_in_radians_per_century_from_year_ra_radians(self):
@@ -184,12 +184,12 @@ class TestProperMotion(object):
 
     def test_in_radians_per_century_dec_deg_arc(self):
         dec  = Declination(degrees = 90)
-        proper_motion = ProperMotion(dec, units = 'century')
+        proper_motion = ProperMotion(dec, time = 'century')
         assert_equal(proper_motion.in_radians_per_century(), pi/2)
 
     def test_in_degrees_per_century_dec_deg_arc(self):
         dec  = Declination(degrees = 90)
-        proper_motion = ProperMotion(dec, units = 'century')
+        proper_motion = ProperMotion(dec, time = 'century')
         assert_equal(proper_motion.in_degrees_per_century(), 90)
 
 
@@ -198,12 +198,12 @@ class TestProperMotion(object):
     # Return in different time units as entered
     def test_in_radians_per_year_from_century_dec_deg_arc(self):
         dec  = Declination(degrees = 90)
-        proper_motion = ProperMotion(dec, units = 'century')
+        proper_motion = ProperMotion(dec, time = 'century')
         assert_equal(proper_motion.in_radians_per_year(), pi/2 / 100 )
 
     def test_in_degrees_per_year_from_century_dec_deg_arc(self):
         dec  = Declination(degrees = 90)
-        proper_motion = ProperMotion(dec, units = 'century')
+        proper_motion = ProperMotion(dec, time = 'century')
         assert_equal(proper_motion.in_degrees_per_year(), 90 / 100)
 
     def test_in_radians_per_century_from_year_dec_deg_arc(self):
@@ -232,12 +232,12 @@ class TestProperMotion(object):
 
     def test_in_radians_per_century_dec_time(self):
         dec  = Declination(degrees = 6, units = 'time')
-        proper_motion = ProperMotion(dec, units = 'century')
+        proper_motion = ProperMotion(dec, time = 'century')
         assert_equal(proper_motion.in_radians_per_century(), pi/2)
 
     def test_in_degrees_per_century_dec_time(self):
         dec  = Declination(degrees = 6, units = 'time')
-        proper_motion = ProperMotion(dec, units = 'century')
+        proper_motion = ProperMotion(dec, time = 'century')
         assert_equal(proper_motion.in_degrees_per_century(), 90)
 
 
@@ -246,12 +246,12 @@ class TestProperMotion(object):
     # Return in different time units as entered
     def test_in_radians_per_year_from_century_dec_time(self):
         dec  = Declination(degrees = 6, units = 'time')
-        proper_motion = ProperMotion(dec, units = 'century')
+        proper_motion = ProperMotion(dec, time = 'century')
         assert_equal(proper_motion.in_radians_per_year(), pi/2 / 100 )
 
     def test_in_degrees_per_year_from_century_dec_time(self):
         dec  = Declination(degrees = 6, units = 'time')
-        proper_motion = ProperMotion(dec, units = 'century')
+        proper_motion = ProperMotion(dec, time = 'century')
         assert_equal(proper_motion.in_degrees_per_year(), 90 / 100)
 
     def test_in_radians_per_century_from_year_dec_time(self):
@@ -280,12 +280,12 @@ class TestProperMotion(object):
 
     def test_in_radians_per_century_dec_radians(self):
         dec  = Declination(radians = pi/4)
-        proper_motion = ProperMotion(dec, units = 'century')
+        proper_motion = ProperMotion(dec, time = 'century')
         assert_equal(proper_motion.in_radians_per_century(), pi/4)
 
     def test_in_degrees_per_century_dec_radians(self):
         dec  = Declination(radians = pi/4)
-        proper_motion = ProperMotion(dec, units = 'century')
+        proper_motion = ProperMotion(dec, time = 'century')
         assert_equal(proper_motion.in_degrees_per_century(), 45)
 
 
@@ -294,12 +294,12 @@ class TestProperMotion(object):
     # Return in different time units as entered
     def test_in_radians_per_year_from_century_dec_radians(self):
         dec  = Declination(radians = pi/4)
-        proper_motion = ProperMotion(dec, units = 'century')
+        proper_motion = ProperMotion(dec, time = 'century')
         assert_equal(proper_motion.in_radians_per_year(), pi/4 / 100 )
 
     def test_in_degrees_per_year_from_century_dec_radians(self):
         dec  = Declination(radians = pi/4)
-        proper_motion = ProperMotion(dec, units = 'century')
+        proper_motion = ProperMotion(dec, time = 'century')
         assert_equal(proper_motion.in_degrees_per_year(), 45 / 100)
 
     def test_in_radians_per_century_from_year_dec_radians(self):
