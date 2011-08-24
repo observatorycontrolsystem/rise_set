@@ -3,28 +3,37 @@
 '''
 rates.py - convenience objects for rates (e.g. proper motion).
 
-TODO: description
+Proper motion is an angle traversed over a period of time. This class provides a
+simple way to define such a quantity, and get useful transformations. The default
+time period is a year, in line with the most common astronomical convention.
 
-Author: Eric Saunders
+Authors: Eric Saunders
+         Michelle Becker
+
 March 2011
 '''
 
 # Required for true (non-integer) division
 from __future__ import division
+
 from angle import Angle
+
 
 class ProperMotion(object):
 
-    def __init__(self, component, units = 'year'):
+    def __init__(self, component, time = 'year'):
+        '''ProperMotion takes an angular component, which can be either
+        an Angle, RightAscension, or Declination object, and an optional
+        unit of time, either 'year' or 'century'.'''
 
         # Check if the units are valid
-        possible_units= ['year', 'century']
+        possible_units_of_time = ['year', 'century']
 
-        if units not in possible_units:
-            msg = ("Insert either year, decade, or century")
+        if time not in possible_units_of_time:
+            msg = ("Valid units of time are either 'year' or 'century'")
             raise RatesConfigError(msg)
 
-        self.units     = units
+        self.time     = time
         self.component = component
 
 
@@ -34,10 +43,9 @@ class ProperMotion(object):
         radians = self.component.in_radians()
 
         # Convert the timescale if necessary
-        if self.units != 'year':
+        if self.time == 'century':
             radians /= 100
 
-        # Return it
         return radians
 
 
@@ -47,10 +55,9 @@ class ProperMotion(object):
         degrees = self.component.in_degrees()
 
         # Convert the timescale if necessary
-        if self.units != 'year':
+        if self.time == 'century':
             degrees /= 100
 
-        # Return it
         return degrees
 
 
@@ -60,10 +67,9 @@ class ProperMotion(object):
         radians = self.component.in_radians()
 
         # Convert the timescale if necessary
-        if self.units != 'century':
+        if self.time == 'year':
             radians *= 100
 
-        # Return it
         return radians
 
 
@@ -73,17 +79,16 @@ class ProperMotion(object):
         degrees = self.component.in_degrees()
 
         # Convert the timescale if necessary
-        if self.units != 'century':
+        if self.time == 'year':
             degrees *= 100
 
-        # Return it
         return degrees
 
 
 
 
 class RatesConfigError(Exception):
-    '''Error for invalid constructor arguments to the Angle class.'''
+    '''Error for invalid constructor arguments to the ProperMotion class.'''
 
     def __init__(self, value):
         self.value = value

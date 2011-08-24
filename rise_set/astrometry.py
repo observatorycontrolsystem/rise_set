@@ -105,8 +105,8 @@ def mean_to_apparent(target, tdb):
 
 
     # Fill the extra fields required by slalib with defaults, as necessary
-    target.setdefault('ra_proper_motion', ProperMotion(RightAscension(0)))
-    target.setdefault('dec_proper_motion', ProperMotion(Declination(0)))
+    target.setdefault('ra_proper_motion', ProperMotion(RightAscension(0), time='year'))
+    target.setdefault('dec_proper_motion', ProperMotion(Declination(0), time='year'))
     target.setdefault('parallax', 0.0)
     target.setdefault('rad_vel', 0.0)
     target.setdefault('epoch', 2000)
