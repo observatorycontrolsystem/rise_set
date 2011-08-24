@@ -1,4 +1,28 @@
-#!/usr/bin/python
+#!/usr/bin/env python
+
+'''This file controls the packaging and deployment of the rise_set module.
+
+    1) RUN TESTS: Unit tests may be run with
+
+       python setup.py test
+
+    (ignore any logger errors)
+
+    2) CREATE SOURCE: Do
+       python setup.py sdist
+
+       to create a source tarball suitable for distributing.
+
+    3) INSTALL:
+       python setup.py install
+
+       This will download and compile any needed dependencies, then install to
+       your Python package directory.
+
+Eric Saunders
+August 2012
+'''
+
 
 from setuptools import setup, find_packages
 
@@ -15,12 +39,12 @@ setup(
     install_requires = [
       "pyslalib"
     ],
-    
+
     package_data = {
-        '': ['*.conf'],    
+        '': ['*.conf'],
     },
-    
-    
+
+
     tests_require = [
         "nose"
     ],
