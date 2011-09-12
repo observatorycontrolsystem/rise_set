@@ -13,9 +13,13 @@ February 2011
 import datetime
 from astrometry import calc_sunrise_set
 from visibility import Visibility
+from angle      import Angle
 
 # BPL East 0.4m - from http://tlister-linux/django/configdb/telescope/16/
-sba = dict(latitude = 34.4332222222, longitude = -119.863045833)
+sba = dict(
+            latitude  = Angle(degrees=34.4332222222),
+            longitude = Angle(degrees=-119.863045833),
+           )
 
 date = datetime.datetime(year=2011, month=2, day=9)
 
