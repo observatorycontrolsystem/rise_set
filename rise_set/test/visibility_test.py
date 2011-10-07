@@ -152,3 +152,20 @@ class TestIntervals(object):
         received = self.visibility.get_target_intervals(self.capella, up=True)
 
         assert_equal(received, expected)
+
+
+    def test_up_intervals_rise_set_transit_within_same_day(self):
+        target_date = datetime.datetime(year=2011, month=10, day=15)
+
+
+        self.rachels_target = {
+                     'ra'                : RightAscension('12 23 34.23'),
+                     'dec'               : Declination('+34 45 54.6'),
+                     'ra_proper_motion'  : ProperMotion(RightAscension('00 00 00.0')),
+                     'dec_proper_motion' : ProperMotion(Declination('-00 00 00.0')),
+                     'parallax'          : 0.0,   # Units: arcsec
+                     'rad_vel'           : 0.0,      # Units: km/s (-ve approaches)
+                     'epoch'             : 2000,
+                   }
+
+

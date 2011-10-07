@@ -52,7 +52,7 @@ class Visibility(object):
         return self.dark_intervals
 
 
-    def get_target_intervals(self, target, up=True):
+    def get_target_intervals(self, target, up=True, horizon=None):
         '''Returns a set of datetime 2-tuples, each of which represents an interval
            of uninterrupted time when the target was below the horizon. The set of
            tuples gives the complete target down intervals between the Visibility
@@ -68,7 +68,7 @@ class Visibility(object):
         intervals = []
         current_date = self.start_date
         while current_date < self.end_date:
-            one_day_intervals = day_interval_func(target, current_date)
+            one_day_intervals = day_interval_func(target, current_date, horizon)
 
             # Add today's intervals to the accumulating list of intervals
             intervals.extend(one_day_intervals)
@@ -82,7 +82,7 @@ class Visibility(object):
         return intervals
 
 
-    def find_when_target_is_down(self, target, dt):
+    def find_when_target_is_down(self, target, dt, horizon=None):
         '''Returns a set of datetime 2-tuples, each of which represents an interval
            of uninterrupted time below the horizon at the specified site, for the
            requested date.
@@ -98,7 +98,7 @@ class Visibility(object):
 
         # We will calculate down intervals as the inverse of the up intervals
         print "dt:", dt
-        up_intervals = self.find_when_target_is_up(target, dt)
+        up_intervals = self.find_when_target_is_up(target, dt, horizon)
         for i in up_intervals:
             print "up interval:", i
 
@@ -141,7 +141,7 @@ class Visibility(object):
         return down_intervals
 
 
-    def find_when_target_is_up(self, target, dt):
+    def find_when_target_is_up(self, target, dt, horizon=None):
         '''Returns a set of datetime 2-tuples, each of which represents an
            interval of uninterrupted time above the horizon at the specified
            site, for the requested date.
@@ -157,7 +157,7 @@ class Visibility(object):
         if target == 'sun':
             (transit, rise, set) = calc_sunrise_set(self.site, dt, self.twilight)
         else:
-            (transit, rise, set) = calc_rise_set(target, self.site, dt)
+            (transit, rise, set) = calc_rise_set(target, self.site, dt, horizon)
 
         intervals = []
 
@@ -201,7 +201,7 @@ class Visibility(object):
             # Only one interval - rise until target set
             absolute_rise = rise + dt
             absolute_set  = set + dt
-            intervals.append(absolute_rise, absolute_set)
+            intervals.append((absolute_rise, absolute_set))
 
 
         # Case 3: Overlapping end of day boundary
