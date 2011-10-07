@@ -237,12 +237,18 @@ def normalise_day(day_frac):
 
 
 
-def calc_rise_set(target, site, date):
+def calc_rise_set(target, site, date, horizon=None):
     '''Return a tuple (transit, rise, set) of timedelta objects, describing the
        time offset for each event from the start of the provided date.
     '''
 
+    if not horizon:
+        horizon = Angle(degrees=0.0)
+
     std_alt_of_stars = Angle(degrees=-0.5667)
+
+    effective_horizon_in_deg = std_alt_of_stars.in_degrees() + horizon.in_degrees()
+    effective_horizon = Angle(degrees=effective_horizon_in_deg)
 
     ut_mjd = gregorian_to_ut_mjd(date)
     tdb = ut_mjd + (sla.sla_dtt(ut_mjd)/86400)
@@ -251,7 +257,7 @@ def calc_rise_set(target, site, date):
     app_ra, app_dec   = mean_to_apparent(target, tdb)
     app_sidereal_time = calc_apparent_sidereal_time(date)
     (hour_angle, msg) = calc_rise_set_hour_angle(site['latitude'], app_dec,
-                                                 std_alt_of_stars)
+                                                 effective_horizon)
 
     if ( not hour_angle ):
         raise RiseSetError(msg)
@@ -269,7 +275,7 @@ def calc_rise_set(target, site, date):
     _log.info('Set time - unrefined (h, m, s): %s' % (set,))
 
     (m_0, m_1, m_2) = refine_day_fraction(app_sidereal_time, m_0, m_1, m_2, tdb,
-                                         target, site, std_alt_of_stars)
+                                         target, site, effective_horizon)
 
     transit = timedelta(days=m_0)
     rise    = timedelta(days=m_1)
