@@ -12,6 +12,8 @@ subject to change without notice.****
 Please report bugs to Eric Saunders (esaunders@lcogt.net). The issues page for this
 project is http://issues.lco.gtn/projects/show/python-rise-set.
 
+v 0.2.2 - Fix rise/set/transit in same day (#3473)
+        - Implemented horizon argument for calc_rise_set
 v 0.2.1 - Generalised Angle class (#2272)
         - Implemented proper motion support (#2272)
         - Fixed sign error in transit refinement code (#1993)
@@ -19,4 +21,4 @@ v 0.2.1 - Generalised Angle class (#2272)
         - Fixed broken interpolation over 24 hr RA boundaries (#3165)
 
 Eric Saunders
-August 2012
+October 2012

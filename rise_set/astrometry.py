@@ -448,7 +448,7 @@ def refine_day_fraction(app_sidereal_time, m_0, m_1, m_2, tdb, target, site,
         if alpha_2.in_degrees() - alpha_1.in_degrees() < -350:
             norm_alpha2 = alpha_2.in_degrees() + 360
             alpha_2 = Angle(degrees=norm_alpha2)
-    
+
     if alpha_3.in_degrees() < alpha_1.in_degrees():
         if alpha_3.in_degrees() - alpha_1.in_degrees() < -350:
             norm_alpha3 = alpha_3.in_degrees() + 360
