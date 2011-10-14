@@ -155,12 +155,17 @@ class TestIntervals(object):
 
 
     def test_up_intervals_rise_set_transit_within_same_day(self):
-        target_date = datetime.datetime(year=2011, month=10, day=15)
+        start = datetime.datetime(year=2011, month=10, day=13, hour=4, minute=30)
+        end   = datetime.datetime(year=2011, month=10, day=13, hour=10, minute=30)
 
+        observatory = {
+                'latitude'  : Angle(degrees=34.4325),
+                'longitude' : Angle('-119 51 46'),
+                }
 
-        self.rachels_target = {
-                     'ra'                : RightAscension('12 23 34.23'),
-                     'dec'               : Declination('+34 45 54.6'),
+        rachels_target = {
+                     'ra'                : RightAscension('00 00 34.23'),
+                     'dec'               : Declination('-30 45 54.6'),
                      'ra_proper_motion'  : ProperMotion(RightAscension('00 00 00.0')),
                      'dec_proper_motion' : ProperMotion(Declination('-00 00 00.0')),
                      'parallax'          : 0.0,   # Units: arcsec
@@ -169,3 +174,14 @@ class TestIntervals(object):
                    }
 
 
+        v = Visibility(observatory, start, end)
+
+        received = v.get_target_intervals(rachels_target)
+        expected = [
+                     (
+                       datetime.datetime(2011, 10, 13, 2, 8, 2, 406269),
+                       datetime.datetime(2011, 10, 13, 11, 1, 25, 259816),
+                     )
+                    ]
+
+        assert_equal(received, expected)

@@ -54,9 +54,9 @@ class Visibility(object):
 
     def get_target_intervals(self, target, up=True, horizon=None):
         '''Returns a set of datetime 2-tuples, each of which represents an interval
-           of uninterrupted time when the target was below the horizon. The set of
-           tuples gives the complete target down intervals between the Visibility
-           object's start and end date.
+           of uninterrupted time when the target was above the horizon (or below, if
+           up=False). The set of tuples gives the complete target down intervals
+           between the Visibility object's start and end date.
         '''
 
         if up:
