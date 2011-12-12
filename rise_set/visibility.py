@@ -12,11 +12,25 @@ February 2011
 # Required for true (non-integer) division
 from __future__ import division
 
+# API for accessing data files after deployment, within an egg
+from pkg_resources import resource_stream
+
 # Standard libary imports
 import datetime
 
 # Internal imports
 from astrometry import calc_sunrise_set, calc_rise_set
+
+# Import logging modules
+import logging
+import logging.config
+
+
+# Configure logger from config file - '_' stops names being exported
+_log_config_file = 'logging.conf'
+_log_config_location = resource_stream(__name__, _log_config_file)
+logging.config.fileConfig(_log_config_location)
+_log = logging.getLogger('rise_set.visibility')
 
 
 # Set convenient constants
@@ -97,15 +111,15 @@ class Visibility(object):
         dt = dt.replace(hour=0, minute=0, second=0, microsecond=0)
 
         # We will calculate down intervals as the inverse of the up intervals
-        print "dt:", dt
+        _log.debug("dt: %s" % (dt,))
         up_intervals = self.find_when_target_is_up(target, dt, horizon)
         for i in up_intervals:
-            print "up interval:", i
+            _log.debug( "up interval: %s -> %s" % i )
 
         if not up_intervals:
-            print "Got no up intervals!"
-            print "dt was:", dt
-            print "target was:", target
+            _log.warn( "Got no up intervals!" )
+            _log.warn( "dt was: %s" % dt )
+            _log.warn( "target was: %s" % target )
             exit()
 
         down_intervals = []
@@ -161,13 +175,13 @@ class Visibility(object):
 
         intervals = []
 
-        print "latitude", self.site['latitude'].in_degrees()
-        print "longitude", self.site['longitude'].in_degrees()
-        print "twilight", self.twilight
-        print "dt", dt
-        print "rise:", rise, dt + rise
-        print "transit:", transit, dt + transit
-        print "set:", set, dt + set
+        _log.debug( "latitude: %s" % self.site['latitude'].in_degrees() )
+        _log.debug( "longitude: %s" % self.site['longitude'].in_degrees() )
+        _log.debug( "twilight: %s" % self.twilight )
+        _log.debug( "dt: %s" % dt )
+        _log.debug( "rise: %s (%s)" % (rise, dt + rise) )
+        _log.debug( "transit: %s (%s)" % (transit, dt + transit) )
+        _log.debug( "set: %s (%s)" % (set, dt + set) )
 
         # Case 1: Overlapping start of day boundary
         # Target rose yesterday, and sets today. Rises again later today.
