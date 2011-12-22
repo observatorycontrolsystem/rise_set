@@ -45,6 +45,83 @@ logging.config.fileConfig(_log_config_location)
 _log = logging.getLogger('rise_set.astrometry')
 
 
+class Star(object):
+    # TODO: This is a crap name - change it
+
+    def __init__(self, latitude, dec_apparent, horizon=None):
+        '''
+             A star is circumpolar to a Northern hemisphere observer if the
+             latitude plus the declination is greater than 90 degrees.
+
+             A star is circumpolar to a Southern hemisphere observer if the
+             latitude plus the declination is less than 90 degrees.
+
+             If no horizon is provided, we approximate the effects of refraction.
+             For positive horizons, the effects of refraction rapidly become
+             negligible (and in any case require air temperature and pressure to
+             calculate accurately).
+        '''
+        self.std_alt_of_stars = Angle(degrees=0.0)
+
+
+        if not horizon:
+            # Default to the Earth's horizon, and approximate the effect of refraction
+            horizon               = Angle(degrees=0.0)
+            self.std_alt_of_stars = Angle(degrees=-0.5667)
+
+        self.latitude = latitude
+        self.dec      = dec_apprent
+        self.horizon  = horizon
+
+
+    def is_always_up(self):
+
+        # TODO: Fix angles so they can be added together natively
+        lat = self.latitude.in_degrees()
+        dec = self.dec.in_degrees()
+        hor = self.horizon.in_degrees()
+
+        # If the observer is in the Northern hemisphere...
+        if lat > 0.0:
+            if lat + dec - hor > 90.0:
+                return True
+            return False
+
+        # Otherwise, if the observer is in the Southern hemisphere...
+        elif lat < 0.0:
+            if lat + dec + hor > -90.0:
+                return True
+            return False
+
+        # We're on the exact equator - no circumpolar stars here!
+        return False
+
+
+    def is_always_down(self):
+        # TODO: Double check these formulas with Tim L
+
+        # TODO: Fix angles so they can be added together natively
+        lat = self.latitude.in_degrees()
+        dec = self.dec.in_degrees()
+        hor = self.horizon.in_degrees()
+
+        # If the observer is in the Northern hemisphere...
+        if lat > 0.0:
+            if dec - lat - hor < -90.0:
+                return True
+            return False
+
+        # Otherwise, if the observer is in the Southern hemisphere...
+        elif lat < 0.0:
+            if dec - lat + hor > 90:
+                return True
+            return False
+
+        # We're on the exact equator - no circumpolar stars here!
+        return False
+
+
+
 def gregorian_to_ut_mjd(date):
     '''Convert Gregorian calendar date to UT MJD.'''
 
@@ -242,10 +319,16 @@ def calc_rise_set(target, site, date, horizon=None):
        time offset for each event from the start of the provided date.
     '''
 
+    # For non-zero horizons, we shall ignore refraction effects
+    std_alt_of_stars = Angle(degrees=0.0)
+
     if not horizon:
+        # Default to the Earth's horizon
         horizon = Angle(degrees=0.0)
 
-    std_alt_of_stars = Angle(degrees=-0.5667)
+    # Approximate the effect of refraction if we are using the true horizon
+    if horizon.in_degrees() == 0.0:
+        std_alt_of_stars = Angle(degrees=-0.5667)
 
     effective_horizon_in_deg = std_alt_of_stars.in_degrees() + horizon.in_degrees()
     effective_horizon = Angle(degrees=effective_horizon_in_deg)
@@ -260,6 +343,9 @@ def calc_rise_set(target, site, date, horizon=None):
                                                  effective_horizon)
 
     if ( not hour_angle ):
+        msg += " (ra=%s, dec=%s, lat=%s)" % ( target.get('ra').in_sexegesimal(),
+                                              target.get('dec').in_sexegesimal(),
+                                              site['latitude'].in_degrees())
         raise RiseSetError(msg)
 
     m_0 = calc_transit_day_fraction(app_ra, site['longitude'], app_sidereal_time)
