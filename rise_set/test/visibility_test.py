@@ -61,6 +61,7 @@ class TestIntervals(object):
         self.dt         = datetime.datetime(year=2011, month=2, day=9)
         self.start_date = datetime.datetime(year=2011, month=2, day=9)
         self.end_date   = datetime.datetime(year=2011, month=2, day=11)
+        self.horizon    = 0
         self.twilight   = 'sunrise'
 
 
@@ -76,7 +77,7 @@ class TestIntervals(object):
 
 
         self.visibility = Visibility(self.bpl, self.start_date, self.end_date,
-                                     self.twilight)
+                                     self.horizon, self.twilight)
 
 
     def test_coalesce_adjacent_intervals(self):

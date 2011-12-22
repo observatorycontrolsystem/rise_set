@@ -19,7 +19,8 @@ from pkg_resources import resource_stream
 import datetime
 
 # Internal imports
-from astrometry import calc_sunrise_set, calc_rise_set
+from astrometry import calc_sunrise_set, calc_rise_set, RiseSetError
+from angle      import Angle
 
 # Import logging modules
 import logging
@@ -34,7 +35,7 @@ _log = logging.getLogger('rise_set.visibility')
 
 
 # Set convenient constants
-ONE_DAY = datetime.timedelta(days=1)
+ONE_DAY  = datetime.timedelta(days=1)
 MIDNIGHT = datetime.time()
 
 class Visibility(object):
@@ -43,7 +44,7 @@ class Visibility(object):
         self.site       = site
         self.start_date = start_date
         self.end_date   = end_date
-        self.horizon    = horizon
+        self.horizon    = Angle(degrees=horizon)
         self.twilight   = twilight
 
         self.dark_intervals = []
@@ -66,7 +67,7 @@ class Visibility(object):
         return self.dark_intervals
 
 
-    def get_target_intervals(self, target, up=True, horizon=None):
+    def get_target_intervals(self, target, up=True):
         '''Returns a set of datetime 2-tuples, each of which represents an interval
            of uninterrupted time when the target was above the horizon (or below, if
            up=False). The set of tuples gives the complete target down intervals
@@ -82,7 +83,7 @@ class Visibility(object):
         intervals = []
         current_date = self.start_date
         while current_date < self.end_date:
-            one_day_intervals = day_interval_func(target, current_date, horizon)
+            one_day_intervals = day_interval_func(target, current_date)
 
             # Add today's intervals to the accumulating list of intervals
             intervals.extend(one_day_intervals)
@@ -96,8 +97,8 @@ class Visibility(object):
         return intervals
 
 
-    def find_when_target_is_down(self, target, dt, horizon=None):
-        '''Returns a set of datetime 2-tuples, each of which represents an interval
+    def find_when_target_is_down(self, target, dt):
+        '''Returns a single datetime 2-tuple, representing an interval
            of uninterrupted time below the horizon at the specified site, for the
            requested date.
 
@@ -112,7 +113,7 @@ class Visibility(object):
 
         # We will calculate down intervals as the inverse of the up intervals
         _log.debug("dt: %s" % (dt,))
-        up_intervals = self.find_when_target_is_up(target, dt, horizon)
+        up_intervals = self.find_when_target_is_up(target, dt)
         for i in up_intervals:
             _log.debug( "up interval: %s -> %s" % i )
 
@@ -155,9 +156,9 @@ class Visibility(object):
         return down_intervals
 
 
-    def find_when_target_is_up(self, target, dt, horizon=None):
-        '''Returns a set of datetime 2-tuples, each of which represents an
-           interval of uninterrupted time above the horizon at the specified
+    def find_when_target_is_up(self, target, dt):
+        '''Returns a single datetime 2-tuple, representing an interval
+           of uninterrupted time above the horizon at the specified
            site, for the requested date.
 
            Note: Even though this function currently ignores times, the dt
@@ -168,12 +169,17 @@ class Visibility(object):
         dt = dt.replace(hour=0, minute=0, second=0, microsecond=0)
 
         # Get the rise/set/transit times for the target, for this day
+        intervals = []
+        # TODO: Catch the RiseSetError for circumpolar stars
+        # TODO: Return either a complete or empty interval, as appropriate
+        # TODO: This requires either introspecting state in the error, or
+        # TODO: calling an is_circumpolar method before this calculation
         if target == 'sun':
             (transit, rise, set) = calc_sunrise_set(self.site, dt, self.twilight)
         else:
-            (transit, rise, set) = calc_rise_set(target, self.site, dt, horizon)
+            (transit, rise, set) = calc_rise_set(target, self.site,
+                                                 dt, self.horizon)
 
-        intervals = []
 
         _log.debug( "latitude: %s" % self.site['latitude'].in_degrees() )
         _log.debug( "longitude: %s" % self.site['longitude'].in_degrees() )
