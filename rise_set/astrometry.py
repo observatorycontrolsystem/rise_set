@@ -48,7 +48,7 @@ _log = logging.getLogger('rise_set.astrometry')
 class Star(object):
     # TODO: This is a crap name - change it
 
-    def __init__(self, latitude, dec_apparent, horizon=None):
+    def __init__(self, latitude, target, horizon=None):
         '''
              A star is circumpolar to a Northern hemisphere observer if the
              latitude plus the declination is greater than 90 degrees.
@@ -65,21 +65,22 @@ class Star(object):
 
 
         if not horizon:
-            # Default to the Earth's horizon, and approximate the effect of refraction
+            # Default to the Earth's horizon
             horizon               = Angle(degrees=0.0)
+
+        # Approximate the effect of refraction if we are using the true horizon
+        if horizon.in_degrees() == 0.0:
             self.std_alt_of_stars = Angle(degrees=-0.5667)
 
+        self.target = target
+
         self.latitude = latitude
-        self.dec      = dec_apprent
         self.horizon  = horizon
 
 
-    def is_always_up(self):
+    def is_always_up(self, date):
 
-        # TODO: Fix angles so they can be added together natively
-        lat = self.latitude.in_degrees()
-        dec = self.dec.in_degrees()
-        hor = self.horizon.in_degrees()
+        lat, hor, dec = self._get_lat_hor_and_app_dec_in_degrees(date)
 
         # If the observer is in the Northern hemisphere...
         if lat > 0.0:
@@ -97,13 +98,9 @@ class Star(object):
         return False
 
 
-    def is_always_down(self):
-        # TODO: Double check these formulas with Tim L
+    def is_always_down(self, date):
 
-        # TODO: Fix angles so they can be added together natively
-        lat = self.latitude.in_degrees()
-        dec = self.dec.in_degrees()
-        hor = self.horizon.in_degrees()
+        lat, hor, dec = self._get_lat_hor_and_app_dec_in_degrees(date)
 
         # If the observer is in the Northern hemisphere...
         if lat > 0.0:
@@ -119,6 +116,18 @@ class Star(object):
 
         # We're on the exact equator - no circumpolar stars here!
         return False
+
+
+    def _get_lat_hor_and_app_dec_in_degrees(self, date):
+        tdb             = date_to_tdb(date)
+        app_ra, app_dec = mean_to_apparent(self.target, tdb)
+
+        # TODO: Fix angles so they can be added together natively
+        lat = self.latitude.in_degrees()
+        dec = app_dec.in_degrees()
+        hor = self.horizon.in_degrees()
+
+        return (lat, hor, dec)
 
 
 
@@ -314,9 +323,12 @@ def normalise_day(day_frac):
 
 
 
-def calc_rise_set(target, site, date, horizon=None):
-    '''Return a tuple (transit, rise, set) of timedelta objects, describing the
-       time offset for each event from the start of the provided date.
+def apply_refraction_to_horizon(horizon):
+    '''If using a horizon of zero, adds an average refraction term to improve
+       the effective horizon. If no horizon is provided, a horizon of zero is
+       assumed.
+
+       Non-zero horizons fall through and are not modified.
     '''
 
     # For non-zero horizons, we shall ignore refraction effects
@@ -333,8 +345,25 @@ def calc_rise_set(target, site, date, horizon=None):
     effective_horizon_in_deg = std_alt_of_stars.in_degrees() + horizon.in_degrees()
     effective_horizon = Angle(degrees=effective_horizon_in_deg)
 
+    return effective_horizon
+
+
+
+def date_to_tdb(date):
     ut_mjd = gregorian_to_ut_mjd(date)
     tdb = ut_mjd + (sla.sla_dtt(ut_mjd)/86400)
+
+    return tdb
+
+
+
+def calc_rise_set(target, site, date, horizon=None):
+    '''Return a tuple (transit, rise, set) of timedelta objects, describing the
+       time offset for each event from the start of the provided date.
+    '''
+
+    effective_horizon = apply_refraction_to_horizon(horizon)
+    tdb = date_to_tdb(date)
 
 
     app_ra, app_dec   = mean_to_apparent(target, tdb)
