@@ -19,7 +19,7 @@ from pkg_resources import resource_stream
 import datetime
 
 # Internal imports
-from astrometry import calc_sunrise_set, calc_rise_set, RiseSetError
+from astrometry import calc_sunrise_set, calc_rise_set, RiseSetError, Star
 from angle      import Angle
 
 # Import logging modules
@@ -74,6 +74,8 @@ class Visibility(object):
            between the Visibility object's start and end date.
         '''
 
+        star = Star(self.site['latitude'], target, self.horizon)
+
         if up:
             day_interval_func = self.find_when_target_is_up
         else:
@@ -83,7 +85,7 @@ class Visibility(object):
         intervals = []
         current_date = self.start_date
         while current_date < self.end_date:
-            one_day_intervals = day_interval_func(target, current_date)
+            one_day_intervals = day_interval_func(target, current_date, star)
 
             # Add today's intervals to the accumulating list of intervals
             intervals.extend(one_day_intervals)
@@ -97,7 +99,7 @@ class Visibility(object):
         return intervals
 
 
-    def find_when_target_is_down(self, target, dt):
+    def find_when_target_is_down(self, target, dt, star):
         '''Returns a single datetime 2-tuple, representing an interval
            of uninterrupted time below the horizon at the specified site, for the
            requested date.
@@ -113,7 +115,7 @@ class Visibility(object):
 
         # We will calculate down intervals as the inverse of the up intervals
         _log.debug("dt: %s" % (dt,))
-        up_intervals = self.find_when_target_is_up(target, dt)
+        up_intervals = self.find_when_target_is_up(target, dt, star)
         for i in up_intervals:
             _log.debug( "up interval: %s -> %s" % i )
 
@@ -156,7 +158,7 @@ class Visibility(object):
         return down_intervals
 
 
-    def find_when_target_is_up(self, target, dt):
+    def find_when_target_is_up(self, target, dt, star):
         '''Returns a single datetime 2-tuple, representing an interval
            of uninterrupted time above the horizon at the specified
            site, for the requested date.
@@ -174,9 +176,20 @@ class Visibility(object):
         # TODO: Return either a complete or empty interval, as appropriate
         # TODO: This requires either introspecting state in the error, or
         # TODO: calling an is_circumpolar method before this calculation
+
         if target == 'sun':
             (transit, rise, set) = calc_sunrise_set(self.site, dt, self.twilight)
         else:
+            # Test for circumpolarity
+            if star.is_always_up(dt):
+                # Return a full interval over the entire day
+                intervals.append((dt, dt + ONE_DAY))
+                return intervals
+            elif star.is_always_down(dt):
+                # Return an empty list
+                return intervals
+
+            # The star rises and sets - so let's find out when
             (transit, rise, set) = calc_rise_set(target, self.site,
                                                  dt, self.horizon)
 
@@ -250,6 +263,10 @@ class Visibility(object):
         '''Combine a set of datetime 2-tuples, coalescing adjacent intervals into
            larger intervals wherever possible.
         '''
+
+        # Catch the special case where the target never rose
+        if len(intervals) == 0:
+            return intervals
 
         coalesced_intervals = [intervals[0]]
         for interval in intervals[1:]:
