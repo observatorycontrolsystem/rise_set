@@ -305,6 +305,18 @@ class TestCanopusFromStAndrews(object):
                                              self.date)
 
 
+    def test_star_is_always_down(self):
+
+        star = Star(self.st_andrews['latitude'],
+                    self.canopus,
+                    horizon = 0.0)
+
+        assert(not star.is_always_up(self.date))
+        assert(star.is_always_down(self.date))
+
+
+
+
 class TestCapellaFromStAndrews(object):
     '''Integration test: rise/set/transit of a circumpolar star from a Northern
         observatory (never sets).'''
@@ -347,6 +359,23 @@ class TestCapellaFromStAndrews(object):
                                              self.date)
 
 
+    def test_star_is_always_up(self):
+
+        star = Star(self.st_andrews['latitude'],
+                    self.capella,
+                    horizon = 0.0)
+
+        assert(star.is_always_up(self.date))
+        assert(not star.is_always_down(self.date))
+
+
+    def test_reducing_horizon_keeps_star_down(self):
+
+        star = Star(self.st_andrews['latitude'],
+                    self.capella,
+                    horizon = 80)
+
+        assert(not star.is_always_down(self.date))
 
 
 class TestPolarisFromSidingSpring(object):

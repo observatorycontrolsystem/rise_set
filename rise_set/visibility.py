@@ -74,7 +74,7 @@ class Visibility(object):
            between the Visibility object's start and end date.
         '''
 
-        star = Star(self.site['latitude'], target, self.horizon)
+        star = Star(self.site['latitude'], target, self.horizon.in_degrees())
 
         if up:
             day_interval_func = self.find_when_target_is_up
@@ -99,7 +99,7 @@ class Visibility(object):
         return intervals
 
 
-    def find_when_target_is_down(self, target, dt, star):
+    def find_when_target_is_down(self, target, dt, star=None):
         '''Returns a single datetime 2-tuple, representing an interval
            of uninterrupted time below the horizon at the specified site, for the
            requested date.
@@ -158,13 +158,17 @@ class Visibility(object):
         return down_intervals
 
 
-    def find_when_target_is_up(self, target, dt, star):
+    def find_when_target_is_up(self, target, dt, star=None):
         '''Returns a single datetime 2-tuple, representing an interval
            of uninterrupted time above the horizon at the specified
            site, for the requested date.
 
            Note: Even though this function currently ignores times, the dt
            object must be a datetime, *not* a date.
+
+           TODO: Clean up this unpleasant interface - no star need be passed if
+           the sun is the target, but one *must* be passed otherwise. This isn't
+           obvious from the method signature.
         '''
 
         # Remove any time component of the provided datetime object
