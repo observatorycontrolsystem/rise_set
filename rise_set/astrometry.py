@@ -48,7 +48,7 @@ _log = logging.getLogger('rise_set.astrometry')
 class Star(object):
     # TODO: This is a crap name - change it
 
-    def __init__(self, latitude, target, horizon=None):
+    def __init__(self, latitude, target, horizon=0.0):
         '''
              A star is circumpolar to a Northern hemisphere observer if the
              latitude plus the declination is greater than 90 degrees.
@@ -61,21 +61,13 @@ class Star(object):
              negligible (and in any case require air temperature and pressure to
              calculate accurately).
         '''
-        self.std_alt_of_stars = Angle(degrees=0.0)
 
+        horizon_angle = Angle(degrees=horizon)
 
-        if not horizon:
-            # Default to the Earth's horizon
-            horizon               = Angle(degrees=0.0)
-
-        # Approximate the effect of refraction if we are using the true horizon
-        if horizon.in_degrees() == 0.0:
-            self.std_alt_of_stars = Angle(degrees=-0.5667)
-
-        self.target = target
-
+        # TODO: This function should be part of this object
+        self.horizon  = apply_refraction_to_horizon(horizon_angle)
+        self.target   = target
         self.latitude = latitude
-        self.horizon  = horizon
 
 
     def is_always_up(self, date):
