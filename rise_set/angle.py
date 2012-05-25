@@ -56,7 +56,8 @@ class Angle(object):
     def from_degrees(self, degrees):
         '''Set the Angle using a value provided in degrees.'''
 
-        if type(degrees) == str:
+        input_type = type(degrees)
+        if ( input_type == str ) or ( input_type == unicode ):
             self.degrees = self.from_sexegesimal(degrees)
         else:
             if self.units == 'time':
@@ -69,7 +70,8 @@ class Angle(object):
     def from_radians(self, radians):
         '''Set the Angle using a value provided in radians.'''
 
-        if type(radians) == str:
+        input_type = type(radians)
+        if ( input_type == str ) or ( input_type == unicode ):
             radians = self.from_sexegesimal(radians)
 
         self.degrees = degrees(radians)
