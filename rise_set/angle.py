@@ -90,8 +90,8 @@ class Angle(object):
             sign = match.groups()[0]
             hr, min, sec = map(float, match.groups()[1:4])
         else:
-            error = ("Invalid sexegesimal format '%s': Try colon or space delimiters"
-                     + " instead (e.g. -12:34:56)" % sexegesimal)
+            error  = "Invalid sexegesimal format '%s': " % sexegesimal
+            error += "Try colon or space delimiters instead (e.g. -12:34:56)"
             raise InvalidAngleError(error)
 
         if self.units == 'arc':
