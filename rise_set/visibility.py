@@ -27,10 +27,7 @@ import logging
 import logging.config
 
 
-# Configure logger from config file - '_' stops names being exported
-_log_config_file = 'logging.conf'
-_log_config_location = resource_stream(__name__, _log_config_file)
-logging.config.fileConfig(_log_config_location)
+# Set the logger name
 _log = logging.getLogger('rise_set.visibility')
 
 
