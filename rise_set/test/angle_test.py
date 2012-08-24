@@ -173,7 +173,7 @@ class TestAngle(object):
         self.angle = Angle(degrees='12:00:-1.0')
 
     @raises(InvalidAngleError)
-    def test_from_sexegesimal_invalid_fomrmat_no_delimiters(self):
+    def test_from_sexegesimal_invalid_format_no_delimiters(self):
         self.angle = Angle(degrees = '123030')
 
     @raises(InvalidAngleError)
