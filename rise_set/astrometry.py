@@ -38,10 +38,14 @@ import logging
 import logging.config
 
 
+''' Removed logging configuration from the library, as per recommendation in
+http://docs.python.org/howto/logging.html#library-config
+Leaving this code here as an example of how to access files inside an egg.
+'''
 # Configure logger from config file - '_' stops names being exported
-_log_config_file = 'logging.conf'
-_log_config_location = resource_stream(__name__, _log_config_file)
-logging.config.fileConfig(_log_config_location)
+#_log_config_file = 'logging.conf'
+#_log_config_location = resource_stream(__name__, _log_config_file)
+#logging.config.fileConfig(_log_config_location)
 _log = logging.getLogger('rise_set.astrometry')
 
 
