@@ -24,8 +24,6 @@ from angle      import Angle
 
 # Import logging modules
 import logging
-import logging.config
-
 
 # Set the logger name
 _log = logging.getLogger('rise_set.visibility')
