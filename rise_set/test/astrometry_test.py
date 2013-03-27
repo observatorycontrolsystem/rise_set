@@ -261,6 +261,39 @@ class TestCanopusFromSidingSpring(object):
         assert set_time.second <= exp_secs, '%r !< %r' % (set_time.second, exp_secs)
 
 
+class TestNGC2997FromCPT(object):
+    '''Integration test: rise/set/transit of a Southern star with telescope horizon.
+       Should rise and set, *not* be circumpolar. This test asserts #5969.'''
+
+    def setup(self):
+
+        self.ngc2997 = {
+                    'ra' : RightAscension(degrees=146.4116375),
+                    'dec': Declination(degrees=-31.19108888)
+                    }
+
+
+        self.cpt = {
+                 'latitude' : Angle(degrees=-32.3805542),
+                 'longitude': Angle(degrees=20.8101815),
+               }
+
+
+        self.date = datetime.date(2013, 3, 26)
+
+        self.horizon=Angle(degrees=30)
+
+        self.star = Star(self.cpt['latitude'], self.ngc2997, self.horizon.in_degrees())
+
+
+
+    def test_not_circumpolar(self):
+        assert(not self.star.is_always_up(self.date))
+        assert(not self.star.is_always_down(self.date))
+
+
+
+
 
 class TestCanopusFromStAndrews(object):
     '''Integration test: rise/set/transit of a Southern star from a Northern
