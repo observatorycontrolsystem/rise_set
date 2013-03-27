@@ -35,7 +35,6 @@ from rates import ProperMotion
 
 # Import logging modules
 import logging
-import logging.config
 
 
 ''' Removed logging configuration from the library, as per recommendation in
@@ -86,7 +85,7 @@ class Star(object):
 
         # Otherwise, if the observer is in the Southern hemisphere...
         elif lat < 0.0:
-            if lat + dec + hor > -90.0:
+            if lat + dec + hor < -90.0:
                 return True
             return False
 
