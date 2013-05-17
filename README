@@ -23,7 +23,8 @@ v 0.2.1 - Generalised Angle class (#2272)
         - Fixed sign error in transit refinement code (#1993)
         - Fixed rounding errors for second overflow (#3166)
         - Fixed broken interpolation over 24 hr RA boundaries (#3165)
-v 0.2.2 - Fixed broken circumpolar calculation for southern hemisphere objects (#5969)
+v 0.2.5 - Fixed broken circumpolar calculation for southern hemisphere objects (#5969)
+v 0.2.6 - Support for memoization of Angle and Visibility objects
 
 Eric Saunders
 October 2012
