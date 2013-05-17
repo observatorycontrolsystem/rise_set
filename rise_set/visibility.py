@@ -291,3 +291,13 @@ class Visibility(object):
         target_up_intervals = self.get_target_up_intervals()
         # Calculate the intersection between the two interval sets
         # Return the intersection
+
+
+    def __key(self):
+        return (self.site, self.start_date, self.end_date, self.horizon, self.twilight)
+
+    def __eq__(x, y):
+        return x.__key() == y.__key()
+
+    def __hash__(self):
+        return hash(self.__key())

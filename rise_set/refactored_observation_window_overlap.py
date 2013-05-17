@@ -81,3 +81,58 @@ seq4 = (
 print "\nAlternative method"
 overlaps = find_overlaps2(seq3, seq4)
 print overlaps
+
+
+# Eric's code for overlapping dark and up intervals
+def intervals_to_obs_endpoints(intervals):
+    endpoints = []
+    for n, i in enumerate(intervals):
+        start, end = i[0], i[1]
+        start_ep = ObservationEndpoint(time=start, is_start=True,  seqid=n)
+        end_ep   = ObservationEndpoint(time=end,   is_start=False, seqid=n)
+
+        endpoints.append(start_ep)
+        endpoints.append(end_ep)
+
+    return endpoints
+
+
+def chunker(seq, chunksize):
+    return (seq[pos:pos + chunksize] for pos in xrange(0, len(seq), chunksize))
+
+
+def obs_endpoints_to_intervals(eps):
+    intervals = []
+    for e_start, e_end in chunker(eps, 2):
+        interval = (e_start.time, e_end.time)
+        intervals.append(interval)
+
+    return intervals
+
+
+def is_dark_and_up(dark_ints, up_ints):
+    dark_eps = intervals_to_obs_endpoints(dark_ints)
+    up_eps   = intervals_to_obs_endpoints(up_ints)
+
+    overlap_eps = find_overlaps(dark_eps, up_eps)
+
+    overlap_ints = obs_endpoints_to_intervals(overlap_eps)
+
+    return overlap_ints
+
+# Example use:
+import datetime
+
+up_ints = [(datetime.datetime(2010, 10, 1, 1, 56, 49, 16863),
+            datetime.datetime(2010, 10, 1, 10, 57, 27, 464638)),
+           (datetime.datetime(2010, 10, 2, 1, 52, 53, 186013),
+            datetime.datetime(2010, 10, 2, 10, 53, 31, 627179))]
+
+dark_ints = [(datetime.datetime(2010, 10, 1, 4, 13, 38, 879895),
+              datetime.datetime(2010, 10, 1, 16, 16, 7, 100207)),
+             (datetime.datetime(2010, 10, 2, 4, 12, 44, 417371),
+              datetime.datetime(2010, 10, 2, 16, 16, 23, 159988))]
+
+dark_and_up_ints = is_dark_and_up(dark_ints, up_ints)
+print "Dark and up:"
+print dark_and_up_ints

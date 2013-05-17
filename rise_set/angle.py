@@ -154,6 +154,16 @@ class Angle(object):
         return "%s %s %s" %(deg_hrs, min, sec)
 
 
+    def __key(self):
+        return (self.degrees, self.units)
+
+    def __eq__(x, y):
+        return x.__key() == y.__key()
+
+    def __hash__(self):
+        return hash(self.__key())
+
+
 
 class InvalidAngleError(Exception):
     '''Error for out-of-range angles provided to the Angle class.'''
