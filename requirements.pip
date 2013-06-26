@@ -1,5 +1,4 @@
 --extra-index-url=http://versionsba.lco.gtn/svn/telsoft/Lco/PyPi/
-nose
 nosexcover
+pylint
 numpy
-pySLALIB
