@@ -16,9 +16,8 @@ April 2011
 from __future__ import division
 
 # Standard library imports
-from math import degrees, radians
+import math
 import re
-import sys
 
 
 class Angle(object):
@@ -74,7 +73,7 @@ class Angle(object):
         if ( input_type == str ) or ( input_type == unicode ):
             radians = self.from_sexegesimal(radians)
 
-        self.degrees = degrees(radians)
+        self.degrees = math.degrees(radians)
 
 
 
@@ -82,13 +81,13 @@ class Angle(object):
         '''Convert from sexegesimal into degrees'''
 
        # Match sexegesimal with almost arbitrary delimiters
-        match = re.search('^([+-])?(\d*)[^-\d]+(\d\d?)[^-\d]+(\d\d?(?:[.]\d+)?)$'
+        match = re.search(r'^([+-])?(\d*)[^-\d]+(\d\d?)[^-\d]+(\d\d?(?:[.]\d+)?)$'
                           ,sexegesimal)
 
         # Check we extracted three numbers
         if ( match and len(match.groups()) == 4 ):
             sign = match.groups()[0]
-            hr, min, sec = map(float, match.groups()[1:4])
+            hrs, mins, secs = map(float, match.groups()[1:4])
         else:
             error  = "Invalid sexegesimal format '%s': " % sexegesimal
             error += "Try colon or space delimiters instead (e.g. -12:34:56)"
@@ -96,13 +95,14 @@ class Angle(object):
 
         if self.units == 'arc':
             #Then we know its in seconds of arc
-            decimal_value = hr + (min/60) + (sec/60/60)
+            decimal_value = hrs + (mins/60) + (secs/60/60)
 
         else:
             #It must be in time
-            decimal_value = hr*(360/24)  +  min*(360/24/60)  +  sec*(360/24/60/60)
+            decimal_value = hrs*(360/24)  +  mins*(360/24/60)  +  secs*(360/24/60/60)
 
-        if sign == '-': decimal_value *= -1
+        if sign == '-':
+            decimal_value *= -1
 
         return decimal_value
 
@@ -117,7 +117,7 @@ class Angle(object):
     def in_radians(self):
         '''Return the value of the angle in radians.'''
 
-        return radians(self.degrees)
+        return math.radians(self.degrees)
 
 
 
@@ -140,18 +140,18 @@ class Angle(object):
             total, deg_hrs  = decimal_value, int(decimal_value)
 
         else:
-            # Convert into time format and pull out the int part - the remainder is the minutes
+            # Convert into units of time
             total, deg_hrs = decimal_value * (24/360), int(decimal_value * (24/360))
 
         # Construct the minutes and seconds from the decimal part
-        all_min = (total - deg_hrs) * 60
-        min     = int(all_min)
-        sec     = (all_min - min) *60
+        all_min  = (total - deg_hrs) * 60
+        mins     = int(all_min)
+        secs     = (all_min - mins) *60
 
         if negative:
             deg_hrs = "-" + str(deg_hrs)
 
-        return "%s %s %s" %(deg_hrs, min, sec)
+        return "%s %s %s" % (deg_hrs, mins, secs)
 
 
     def __key(self):
@@ -167,21 +167,9 @@ class Angle(object):
 
 class InvalidAngleError(Exception):
     '''Error for out-of-range angles provided to the Angle class.'''
-
-    def __init__(self, value):
-        self.value = value
-
-    def __str__(self):
-        return self.value
-
+    pass
 
 
 class AngleConfigError(Exception):
     '''Error for invalid constructor arguments to the Angle class.'''
-
-    def __init__(self, value):
-        self.value = value
-
-    def __str__(self):
-        return self.value
-
+    pass
