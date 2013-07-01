@@ -6,7 +6,7 @@ from nose.tools import eq_, assert_equal, assert_almost_equal, raises, nottest
 import datetime
 
 #Import the module to test
-from rise_set.visibility import Visibility
+from rise_set.visibility import Visibility, coalesce_adjacent_intervals
 
 # Additional support modules
 from rise_set.angle import Angle
@@ -81,8 +81,7 @@ class TestIntervals(object):
 
 
     def test_coalesce_adjacent_intervals(self):
-        received = self.visibility.coalesce_adjacent_intervals(
-                                                        self.some_adjacent_intervals)
+        received = coalesce_adjacent_intervals(self.some_adjacent_intervals)
 
         assert_equal(received, self.expected_coalescence)
 
