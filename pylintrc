@@ -46,10 +46,10 @@ load-plugins=
 # Set the output format. Available formats are text, parseable, colorized, msvs
 # (visual studio) and html. You can also give a reporter class, eg
 # mypackage.mymodule.MyReporterClass.
-output-format=text
+output-format=colorized
 
 # Include message's id in output
-include-ids=no
+include-ids=yes
 
 # Include symbolic ids of messages in output
 symbols=no
@@ -106,25 +106,26 @@ bad-functions=map,filter,apply,input
 module-rgx=(([a-z_][a-z0-9_]*)|([A-Z][a-zA-Z0-9]+))$
 
 # Regular expression which should only match correct module level names
-const-rgx=(([A-Z_][A-Z0-9_]*)|(__.*__))$
+#const-rgx=(([A-Z_][A-Z0-9_]*)|(__.*__))$
+const-rgx=((_?log*)|([A-Z_][A-Z0-9_]*)|(__.*__))$
 
 # Regular expression which should only match correct class names
 class-rgx=[A-Z_][a-zA-Z0-9]+$
 
 # Regular expression which should only match correct function names
-function-rgx=[a-z_][a-z0-9_]{2,30}$
+function-rgx=[a-z_][a-z0-9_]{1,40}$
 
 # Regular expression which should only match correct method names
-method-rgx=[a-z_][a-z0-9_]{2,30}$
+method-rgx=[a-z_][a-z0-9_]{1,40}$
 
 # Regular expression which should only match correct instance attribute names
-attr-rgx=[a-z_][a-z0-9_]{2,30}$
+attr-rgx=[a-z_][a-z0-9_]{1,30}$
 
 # Regular expression which should only match correct argument names
-argument-rgx=[a-z_][a-z0-9_]{2,30}$
+argument-rgx=[a-z_][a-z0-9_]{1,30}$
 
 # Regular expression which should only match correct variable names
-variable-rgx=[a-z_][a-z0-9_]{2,30}$
+variable-rgx=[a-z_][a-z0-9_]{1,30}$
 
 # Regular expression which should only match correct list comprehension /
 # generator expression variable names
@@ -179,7 +180,7 @@ notes=FIXME,XXX,TODO
 [FORMAT]
 
 # Maximum number of characters on a single line.
-max-line-length=85
+max-line-length=90
 
 # Maximum number of lines in a module
 max-module-lines=1000
