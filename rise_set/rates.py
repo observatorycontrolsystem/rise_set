@@ -16,8 +16,6 @@ March 2011
 # Required for true (non-integer) division
 from __future__ import division
 
-from angle import Angle
-
 
 class ProperMotion(object):
 
@@ -37,7 +35,6 @@ class ProperMotion(object):
         self.component = component
 
 
-
     def in_radians_per_year(self):
         # Get the angle in radians
         radians = self.component.in_radians()
@@ -47,7 +44,6 @@ class ProperMotion(object):
             radians /= 100
 
         return radians
-
 
 
     def in_degrees_per_year(self):
@@ -61,7 +57,6 @@ class ProperMotion(object):
         return degrees
 
 
-
     def in_radians_per_century(self):
         # Get the angle in radians
         radians = self.component.in_radians()
@@ -71,7 +66,6 @@ class ProperMotion(object):
             radians *= 100
 
         return radians
-
 
 
     def in_degrees_per_century(self):
@@ -96,13 +90,6 @@ class ProperMotion(object):
 
 
 
-
-
 class RatesConfigError(Exception):
     '''Error for invalid constructor arguments to the ProperMotion class.'''
-
-    def __init__(self, value):
-        self.value = value
-
-    def __str__(self):
-        return self.value
+    pass
