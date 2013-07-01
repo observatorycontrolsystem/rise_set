@@ -24,14 +24,10 @@ class YiannisIsTryingToBreakMyDateCalculator(object):
 class TestAstrometry(object):
     '''Unit tests for the astrometry module.'''
 
-    def setUp(self):
+    def setup(self):
         self.date      = datetime.date(year=1988, month=3, day=20)
         self.bad_month = YiannisIsTryingToBreakMyDateCalculator()
         self.mjd       = 47240.0
-
-
-    def tearDown(self):
-        pass
 
 
     def test_gregorian_to_ut_mjd(self):
@@ -64,7 +60,7 @@ class TestAstrometry(object):
 class TestVenusRiseTransitSet(object):
     '''Implementation of Example 14.a from Astronomical Algorithms, p.99'''
 
-    def setUp(self):
+    def setup(self):
         self.boston = {
            'latitude'  : Angle(degrees = 42.3333),
            'longitude' : Angle(degrees = -71.0833)
@@ -117,7 +113,7 @@ class TestDenebFromMaui(object):
     # Thanks. You bastards.
 
 
-    def setUp(self):
+    def setup(self):
 
         # Target
         # Note: Aladin units are mas/yr...
@@ -142,7 +138,7 @@ class TestDenebFromMaui(object):
 
 
     def test_rise_set(self):
-        (transit, rise, set) = calc_rise_set(self.deneb, self.maui, self.date)
+        (transit, rise, sets) = calc_rise_set(self.deneb, self.maui, self.date)
 
         # Second accuracy isn't meaningful, so just check we would round up or
         # down as apppropriate.
@@ -177,7 +173,7 @@ class TestDenebFromMaui(object):
         exp_s_hr  = 12
         exp_s_min = 25   # Not 24, because we expect to round down seconds
 
-        set_time = self.date + set
+        set_time = self.date + sets
 
         assert_equal(set_time.hour, exp_s_hr)
         assert_equal(set_time.minute, exp_s_min)
@@ -226,7 +222,7 @@ class TestCanopusFromSidingSpring(object):
 
 
     def test_rise_set(self):
-        (transit, rise, set) = calc_rise_set(self.canopus, self.siding_spring,
+        (transit, rise, sets) = calc_rise_set(self.canopus, self.siding_spring,
                                              self.date)
 
         # Second accuracy isn't meaningful, so just check we would round up or
@@ -262,7 +258,7 @@ class TestCanopusFromSidingSpring(object):
         exp_s_hr  = 18
         exp_s_min = 45    # USNO actually gives 18.46, but let's not worry...
 
-        set_time = self.date + set
+        set_time = self.date + sets
 
         assert_equal(set_time.hour, exp_s_hr)
         assert_equal(set_time.minute, exp_s_min)
@@ -289,7 +285,7 @@ class TestNGC2997FromCPT(object):
 
         self.date = datetime.date(2013, 3, 26)
 
-        self.horizon=Angle(degrees=30)
+        self.horizon = Angle(degrees=30)
 
         self.star = Star(self.cpt['latitude'], self.ngc2997, self.horizon.in_degrees())
 
