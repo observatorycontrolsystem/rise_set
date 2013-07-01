@@ -5,7 +5,13 @@ from nose.tools import eq_, assert_equal, assert_almost_equal, raises, nottest
 import datetime
 
 #Import the module to test
-from rise_set.astrometry import *
+from rise_set.astrometry import (InvalidDateError, IncompleteTargetError, RiseSetError,
+                                 RightAscension, Declination, Star, ProperMotion,
+                                 gregorian_to_ut_mjd, mean_to_apparent,
+                                 calc_rise_set, calc_setting_day_fraction,
+                                 calc_rise_set_hour_angle, calc_rising_day_fraction,
+                                 calc_transit_day_fraction, day_frac_to_hms)
+
 from rise_set.angle import Angle
 
 class YiannisIsTryingToBreakMyDateCalculator(object):
@@ -77,7 +83,7 @@ class TestVenusRiseTransitSet(object):
         assert_almost_equal(m_0, 0.81965, places=5)
 
 
-        (hour_angle, msg) = calc_rise_set_hour_angle(self.boston['latitude'],
+        (hour_angle, _) = calc_rise_set_hour_angle(self.boston['latitude'],
                                                      self.delta_2,
                                                      self.std_alt)
         assert_almost_equal(hour_angle.in_degrees(), 108.5344, places=4)
@@ -116,14 +122,14 @@ class TestDenebFromMaui(object):
         # Target
         # Note: Aladin units are mas/yr...
         self.deneb = {
-                       'ra'                : RightAscension('20 41 25.91'),
-                       'dec'               : Declination('+45 16 49.22'),
-                       'ra_proper_motion'  : ProperMotion(RightAscension('00 00 00.00156')),
-                       'dec_proper_motion' : ProperMotion(Declination('00 00 00.00155')),
-                       'parallax'          : 0.00101,  # Units: arcsec
-                       'rad_vel'           : -4.5,  # Units: km/s (-ve approaches)
-                       'epoch'             : 2000,
-                      }
+               'ra'                : RightAscension('20 41 25.91'),
+               'dec'               : Declination('+45 16 49.22'),
+               'ra_proper_motion'  : ProperMotion(RightAscension('00 00 00.00156')),
+               'dec_proper_motion' : ProperMotion(Declination('00 00 00.00155')),
+               'parallax'          : 0.00101,  # Units: arcsec
+               'rad_vel'           : -4.5,  # Units: km/s (-ve approaches)
+               'epoch'             : 2000,
+              }
 
         # Site (East +ve longitude)
         self.maui = {
@@ -152,7 +158,8 @@ class TestDenebFromMaui(object):
 
         assert_equal(transit_time.hour, exp_t_hr)
         assert_equal(transit_time.minute, exp_t_min)
-        assert transit_time.second >= exp_secs, '%r !> %r' % (transit_time.second, exp_secs)
+        msg = '%r !> %r' % (transit_time.second, exp_secs)
+        assert transit_time.second >= exp_secs, msg
 
 
         # Rise
@@ -195,18 +202,18 @@ class TestCanopusFromSidingSpring(object):
         # Target
         # Note: Aladin units are mas/yr...
         self.canopus = {
-                         'ra'                : RightAscension('06 23 57.11'),
-                         'dec'               : Declination('-52 40 03.5'),
-                         #'ra_proper_motion'  : ProperMotion(RightAscension('00 00 00.01999')),
-                         #'dec_proper_motion' : ProperMotion(Declination('00 00 00.02367')),
-                         'ra_proper_motion'  : ProperMotion(RightAscension('00 00 00.0')),
-                         'dec_proper_motion' : ProperMotion(Declination('00 00 00.0')),
-                         #'parallax'          : 0.01043,   # Units: arcsec
-                         'parallax'          : 0.0,   # Units: arcsec
-                         #'rad_vel'           : 20.5,      # Units: km/s (-ve approaches)
-                         'rad_vel'           : 0.0,      # Units: km/s (-ve approaches)
-                         'epoch'             : 2000,
-                       }
+             'ra'                : RightAscension('06 23 57.11'),
+             'dec'               : Declination('-52 40 03.5'),
+             #'ra_proper_motion'  : ProperMotion(RightAscension('00 00 00.01999')),
+             #'dec_proper_motion' : ProperMotion(Declination('00 00 00.02367')),
+             'ra_proper_motion'  : ProperMotion(RightAscension('00 00 00.0')),
+             'dec_proper_motion' : ProperMotion(Declination('00 00 00.0')),
+             #'parallax'          : 0.01043,   # Units: arcsec
+             'parallax'          : 0.0,   # Units: arcsec
+             #'rad_vel'           : 20.5,      # Units: km/s (-ve approaches)
+             'rad_vel'           : 0.0,      # Units: km/s (-ve approaches)
+             'epoch'             : 2000,
+           }
 
         # Site (East +ve longitude)
         self.siding_spring = {
@@ -236,7 +243,8 @@ class TestCanopusFromSidingSpring(object):
 
         assert_equal(transit_time.hour, exp_t_hr)
         assert_equal(transit_time.minute, exp_t_min)
-        assert transit_time.second <= exp_secs, '%r !> %r' % (transit_time.second, exp_secs)
+        msg = '%r !> %r' % (transit_time.second, exp_secs)
+        assert transit_time.second <= exp_secs, msg
 
 
         # Rise
@@ -312,14 +320,14 @@ class TestCanopusFromStAndrews(object):
         # Target
         # Note: Aladin units are mas/yr...
         self.canopus = {
-                         'ra'                : RightAscension('06 23 57.11'),
-                         'dec'               : Declination('-52 40 03.5'),
-                         'ra_proper_motion'  : ProperMotion(RightAscension('00 00 00.01999')),
-                         'dec_proper_motion' : ProperMotion(Declination('00 00 00.02367')),
-                         'parallax'          : 0.01043,   # Units: arcsec
-                         'rad_vel'           : 20.5,      # Units: km/s (-ve approaches)
-                         'epoch'             : 2000,
-                       }
+             'ra'                : RightAscension('06 23 57.11'),
+             'dec'               : Declination('-52 40 03.5'),
+             'ra_proper_motion'  : ProperMotion(RightAscension('00 00 00.01999')),
+             'dec_proper_motion' : ProperMotion(Declination('00 00 00.02367')),
+             'parallax'          : 0.01043,   # Units: arcsec
+             'rad_vel'           : 20.5,      # Units: km/s (-ve approaches)
+             'epoch'             : 2000,
+           }
 
         # Site (East +ve longitude)
         # Very rough St. Andrews coords, for easy almanac comparison
@@ -366,14 +374,14 @@ class TestCapellaFromStAndrews(object):
         # Target
         # Note: Aladin units for proper motion are mas/yr...
         self.capella = {
-                         'ra'                : RightAscension('05 16 41.36'),
-                         'dec'               : Declination('+45 59 52.8'),
-                         'ra_proper_motion'  : ProperMotion(RightAscension('00 00 00.07552')),
-                         'dec_proper_motion' : ProperMotion(Declination('-00 00 00.42711')),
-                         'parallax'          : 0.07729,   # Units: arcsec
-                         'rad_vel'           : 30.2,      # Units: km/s (-ve approaches)
-                         'epoch'             : 2000,
-                       }
+                 'ra'                : RightAscension('05 16 41.36'),
+                 'dec'               : Declination('+45 59 52.8'),
+                 'ra_proper_motion'  : ProperMotion(RightAscension('00 00 00.07552')),
+                 'dec_proper_motion' : ProperMotion(Declination('-00 00 00.42711')),
+                 'parallax'          : 0.07729,   # Units: arcsec
+                 'rad_vel'           : 30.2,      # Units: km/s (-ve approaches)
+                 'epoch'             : 2000,
+               }
 
         # Site (East +ve longitude)
         # Very rough St. Andrews coords, for easy almanac comparison
