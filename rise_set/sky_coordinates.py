@@ -7,24 +7,15 @@ Author: Michelle Becker (mbecker@lcogt.net)
 April 2011
 '''
 
-#___________________________________________________________
-#Imports
 # Required for true (non-integer) division
 from __future__ import division
 
-#The angle class
-from angle import Angle, InvalidAngleError, AngleConfigError
-
-# Standard library imports
-from math import degrees, radians
-import re
-import sys
-#___________________________________________________________
+# Internal imports
+from rise_set.angle import Angle, InvalidAngleError
 
 
 class RightAscension(Angle):
-
-    def __init__(self, time = None, degrees = None, radians = None, units = 'time'):
+    def __init__(self, time=None, degrees=None, radians=None, units='time'):
 
         angle_degrees = time
         angle_radians = radians
@@ -45,15 +36,16 @@ class RightAscension(Angle):
 
         # RA cannot be greater than one circle in size
         if ( self.degrees >= 360 or self.degrees < 0 ) :
-            raise InvalidAngleError("'%s' is not within allowable RA range(0 <= ra < 360 degrees)." % (str(self.degrees)))
+            msg  = "'%s' is not within allowable RA range" % str(self.degrees)
+            msg += " (0 <= ra < 360 degrees)."
+            raise InvalidAngleError(msg)
 
         return True
 
 
 
 class Declination(Angle):
-
-    def __init__(self, degrees = None, radians = None, units = 'arc'):
+    def __init__(self, degrees=None, radians=None, units='arc'):
         Angle.__init__(self, degrees, radians, units)
 
         # Check input
@@ -64,6 +56,8 @@ class Declination(Angle):
 
         # Treat the special case of the north and south poles
         if ( self.degrees > 90   or   self.degrees < -90 ):
-            raise InvalidAngleError("'%s' is not within allowable Dec range(-90 <= dec <= +90 degrees)." % (str(self.degrees)))
+            msg  = "'%s' is not within allowable Dec range" % str(self.degrees)
+            msg += " (-90 <= dec <= +90 degrees)."
+            raise InvalidAngleError(msg)
 
         return True
