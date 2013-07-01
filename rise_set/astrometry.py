@@ -29,22 +29,14 @@ from pkg_resources import resource_stream
 import slalib as sla
 
 # Internal imports
-from angle import Angle
-from sky_coordinates import RightAscension, Declination
-from rates import ProperMotion
+from rise_set.angle import Angle
+from rise_set.sky_coordinates import RightAscension, Declination
+from rise_set.rates import ProperMotion
 
 # Import logging modules
 import logging
 
 
-''' Removed logging configuration from the library, as per recommendation in
-http://docs.python.org/howto/logging.html#library-config
-Leaving this code here as an example of how to access files inside an egg.
-'''
-# Configure logger from config file - '_' stops names being exported
-#_log_config_file = 'logging.conf'
-#_log_config_location = resource_stream(__name__, _log_config_file)
-#logging.config.fileConfig(_log_config_location)
 _log = logging.getLogger('rise_set.astrometry')
 
 
@@ -192,14 +184,15 @@ def mean_to_apparent(target, tdb):
     target.setdefault('rad_vel', 0.0)
     target.setdefault('epoch', 2000)
 
-    (ra_app_rads, dec_app_rads) = sla.sla_map(target['ra'].in_radians(),
-                                              target['dec'].in_radians(),
-                                              target['ra_proper_motion'].in_radians_per_year(),
-                                              target['dec_proper_motion'].in_radians_per_year(),
-                                              target['parallax'],
-                                              target['rad_vel'],
-                                              target['epoch'],
-                                              tdb)
+    (ra_app_rads, dec_app_rads) = sla.sla_map(
+                                  target['ra'].in_radians(),
+                                  target['dec'].in_radians(),
+                                  target['ra_proper_motion'].in_radians_per_year(),
+                                  target['dec_proper_motion'].in_radians_per_year(),
+                                  target['parallax'],
+                                  target['rad_vel'],
+                                  target['epoch'],
+                                  tdb)
 
     ra_apparent  = Angle(radians=ra_app_rads)
     dec_apparent = Angle(radians=dec_app_rads)
@@ -376,23 +369,23 @@ def calc_rise_set(target, site, date, horizon=None):
     m_1 = calc_rising_day_fraction(m_0, hour_angle)
     m_2 = calc_setting_day_fraction(m_0, hour_angle)
 
-    transit = day_frac_to_hms(m_0)
-    rise    = day_frac_to_hms(m_1)
-    set     = day_frac_to_hms(m_2)
+    transits = day_frac_to_hms(m_0)
+    rises    = day_frac_to_hms(m_1)
+    sets     = day_frac_to_hms(m_2)
 
-    _log.info('Rise time - unrefined (h, m, s): %s' % (rise,))
-    _log.info('Transit time - unrefined (h, m, s): %s' % (transit,))
-    _log.info('Set time - unrefined (h, m, s): %s' % (set,))
+    _log.info('Rise time - unrefined (h, m, s): %s' % (rises,))
+    _log.info('Transit time - unrefined (h, m, s): %s' % (transits,))
+    _log.info('Set time - unrefined (h, m, s): %s' % (sets,))
 
     (m_0, m_1, m_2) = refine_day_fraction(app_sidereal_time, m_0, m_1, m_2, tdb,
                                          target, site, effective_horizon)
 
-    transit = timedelta(days=m_0)
-    rise    = timedelta(days=m_1)
-    set     = timedelta(days=m_2)
+    transits = timedelta(days=m_0)
+    rises    = timedelta(days=m_1)
+    sets     = timedelta(days=m_2)
 
 
-    return (transit, rise, set)
+    return (transits, rises, sets)
 
 
 
@@ -622,11 +615,13 @@ def refine_day_fraction(app_sidereal_time, m_0, m_1, m_2, tdb, target, site,
 
     refined_m_0 = correct_transit(m_0, local_hour_angle_transit)
 
-    refined_m_1 = correct_rise_set(m_1, site['latitude'].in_degrees(), interp_delta_2_rise,
-                                   local_hour_angle_rise, std_altitude)
+    refined_m_1 = correct_rise_set(m_1, site['latitude'].in_degrees(),
+                                   interp_delta_2_rise, local_hour_angle_rise,
+                                   std_altitude)
 
-    refined_m_2 = correct_rise_set(m_2, site['latitude'].in_degrees(), interp_delta_2_set,
-                                   local_hour_angle_set, std_altitude)
+    refined_m_2 = correct_rise_set(m_2, site['latitude'].in_degrees(),
+                                   interp_delta_2_set, local_hour_angle_set,
+                                   std_altitude)
 
 
     return (refined_m_0, refined_m_1, refined_m_2)
