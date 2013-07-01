@@ -19,11 +19,8 @@ from __future__ import division
 
 # Standard library imports
 # Trigonometry functions
-from math import sin, cos, asin, acos, radians, degrees, modf
+from math import sin, cos, asin, acos, radians, modf
 from datetime import timedelta
-
-# API for accessing data files after deployment, within an egg
-from pkg_resources import resource_stream
 
 # Third party imports
 import slalib as sla
@@ -106,8 +103,8 @@ class Star(object):
 
 
     def _get_lat_hor_and_app_dec_in_degrees(self, date):
-        tdb             = date_to_tdb(date)
-        app_ra, app_dec = mean_to_apparent(self.target, tdb)
+        tdb        = date_to_tdb(date)
+        _, app_dec = mean_to_apparent(self.target, tdb)
 
         # TODO: Fix angles so they can be added together natively
         lat = self.latitude.in_degrees()
@@ -373,9 +370,9 @@ def calc_rise_set(target, site, date, horizon=None):
     rises    = day_frac_to_hms(m_1)
     sets     = day_frac_to_hms(m_2)
 
-    _log.info('Rise time - unrefined (h, m, s): %s' % (rises,))
-    _log.info('Transit time - unrefined (h, m, s): %s' % (transits,))
-    _log.info('Set time - unrefined (h, m, s): %s' % (sets,))
+    _log.info('Rise time - unrefined (h, m, s): %s', rises)
+    _log.info('Transit time - unrefined (h, m, s): %s', transits)
+    _log.info('Set time - unrefined (h, m, s): %s', sets)
 
     (m_0, m_1, m_2) = refine_day_fraction(app_sidereal_time, m_0, m_1, m_2, tdb,
                                          target, site, effective_horizon)
@@ -400,8 +397,8 @@ def calc_sunrise_set(site, date, twilight):
     target = dict(planet = 'sun')
     (app_ra, app_dec) = apparent_planet_pos(target['planet'], tdb, site)
 
-    _log.info("RA, Dec (apparent, degrees) for %s: (%s, %s)"
-                 % (target['planet'], app_ra.in_degrees(), app_dec.in_degrees()))
+    _log.info("RA, Dec (apparent, degrees) for %s: (%s, %s)",
+              target['planet'], app_ra.in_degrees(), app_dec.in_degrees())
 
     app_sidereal_time = calc_apparent_sidereal_time(date)
 
@@ -424,23 +421,23 @@ def calc_sunrise_set(site, date, twilight):
     m_1 = calc_rising_day_fraction(m_0, hour_angle)
     m_2 = calc_setting_day_fraction(m_0, hour_angle)
 
-    transit = day_frac_to_hms(m_0)
-    rise    = day_frac_to_hms(m_1)
-    set     = day_frac_to_hms(m_2)
+    transits = day_frac_to_hms(m_0)
+    rises    = day_frac_to_hms(m_1)
+    sets     = day_frac_to_hms(m_2)
 
-    _log.info('Rise time - unrefined (h, m, s): %s' % (rise,))
-    _log.info('Transit time - unrefined (h, m, s): %s' % (transit,))
-    _log.info('Set time - unrefined (h, m, s): %s' % (set,))
+    _log.info('Rise time - unrefined (h, m, s): %s', rises)
+    _log.info('Transit time - unrefined (h, m, s): %s', transits)
+    _log.info('Set time - unrefined (h, m, s): %s', sets)
 
     (m_0, m_1, m_2) = refine_day_fraction(app_sidereal_time, m_0, m_1, m_2, tdb,
                                           target, site, sun_std_alt[twilight])
 
 
-    transit = timedelta(days=m_0)
-    rise    = timedelta(days=m_1)
-    set     = timedelta(days=m_2)
+    transits = timedelta(days=m_0)
+    rises    = timedelta(days=m_1)
+    sets     = timedelta(days=m_2)
 
-    return (transit, rise, set)
+    return (transits, rises, sets)
 
 
 
@@ -469,10 +466,10 @@ def apparent_planet_pos(planet_name, tdb, site):
                   )
 
 
-    (app_ra_rads, app_dec_rads, ang_diameter) = sla.sla_rdplan(tdb,
-                                                        planet[planet_name],
-                                                        longitude.in_radians(),
-                                                        latitude.in_radians())
+    (app_ra_rads, app_dec_rads, _) = sla.sla_rdplan(tdb,
+                                                    planet[planet_name],
+                                                    longitude.in_radians(),
+                                                    latitude.in_radians())
 
     app_ra  = Angle(radians=app_ra_rads)
     app_dec = Angle(radians=app_dec_rads)
@@ -485,13 +482,13 @@ def day_frac_to_hms(day_frac):
     '''Convert a fractional day into an (hr, min, sec) tuple.'''
 
     # Discard any surplus days
-    (day_frac, junk) = modf(day_frac)
+    day_frac, _ = modf(day_frac)
 
     # Convert the fractional day into hours
     hrs_frac = day_frac * 24
 
     # Extract the fractional and integer parts of the hours
-    (mins_frac, hrs) = modf(hrs_frac)
+    mins_frac, hrs = modf(hrs_frac)
 
     # Turn the remainder into fractional minutes
     mins_frac = mins_frac * 60
@@ -520,9 +517,9 @@ def refine_day_fraction(app_sidereal_time, m_0, m_1, m_2, tdb, target, site,
     sidereal_time_set     = sidereal_time_at_greenwich(app_sidereal_time, m_2)
 
 
-    _log.debug('gwich sidereal_time (rise): %s'    % sidereal_time_rise)
-    _log.debug('gwich sidereal_time (transit): %s' % sidereal_time_transit)
-    _log.debug('gwich sidereal_time (set): %s'     % sidereal_time_set)
+    _log.debug('gwich sidereal_time (rise): %s', sidereal_time_rise)
+    _log.debug('gwich sidereal_time (transit): %s', sidereal_time_transit)
+    _log.debug('gwich sidereal_time (set): %s', sidereal_time_set)
 
 
     # Calculate 'n' as per book instructions
@@ -541,9 +538,9 @@ def refine_day_fraction(app_sidereal_time, m_0, m_1, m_2, tdb, target, site,
         (alpha_2, delta_2) = mean_to_apparent(target, tdb)
         (alpha_3, delta_3) = mean_to_apparent(target, tdb+1)
 
-    _log.debug('alpha_1 (yesterday): %s' % alpha_1.in_degrees())
-    _log.debug('alpha_2 (today): %s' % alpha_2.in_degrees())
-    _log.debug('alpha_3 (tomorrow): %s' % alpha_3.in_degrees())
+    _log.debug('alpha_1 (yesterday): %s', alpha_1.in_degrees())
+    _log.debug('alpha_2 (today): %s', alpha_2.in_degrees())
+    _log.debug('alpha_3 (tomorrow): %s', alpha_3.in_degrees())
 
 
     # Handle wrapping across 24 hr boundary
@@ -563,38 +560,21 @@ def refine_day_fraction(app_sidereal_time, m_0, m_1, m_2, tdb, target, site,
     b = alpha_3.in_degrees() - alpha_2.in_degrees()
     c = b - a
 
-    _log.debug('a: %s' % a)
-    _log.debug('b: %s' % b)
-    _log.debug('c: %s' % c)
 
     interp_alpha_2_transit = interpolate(alpha_2.in_degrees(), n_0, a, b, c)
     interp_alpha_2_rise    = interpolate(alpha_2.in_degrees(), n_1, a, b, c)
     interp_alpha_2_set     = interpolate(alpha_2.in_degrees(), n_2, a, b, c)
 
 
-    _log.debug('Original alpha_2: %s' % alpha_2.in_degrees())
-    _log.debug('interpolated_alpha_2_rise: %s' % interp_alpha_2_rise)
-    _log.debug('interpolated_alpha_2_transit: %s' % interp_alpha_2_transit)
-    _log.debug('interpolated_alpha_2_set: %s' % interp_alpha_2_set)
-
     # Construct the first and second differences
     a = delta_2.in_degrees() - delta_1.in_degrees()
     b = delta_3.in_degrees() - delta_2.in_degrees()
     c = b - a
 
-    _log.debug('a: %s' % a)
-    _log.debug('b: %s' % b)
-    _log.debug('c: %s' % c)
 
-
-    interp_delta_2_transit = interpolate(delta_2.in_degrees(), n_0, a, b, c)
     interp_delta_2_rise    = interpolate(delta_2.in_degrees(), n_1, a, b, c)
     interp_delta_2_set     = interpolate(delta_2.in_degrees(), n_2, a, b, c)
 
-    _log.debug('Original delta_2: %s' % delta_2.in_degrees())
-    _log.debug('interpolated_delta_2_rise: %s' % interp_delta_2_rise)
-    _log.debug('interpolated_delta_2_transit: %s' % interp_delta_2_transit)
-    _log.debug('interpolated_delta_2_set: %s' % interp_delta_2_set)
 
     # Calculate the local hour angle (in degrees)
     local_hour_angle_transit = (sidereal_time_transit
@@ -609,9 +589,9 @@ def refine_day_fraction(app_sidereal_time, m_0, m_1, m_2, tdb, target, site,
 
 
     # TODO: Check local hour angle lies between -180 and +180
-    _log.debug('local_hour_angle_rise: %s' % local_hour_angle_rise)
-    _log.debug('local_hour_angle_transit: %s' % local_hour_angle_transit)
-    _log.debug('local_hour_angle_set: %s' % local_hour_angle_set)
+    _log.debug('local_hour_angle_rise: %s',    local_hour_angle_rise)
+    _log.debug('local_hour_angle_transit: %s', local_hour_angle_transit)
+    _log.debug('local_hour_angle_set: %s',     local_hour_angle_set)
 
     refined_m_0 = correct_transit(m_0, local_hour_angle_transit)
 
@@ -666,7 +646,7 @@ def correct_transit(m, local_hour_angle):
     # Find the correction to m_0 (transit)
     delta_m = -1 * (local_hour_angle / 360)
 
-    _log.debug('delta_m (transit): %s' % delta_m)
+    _log.debug('delta_m (transit): %s', delta_m)
 
     # Return the corrected value
     return m + delta_m
@@ -684,7 +664,7 @@ def correct_rise_set(m, latitude, dec, local_hour_angle, std_altitude):
 
     altitude = calculate_altitude(latitude, dec, local_hour_angle)
 
-    _log.debug('altitude (rise/set): %s' % altitude.in_degrees())
+    _log.debug('altitude (rise/set): %s', altitude.in_degrees())
 
 
 
@@ -692,7 +672,7 @@ def correct_rise_set(m, latitude, dec, local_hour_angle, std_altitude):
               / ( 360 * cos(radians(dec)) * cos(radians(latitude))
                       * sin(radians(local_hour_angle)) ))
 
-    _log.debug('delta_m (rise/set): %s' % delta_m)
+    _log.debug('delta_m (rise/set): %s', delta_m)
 
     return m + delta_m
 
@@ -714,31 +694,14 @@ def calculate_altitude(latitude, dec, local_hour_angle):
 
 class InvalidDateError(Exception):
     '''Raised when an invalid date is encountered.'''
-
-    def __init__(self, value):
-        self.value = value
-
-    def __str__(self):
-        return self.value
-
+    pass
 
 
 class RiseSetError(Exception):
     '''Raised when a target either never rises or never sets.'''
-
-    def __init__(self, value):
-        self.value = value
-
-    def __str__(self):
-        return self.value
-
+    pass
 
 
 class IncompleteTargetError(Exception):
     '''Raised when a target is missing a key value (RA, Dec).'''
-
-    def __init__(self, value):
-        self.value = value
-
-    def __str__(self):
-        return self.value
+    pass
