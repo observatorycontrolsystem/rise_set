@@ -1,7 +1,7 @@
 #!/usr/bin/python
 from __future__ import division
 
-from nose.tools import eq_, assert_equal, assert_almost_equal, raises, nottest
+from nose.tools import assert_equal, assert_almost_equal, raises
 import datetime
 
 #Import the module to test
@@ -193,7 +193,7 @@ class TestCanopusFromSidingSpring(object):
     # SLALIB (rest of library) convention = East is +ve
 
 
-    def setUp(self):
+    def setup(self):
 
         # Target
         # Note: Aladin units are mas/yr...
@@ -311,7 +311,7 @@ class TestCanopusFromStAndrews(object):
     # SLALIB (rest of library) convention = East is +ve
 
 
-    def setUp(self):
+    def setup(self):
 
         # Target
         # Note: Aladin units are mas/yr...
@@ -338,8 +338,8 @@ class TestCanopusFromStAndrews(object):
 
     @raises(RiseSetError)
     def test_rise_set(self):
-        (transit, rise, set) = calc_rise_set(self.canopus, self.st_andrews,
-                                             self.date)
+        (transit, rise, sets) = calc_rise_set(self.canopus, self.st_andrews,
+                                              self.date)
 
 
     def test_star_is_always_down(self):
@@ -366,7 +366,7 @@ class TestCapellaFromStAndrews(object):
     # SLALIB (rest of library) convention = East is +ve
 
 
-    def setUp(self):
+    def setup(self):
         # Target
         # Note: Aladin units for proper motion are mas/yr...
         self.capella = {
@@ -392,8 +392,8 @@ class TestCapellaFromStAndrews(object):
 
     @raises(RiseSetError)
     def test_rise_set(self):
-        (transit, rise, set) = calc_rise_set(self.capella, self.st_andrews,
-                                             self.date)
+        (transit, rise, sets) = calc_rise_set(self.capella, self.st_andrews,
+                                              self.date)
 
 
     def test_star_is_always_up(self):
@@ -427,7 +427,7 @@ class TestPolarisFromSidingSpring(object):
     # SLALIB (rest of library) convention = East is +ve
 
 
-    def setUp(self):
+    def setup(self):
 
         # Target
         # Note: Aladin units for proper motion are mas/yr...
@@ -450,8 +450,8 @@ class TestPolarisFromSidingSpring(object):
 
     @raises(RiseSetError)
     def test_rise_set(self):
-        (transit, rise, set) = calc_rise_set(self.polaris, self.siding_spring,
-                                             self.date)
+        (transit, rise, sets) = calc_rise_set(self.polaris, self.siding_spring,
+                                              self.date)
 
 
 
@@ -468,7 +468,7 @@ class TestMimosaFromSidingSpring(object):
     # SLALIB (rest of library) convention = East is +ve
 
 
-    def setUp(self):
+    def setup(self):
         # Target
         # Note: Aladin units for proper motion are mas/yr...
         self.mimosa = {
@@ -489,5 +489,5 @@ class TestMimosaFromSidingSpring(object):
 
     @raises(RiseSetError)
     def test_rise_set(self):
-        (transit, rise, set) = calc_rise_set(self.mimosa, self.siding_spring,
-                                             self.date)
+        (transit, rise, sets) = calc_rise_set(self.mimosa, self.siding_spring,
+                                              self.date)
