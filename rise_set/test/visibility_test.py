@@ -2,7 +2,7 @@
 
 from __future__ import division
 
-from nose.tools import eq_, assert_equal, assert_almost_equal, raises, nottest
+from nose.tools import assert_equal
 import datetime
 
 #Import the module to test
@@ -16,7 +16,7 @@ from rise_set.rates import ProperMotion
 
 class TestIntervals(object):
 
-    def setUp(self):
+    def setup(self):
 
         self.some_adjacent_intervals = [
                # Two contiguous intervals

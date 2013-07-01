@@ -12,7 +12,7 @@ def test_from_degrees():
 
 
 
-class some_test_class_i_just_made_up(object):
+class SomeTestClassIJustMadeUp(object):
     def setup(self):
         self.angle = angle.Angle(degrees = 0)
         print "Hello"
