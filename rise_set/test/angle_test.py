@@ -249,7 +249,7 @@ class TestAngle(object):
         self.angle = Angle(degrees = 12, units = 'time')
         assert_equal(self.angle.in_sexegesimal(radians = True), '3 8 29.7335529233')
 
-    def test_in_sexegesimal_negative_degrees_to_radians_Time(self):
+    def test_in_sexegesimal_negative_degrees_to_radians_time(self):
         self.angle = Angle(degrees = -12, units = 'time')
         assert_equal(self.angle.in_sexegesimal(radians = True), '-3 8 29.7335529233')
 
