@@ -3,13 +3,13 @@
 from operator import attrgetter, methodcaller
 
 class ObservationEndpoint:
-  def __init__(self, time, is_start, seqid):
+    def __init__(self, time, is_start, seqid):
         self.time     = time
         self.is_start = is_start
         self.seqid    = seqid
 
-  def __repr__(self):
-      return repr( (self.time, self.is_start, self.seqid) )
+    def __repr__(self):
+        return repr( (self.time, self.is_start, self.seqid) )
 
 
 # populate two lists of ObservationEndpoint objects with starts and ends
@@ -37,14 +37,14 @@ def find_overlaps(seq1, seq2):
     overlaps = []
     flags    = [0,0]
     for oe in bothseq:
-       if oe.is_start:
-          flags[oe.seqid] += 1 # raise the flag
-          if flags[(oe.seqid+1)%2]: # detect start of an overlap
-             overlaps.append(ObservationEndpoint(oe.time, True, 0)) # add start
-       else:
-          flags[oe.seqid]-=1 # lower the flag
-          if flags[(oe.seqid+1)%2]: # detect end of an overlap
-             overlaps.append(ObservationEndpoint(oe.time, False, 0)) # add end
+        if oe.is_start:
+            flags[oe.seqid] += 1 # raise the flag
+            if flags[(oe.seqid+1)%2]: # detect start of an overlap
+                overlaps.append(ObservationEndpoint(oe.time, True, 0)) # add start
+        else:
+            flags[oe.seqid]-=1 # lower the flag
+            if flags[(oe.seqid+1)%2]: # detect end of an overlap
+                overlaps.append(ObservationEndpoint(oe.time, False, 0)) # add end
 
     return overlaps
 

@@ -12,15 +12,12 @@ February 2011
 # Required for true (non-integer) division
 from __future__ import division
 
-# API for accessing data files after deployment, within an egg
-from pkg_resources import resource_stream
-
 # Standard libary imports
 import datetime
 
 # Internal imports
-from astrometry import calc_sunrise_set, calc_rise_set, RiseSetError, Star
-from angle      import Angle
+from rise_set.astrometry import calc_sunrise_set, calc_rise_set, RiseSetError, Star
+from rise_set.angle      import Angle
 
 # Import logging modules
 import logging
@@ -32,6 +29,29 @@ _log = logging.getLogger('rise_set.visibility')
 # Set convenient constants
 ONE_DAY  = datetime.timedelta(days=1)
 MIDNIGHT = datetime.time()
+
+def coalesce_adjacent_intervals(intervals):
+    '''Combine a set of datetime 2-tuples, coalescing adjacent intervals into
+       larger intervals wherever possible.
+    '''
+
+    # Catch the special case where the target never rose
+    if len(intervals) == 0:
+        return intervals
+
+    coalesced_intervals = [intervals[0]]
+    for interval in intervals[1:]:
+
+        # If the current interval end matches the next interval start...
+        if coalesced_intervals[-1][1] == interval[0]:
+            # ...the two intervals are contiguous - combine them
+            coalesced_intervals[-1] = (coalesced_intervals[-1][0], interval[1])
+        else:
+            # ...the two intervals are not contiguous - store seperately
+            coalesced_intervals.append(interval)
+
+    return coalesced_intervals
+
 
 class Visibility(object):
 
@@ -89,7 +109,7 @@ class Visibility(object):
             current_date += ONE_DAY
 
         # Collapse adjacent intervals into continuous larger intervals
-        intervals = self.coalesce_adjacent_intervals(intervals)
+        intervals = coalesce_adjacent_intervals(intervals)
 
         return intervals
 
@@ -109,15 +129,13 @@ class Visibility(object):
         dt = dt.replace(hour=0, minute=0, second=0, microsecond=0)
 
         # We will calculate down intervals as the inverse of the up intervals
-        _log.debug("dt: %s" % (dt,))
+        _log.debug("dt: %s", dt)
         up_intervals = self.find_when_target_is_up(target, dt, star)
-        for i in up_intervals:
-            _log.debug( "up interval: %s -> %s" % i )
 
         if not up_intervals:
-            _log.warn( "Got no up intervals!" )
-            _log.warn( "dt was: %s" % dt )
-            _log.warn( "target was: %s" % target )
+            _log.warn("Got no up intervals!")
+            _log.warn("dt was: %s", dt)
+            _log.warn("target was: %s", target)
             exit()
 
         down_intervals = []
@@ -177,29 +195,29 @@ class Visibility(object):
         # TODO: calling an is_circumpolar method before this calculation
 
         if target == 'sun':
-            (transit, rise, set) = calc_sunrise_set(self.site, dt, self.twilight)
+            transits, rises, sets = calc_sunrise_set(self.site, dt, self.twilight)
         else:
             # Test for circumpolarity
             if star.is_always_up(dt):
                 # Return a full interval over the entire day
                 intervals.append((dt, dt + ONE_DAY))
                 return intervals
-            elif star.is_always_down(dt):
-                # Return an empty list
+
+            # Catch target never rising
+            try:
+                transits, rises, sets = calc_rise_set(target, self.site,
+                                                      dt, self.horizon)
+            except RiseSetError:
                 return intervals
 
-            # The star rises and sets - so let's find out when
-            (transit, rise, set) = calc_rise_set(target, self.site,
-                                                 dt, self.horizon)
 
-
-        _log.debug( "latitude: %s" % self.site['latitude'].in_degrees() )
-        _log.debug( "longitude: %s" % self.site['longitude'].in_degrees() )
-        _log.debug( "twilight: %s" % self.twilight )
-        _log.debug( "dt: %s" % dt )
-        _log.debug( "rise: %s (%s)" % (rise, dt + rise) )
-        _log.debug( "transit: %s (%s)" % (transit, dt + transit) )
-        _log.debug( "set: %s (%s)" % (set, dt + set) )
+        _log.debug("latitude: %s",     self.site['latitude'].in_degrees())
+        _log.debug("longitude: %s",    self.site['longitude'].in_degrees())
+        _log.debug("twilight: %s",     self.twilight)
+        _log.debug("dt: %s",           dt)
+        _log.debug("rise: %s (%s)",    rises, dt + rises)
+        _log.debug("transit: %s (%s)", transits, dt + transits)
+        _log.debug("set: %s (%s)",     sets, dt + sets)
 
         # Case 1: Overlapping start of day boundary
         # Target rose yesterday, and sets today. Rises again later today.
@@ -209,14 +227,14 @@ class Visibility(object):
         #        x|                x                           x|
         #     x   |                   x                     x   |
         #   Rise  0hr  Transit       Set                  Rise 24hr
-        if (rise > transit) and (set > transit):
+        if (rises > transits) and (sets > transits):
 
             # Store the first interval - start of day until target set
-            absolute_set = set + dt
+            absolute_set = sets + dt
             intervals.append((dt, absolute_set))
 
             # Store the second interval - target rise until end of day
-            absolute_rise = rise + dt
+            absolute_rise = rises + dt
             intervals.append((absolute_rise, dt + ONE_DAY))
 
 
@@ -229,10 +247,10 @@ class Visibility(object):
         #         |          x                       x         |
         #         |       x                             x      |
         #         0hr   Rise           Transit          Set   24hr
-        elif (rise < transit) and (set > transit):
+        elif (rises < transits) and (sets > transits):
             # Only one interval - rise until target set
-            absolute_rise = rise + dt
-            absolute_set  = set + dt
+            absolute_rise = rises + dt
+            absolute_set  = sets + dt
             intervals.append((absolute_rise, absolute_set))
 
 
@@ -244,41 +262,18 @@ class Visibility(object):
         #        x             |   x                           x             |   x
         #     x                |      x                     x                |
         #   Rise       Transit 0hr   Set                  Rise      Transit 24hr
-        elif (rise < transit) and (set < transit):
+        elif (rises < transits) and (sets < transits):
             # Same code as case 1!
             # Store the first interval - start of day until target set
-            absolute_set = set + dt
+            absolute_set = sets + dt
             intervals.append((dt, absolute_set))
 
             # Store the second interval - target rise until end of day
-            absolute_rise = rise + dt
+            absolute_rise = rises + dt
             intervals.append((absolute_rise, dt + ONE_DAY))
 
 
         return intervals
-
-
-    def coalesce_adjacent_intervals(self, intervals):
-        '''Combine a set of datetime 2-tuples, coalescing adjacent intervals into
-           larger intervals wherever possible.
-        '''
-
-        # Catch the special case where the target never rose
-        if len(intervals) == 0:
-            return intervals
-
-        coalesced_intervals = [intervals[0]]
-        for interval in intervals[1:]:
-
-            # If the current interval end matches the next interval start...
-            if coalesced_intervals[-1][1] == interval[0]:
-                # ...the two intervals are contiguous - combine them
-                coalesced_intervals[-1] = (coalesced_intervals[-1][0], interval[1])
-            else:
-                # ...the two intervals are not contiguous - store seperately
-                coalesced_intervals.append(interval)
-
-        return coalesced_intervals
 
 
 
