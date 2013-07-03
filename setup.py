@@ -28,7 +28,7 @@ from setuptools import setup, find_packages
 
 setup(
     name = 'rise_set',
-    version = '0.2.6',
+    version = '0.2.7',
     description = 'Routines for accurate rise/set/transit calculations',
     author = 'Eric Saunders',
     author_email = 'esaunders@lcogt.net',
