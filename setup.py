@@ -32,7 +32,8 @@ setup(
     description = 'Routines for accurate rise/set/transit calculations',
     author = 'Eric Saunders',
     author_email = 'esaunders@lcogt.net',
-    packages = ['rise_set', 'rise_set.test'],
+#    packages = ['rise_set', 'rise_set.test'],
+    packages = ['rise_set'],
     dependency_links = [
        "http://pluto/pyslalib-1.0.tar.gz"
     ],
