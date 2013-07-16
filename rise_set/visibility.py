@@ -14,6 +14,7 @@ from __future__ import division
 
 # Standard libary imports
 import datetime
+import math
 
 # Internal imports
 from rise_set.astrometry import calc_sunrise_set, calc_rise_set, RiseSetError, Star
@@ -29,6 +30,33 @@ _log = logging.getLogger('rise_set.visibility')
 # Set convenient constants
 ONE_DAY  = datetime.timedelta(days=1)
 MIDNIGHT = datetime.time()
+
+
+
+
+def set_airmass_limit(airmass, horizon):
+    ''' Compare the provided maximum airmass limit with the horizon of a telescope, and
+        return the effective horizon for rise/set purposes (whichever is higher elevation). If
+        no airmass is provided, we default to the horizon.
+
+        airmass = 1 / cos(zenith)
+        horizon = 90 - zenith'''
+
+    if not airmass:
+        return horizon
+
+    # We convert the horizon to airmass, not vice versa, to avoid small angle problems if a
+    # very large airmass is provided
+    zenith_distance = 90 - horizon
+    horizon_airmass = 1 / math.cos(math.radians(zenith_distance))
+
+    effective_horizon = horizon
+    if airmass < horizon_airmass:
+        effective_horizon = 90 - math.degrees(math.acos(1 / airmass))
+
+
+    return effective_horizon
+
 
 def coalesce_adjacent_intervals(intervals):
     '''Combine a set of datetime 2-tuples, coalescing adjacent intervals into
@@ -82,14 +110,15 @@ class Visibility(object):
         return self.dark_intervals
 
 
-    def get_target_intervals(self, target, up=True):
+    def get_target_intervals(self, target, up=True, airmass=None):
         '''Returns a set of datetime 2-tuples, each of which represents an interval
            of uninterrupted time when the target was above the horizon (or below, if
            up=False). The set of tuples gives the complete target down intervals
            between the Visibility object's start and end date.
         '''
+        effective_horizon = set_airmass_limit(airmass, self.horizon.in_degrees())
 
-        star = Star(self.site['latitude'], target, self.horizon.in_degrees())
+        star = Star(self.site['latitude'], target, effective_horizon)
 
         if up:
             day_interval_func = self.find_when_target_is_up
@@ -100,7 +129,7 @@ class Visibility(object):
         intervals = []
         current_date = self.start_date
         while current_date < self.end_date:
-            one_day_intervals = day_interval_func(target, current_date, star)
+            one_day_intervals = day_interval_func(target, current_date, star, airmass)
 
             # Add today's intervals to the accumulating list of intervals
             intervals.extend(one_day_intervals)
@@ -114,7 +143,7 @@ class Visibility(object):
         return intervals
 
 
-    def find_when_target_is_down(self, target, dt, star=None):
+    def find_when_target_is_down(self, target, dt, star=None, airmass=None):
         '''Returns a single datetime 2-tuple, representing an interval
            of uninterrupted time below the horizon at the specified site, for the
            requested date.
@@ -130,7 +159,7 @@ class Visibility(object):
 
         # We will calculate down intervals as the inverse of the up intervals
         _log.debug("dt: %s", dt)
-        up_intervals = self.find_when_target_is_up(target, dt, star)
+        up_intervals = self.find_when_target_is_up(target, dt, star, airmass)
 
         if not up_intervals:
             _log.warn("Got no up intervals!")
@@ -171,7 +200,7 @@ class Visibility(object):
         return down_intervals
 
 
-    def find_when_target_is_up(self, target, dt, star=None):
+    def find_when_target_is_up(self, target, dt, star=None, airmass=None):
         '''Returns a single datetime 2-tuple, representing an interval
            of uninterrupted time above the horizon at the specified
            site, for the requested date.
@@ -183,6 +212,7 @@ class Visibility(object):
            the sun is the target, but one *must* be passed otherwise. This isn't
            obvious from the method signature.
         '''
+        effective_horizon = set_airmass_limit(airmass, self.horizon.in_degrees())
 
         # Remove any time component of the provided datetime object
         dt = dt.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -205,8 +235,9 @@ class Visibility(object):
 
             # Catch target never rising
             try:
+                effective_horizon_angle = Angle(degrees=effective_horizon)
                 transits, rises, sets = calc_rise_set(target, self.site,
-                                                      dt, self.horizon)
+                                                      dt, effective_horizon_angle)
             except RiseSetError:
                 return intervals
 

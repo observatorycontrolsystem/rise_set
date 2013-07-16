@@ -2,11 +2,12 @@
 
 from __future__ import division
 
-from nose.tools import assert_equal
+from nose.tools import assert_equal, assert_almost_equals, assert_less
 import datetime
 
 #Import the module to test
-from rise_set.visibility import Visibility, coalesce_adjacent_intervals
+from rise_set.visibility import (Visibility, set_airmass_limit,
+                                 coalesce_adjacent_intervals)
 
 # Additional support modules
 from rise_set.angle import Angle
@@ -185,3 +186,67 @@ class TestIntervals(object):
                     ]
 
         assert_equal(received, expected)
+
+
+
+class TestAirmassCalculation(object):
+
+    def setup(self):
+        pass
+
+    def interval_for_airmass(self, airmass):
+        horizon = 25
+
+        # Site (East +ve longitude)
+        site = {
+           'latitude'  : Angle(degrees = 20.0),
+           'longitude' : Angle(degrees = -150.0)
+        }
+
+        start = datetime.datetime(year=2010, month=10, day=25)
+        end   = datetime.datetime(year=2010, month=10, day=26)
+
+        # Target
+        # Note: Aladin units are mas/yr...
+        target = {
+               'ra'                : RightAscension('20 41 25.91'),
+               'dec'               : Declination('+20 00 00.00'),
+               'epoch'             : 2000,
+              }
+
+        v = Visibility(site, start, end, horizon)
+        intervals   = v.get_target_intervals(target=target, airmass=airmass)
+        up_interval = intervals[0][1] - intervals[0][0]
+
+        return up_interval
+
+    def test_set_airmass_limit_no_airmass(self):
+        horizon  = 30
+        expected = horizon
+        assert_equal(set_airmass_limit(None, horizon), expected)
+
+
+    def test_set_airmass_limit_airmass_worse_than_horizon(self):
+        horizon  = 30
+        airmass  = 3
+        expected = horizon
+        assert_equal(set_airmass_limit(airmass, horizon), expected)
+
+
+    def test_set_airmass_limit_airmass_better_than_horizon(self):
+        horizon  = 30
+        airmass  = 1.2
+        expected = 56.44
+        assert_almost_equals(set_airmass_limit(airmass, horizon), expected, places=2)
+
+
+    def test_airmass_is_applied_if_above_horizon_and_not_otherwise(self):
+        airmass_above_horizon = 1.082392200292394   # 22.5 degrees from the zenith
+        airmass_below_horizon = 3
+        interval_with_airmass    = self.interval_for_airmass(airmass_above_horizon)
+        interval_without_airmass = self.interval_for_airmass(airmass_below_horizon)
+
+        assert_less(interval_with_airmass, interval_without_airmass)
+
+
+
