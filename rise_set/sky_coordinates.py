@@ -43,6 +43,10 @@ class RightAscension(Angle):
         return True
 
 
+    def __repr__(self):
+        return "RightAscension(%s)" % self.in_sexegesimal()
+
+
 
 class Declination(Angle):
     def __init__(self, degrees=None, radians=None, units='arc'):
@@ -50,6 +54,7 @@ class Declination(Angle):
 
         # Check input
         self.validate_dec()
+
 
     def validate_dec(self):
         '''Check the declination is valid (-90 <= dec <= +90).'''
@@ -61,3 +66,7 @@ class Declination(Angle):
             raise InvalidAngleError(msg)
 
         return True
+
+
+    def __repr__(self):
+        return "Declination(%s)" % self.in_degrees()
