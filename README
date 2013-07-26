@@ -26,6 +26,7 @@ v 0.2.1 - Generalised Angle class (#2272)
 v 0.2.5 - Fixed broken circumpolar calculation for southern hemisphere objects (#5969)
 v 0.2.6 - Support for memoization of Angle and Visibility objects
 v.0.2.7 - Standardisations for Pylint and Sonar, many bad practice cleanups
+v.0.2.8 - Modified airmass handling
 
 Eric Saunders
 October 2012
