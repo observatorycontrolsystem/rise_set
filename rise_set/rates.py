@@ -88,6 +88,9 @@ class ProperMotion(object):
     def __hash__(self):
         return hash(self.__key())
 
+    def __repr__(self):
+        return "%s/%s" % (self.component, self.time)
+
 
 
 class RatesConfigError(Exception):

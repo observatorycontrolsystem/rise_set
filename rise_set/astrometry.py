@@ -161,6 +161,22 @@ def calc_apparent_sidereal_time(date):
 
 
 
+def make_target(ra, dec, ra_proper_motion=None, dec_proper_motion=None, parallax=None,
+                rad_vel=None, epoch=None):
+
+    target = {
+                'ra'                : ra,
+                'dec'               : dec,
+                'ra_proper_motion'  : ra_proper_motion or ProperMotion(RightAscension(0), time='year'),
+                'dec_proper_motion' : dec_proper_motion or ProperMotion(Declination(0), time='year'),
+                'parallax'          : parallax or 0.0,
+                'rad_vel'           : rad_vel or 0.0,
+                'epoch'             : epoch or 2000,
+             }
+
+    return target
+
+
 def mean_to_apparent(target, tdb):
     '''Given a target and TDB, return an apparent (RA, Dec) tuple.
        Thin wrapper for SLA_MAP.
@@ -173,13 +189,14 @@ def mean_to_apparent(target, tdb):
     if not target.get('dec'):
         raise IncompleteTargetError("Missing Declination in target definition")
 
+    target = make_target(target['ra'], target['dec'],
+                         ra_proper_motion=target.get('ra_proper_motion'),
+                         dec_proper_motion=target.get('dec_proper_motion'),
+                         parallax=target.get('parallax'),
+                         rad_vel=target.get('rad_vel'),
+                         epoch=target.get('epoch'))
 
-    # Fill the extra fields required by slalib with defaults, as necessary
-    target.setdefault('ra_proper_motion', ProperMotion(RightAscension(0), time='year'))
-    target.setdefault('dec_proper_motion', ProperMotion(Declination(0), time='year'))
-    target.setdefault('parallax', 0.0)
-    target.setdefault('rad_vel', 0.0)
-    target.setdefault('epoch', 2000)
+
 
     (ra_app_rads, dec_app_rads) = sla.sla_map(
                                   target['ra'].in_radians(),
