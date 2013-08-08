@@ -113,6 +113,9 @@ class Star(object):
 
         return (lat, hor, dec)
 
+    def __repr__(self):
+        return str(self.__dict__)
+
 
 
 def gregorian_to_ut_mjd(date):
@@ -449,7 +452,6 @@ def calc_sunrise_set(site, date, twilight):
     (m_0, m_1, m_2) = refine_day_fraction(app_sidereal_time, m_0, m_1, m_2, tdb,
                                           target, site, sun_std_alt[twilight])
 
-
     transits = timedelta(days=m_0)
     rises    = timedelta(days=m_1)
     sets     = timedelta(days=m_2)
@@ -538,6 +540,9 @@ def refine_day_fraction(app_sidereal_time, m_0, m_1, m_2, tdb, target, site,
     _log.debug('gwich sidereal_time (transit): %s', sidereal_time_transit)
     _log.debug('gwich sidereal_time (set): %s', sidereal_time_set)
 
+    _log.debug('m_0: %s', m_0)
+    _log.debug('m_1: %s', m_1)
+    _log.debug('m_2: %s', m_2)
 
     # Calculate 'n' as per book instructions
     n_0 = calc_tabular_interval(m_0, tdb)
@@ -561,6 +566,12 @@ def refine_day_fraction(app_sidereal_time, m_0, m_1, m_2, tdb, target, site,
 
 
     # Handle wrapping across 24 hr boundary
+    # Why do we use 350 degrees? That's a very good question.
+    # We need to determine when the alpha has wrapped, but we can't do
+    # the obvious test, because of valid cases.
+    # Instead, we use the fact that the differences between the alphas
+    # need to be large, otherwise the object is moving extremely fast,
+    # to determine the wrapping scenario.
     if alpha_2.in_degrees() < alpha_1.in_degrees():
         if alpha_2.in_degrees() - alpha_1.in_degrees() < -350:
             norm_alpha2 = alpha_2.in_degrees() + 360
@@ -571,6 +582,9 @@ def refine_day_fraction(app_sidereal_time, m_0, m_1, m_2, tdb, target, site,
             norm_alpha3 = alpha_3.in_degrees() + 360
             alpha_3 = Angle(degrees=norm_alpha3)
 
+    _log.debug('alpha_1 normalised (yesterday): %s', alpha_1.in_degrees())
+    _log.debug('alpha_2 normalised (today): %s', alpha_2.in_degrees())
+    _log.debug('alpha_3 normalised (tomorrow): %s', alpha_3.in_degrees())
 
     # Construct the first and second differences
     a = alpha_2.in_degrees() - alpha_1.in_degrees()
@@ -620,13 +634,21 @@ def refine_day_fraction(app_sidereal_time, m_0, m_1, m_2, tdb, target, site,
                                    interp_delta_2_set, local_hour_angle_set,
                                    std_altitude)
 
+    refined_m_0 = normalise_day(refined_m_0)
+    refined_m_1 = normalise_day(refined_m_1)
+    refined_m_2 = normalise_day(refined_m_2)
 
     return (refined_m_0, refined_m_1, refined_m_2)
 
 
 
 def sidereal_time_at_greenwich(app_sidereal_time, m):
-    return app_sidereal_time.in_degrees() + (360.985647 * m)
+    sidereal_m =  app_sidereal_time.in_degrees() + (360.985647 * m)
+
+    while sidereal_m > 360.0:
+        sidereal_m -= 360.0
+
+    return sidereal_m
 
 
 

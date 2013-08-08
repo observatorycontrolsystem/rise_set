@@ -15,6 +15,7 @@ from __future__ import division
 # Standard libary imports
 import datetime
 import math
+import copy
 
 # Internal imports
 from rise_set.astrometry import calc_sunrise_set, calc_rise_set, RiseSetError, Star
@@ -130,6 +131,7 @@ class Visibility(object):
         current_date = self.start_date
         while current_date < self.end_date:
             one_day_intervals = day_interval_func(target, current_date, star, airmass)
+            print one_day_intervals
 
             # Add today's intervals to the accumulating list of intervals
             intervals.extend(one_day_intervals)
@@ -138,6 +140,7 @@ class Visibility(object):
             current_date += ONE_DAY
 
         # Collapse adjacent intervals into continuous larger intervals
+        old_intervals = list(intervals)
         intervals = coalesce_adjacent_intervals(intervals)
 
         return intervals
@@ -165,6 +168,9 @@ class Visibility(object):
             _log.warn("Got no up intervals!")
             _log.warn("dt was: %s", dt)
             _log.warn("target was: %s", target)
+            print("Got no up intervals!")
+            print("dt was: %s", dt)
+            print("target was: %s", target)
             exit()
 
         down_intervals = []
@@ -250,6 +256,8 @@ class Visibility(object):
         _log.debug("transit: %s (%s)", transits, dt + transits)
         _log.debug("set: %s (%s)",     sets, dt + sets)
 
+#        import ipdb; ipdb.set_trace()
+
         # Case 1: Overlapping start of day boundary
         # Target rose yesterday, and sets today. Rises again later today.
         #         |       x                                     |
@@ -307,6 +315,13 @@ class Visibility(object):
         return intervals
 
 
+    def __repr__(self):
+        repr_dict = copy.deepcopy(self.__dict__)
+        del(repr_dict['dark_intervals'])
+
+        sorted_str_dict = "{" + ", ".join("%s: %s" % (key, self.__dict__[key])
+                             for key in sorted(self.__dict__)) + "}"
+        return "Visibility (%s)" % sorted_str_dict
 
     def __key(self):
         return (self.site, self.start_date, self.end_date, self.horizon, self.twilight)
