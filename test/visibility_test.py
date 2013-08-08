@@ -3,6 +3,7 @@
 from __future__ import division
 
 from nose.tools import assert_equal, assert_almost_equals, assert_less
+from nose import SkipTest
 import datetime
 
 #Import the module to test
@@ -81,6 +82,27 @@ class TestIntervals(object):
                                      self.horizon, self.twilight)
 
 
+    def test_dark_intervals_have_positive_duration(self):
+        site        = {
+                        'latitude': Angle(degrees=-30.1673305556),
+                        'longitude': Angle(degrees=-70.8046611111),
+                      }
+        visibility = Visibility(
+                                 site=site,
+                                 start_date=datetime.datetime(2013, 10, 1, 0, 0),
+                                 end_date=datetime.datetime(2014, 4, 1, 0, 0),
+                                 horizon=30,
+                                 twilight='nautical',
+                               )
+
+        dark_intervals = visibility.get_dark_intervals()
+#        dark_intervals = visibility.get_target_intervals('sun', up=False)
+#        dark_intervals = visibility.find_when_target_is_up('sun', dt=datetime.datetime(2014, 3, 20))
+
+        for start, end in dark_intervals:
+            assert_less(start, end)
+
+
     def test_coalesce_adjacent_intervals(self):
         received = coalesce_adjacent_intervals(self.some_adjacent_intervals)
 
@@ -113,6 +135,27 @@ class TestIntervals(object):
         received = self.visibility.find_when_target_is_down(self.sun, self.dt)
 
         assert_equal(received, expected)
+
+
+    def test_sun_down_intervals_have_positive_duration(self):
+        dt = datetime.datetime(2013, 10, 31, 0, 0)
+        site        = {
+                        'latitude': Angle(degrees=-30.1673305556),
+                        'longitude': Angle(degrees=-70.8046611111),
+                      }
+        visibility = Visibility(
+                                 site=site,
+                                 start_date=datetime.datetime(2013, 10, 1, 0, 0),
+                                 end_date=datetime.datetime(2014, 4, 1, 0, 0),
+                                 horizon=30,
+                                 twilight='nautical',
+                               )
+
+        received = visibility.find_when_target_is_down(self.sun, dt, star=None,
+                                                                     airmass=None)
+
+        assert_less(received[0][0], received[0][1])
+
 
 
     def test_can_get_dark_intervals(self):

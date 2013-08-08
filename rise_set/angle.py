@@ -153,6 +153,8 @@ class Angle(object):
 
         return "%s %s %s" % (deg_hrs, mins, secs)
 
+    def __repr__(self):
+        return "Angle(%s degrees)" % self.in_degrees()
 
     def __key(self):
         return (self.degrees, self.units)
