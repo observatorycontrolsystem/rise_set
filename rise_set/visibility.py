@@ -131,7 +131,6 @@ class Visibility(object):
         current_date = self.start_date
         while current_date < self.end_date:
             one_day_intervals = day_interval_func(target, current_date, star, airmass)
-            print one_day_intervals
 
             # Add today's intervals to the accumulating list of intervals
             intervals.extend(one_day_intervals)
@@ -168,10 +167,6 @@ class Visibility(object):
             _log.warn("Got no up intervals!")
             _log.warn("dt was: %s", dt)
             _log.warn("target was: %s", target)
-            print("Got no up intervals!")
-            print("dt was: %s", dt)
-            print("target was: %s", target)
-            exit()
 
         down_intervals = []
 
