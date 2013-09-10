@@ -139,7 +139,6 @@ class Visibility(object):
             current_date += ONE_DAY
 
         # Collapse adjacent intervals into continuous larger intervals
-        old_intervals = list(intervals)
         intervals = coalesce_adjacent_intervals(intervals)
 
         return intervals

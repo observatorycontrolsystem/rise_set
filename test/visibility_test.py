@@ -104,9 +104,13 @@ class TestIntervals(object):
 
 
     def test_coalesce_adjacent_intervals(self):
+        input_intervals = list(self.some_adjacent_intervals)
         received = coalesce_adjacent_intervals(self.some_adjacent_intervals)
 
         assert_equal(received, self.expected_coalescence)
+
+        # Confirm the input list was not modified in place
+        assert_equal(input_intervals, self.some_adjacent_intervals)
 
 
     def test_can_get_sun_up_intervals(self):
