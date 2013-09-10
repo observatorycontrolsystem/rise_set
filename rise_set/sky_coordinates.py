@@ -44,7 +44,7 @@ class RightAscension(Angle):
 
 
     def __repr__(self):
-        return "RightAscension(%s)" % self.in_sexegesimal()
+        return "RightAscension(%s degrees)" % self.in_degrees()
 
 
 
@@ -69,4 +69,4 @@ class Declination(Angle):
 
 
     def __repr__(self):
-        return "Declination(%s)" % self.in_degrees()
+        return "Declination(%s degrees)" % self.in_degrees()
