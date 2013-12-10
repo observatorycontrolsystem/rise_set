@@ -16,6 +16,17 @@ from rise_set.sky_coordinates import RightAscension, Declination
 from rise_set.rates import ProperMotion
 
 
+def zero_out_microseconds(received):
+    zeroed = []
+    for start, end in received:
+        z_start = start.replace(microsecond=0)
+        z_end   = end.replace(microsecond=0)
+        zeroed.append((z_start, z_end))
+
+
+    return zeroed
+
+
 class TestIntervals(object):
 
     def setup(self):
@@ -116,14 +127,28 @@ class TestIntervals(object):
     def test_can_get_sun_up_intervals(self):
 
         expected = [
-                     (self.dt,
-                      self.dt.replace(hour=1,    minute=36,
-                                      second=1,  microsecond=743923)),
-                     (self.dt.replace(hour=14,   minute=50,
-                                      second=42, microsecond=912323),
-                      self.dt.replace(day=10))
+                     (
+                       self.dt,
+                       self.dt.replace(
+                                        hour=1,
+                                        minute=36,
+                                        second=1,
+                                      )
+                     ),
+                     (
+                       self.dt.replace(
+                                        hour=14,
+                                        minute=50,
+                                        second=42,
+                                      ),
+                        self.dt.replace(day=10)
+                     )
                     ]
         received = self.visibility.find_when_target_is_up(self.sun, self.dt)
+
+
+        # Ignore microseconds for these tests
+        received = zero_out_microseconds(received)
 
         assert_equal(received, expected)
 
@@ -132,11 +157,14 @@ class TestIntervals(object):
 
         expected = [
                     (self.dt.replace(hour=1,   minute=36,
-                                     second=1, microsecond=743923),
+                                     second=1,             ),
                      self.dt.replace(hour=14,   minute=50,
-                                     second=42, microsecond=912323))
+                                     second=42,            ))
                     ]
         received = self.visibility.find_when_target_is_down(self.sun, self.dt)
+
+        # Ignore microseconds for these tests
+        received = zero_out_microseconds(received)
 
         assert_equal(received, expected)
 
@@ -167,15 +195,18 @@ class TestIntervals(object):
 
         expected = [
                      (
-                       datetime.datetime(2011, 2, 9, 1, 36, 1, 743923),
-                       datetime.datetime(2011, 2, 9, 14, 50, 42, 912323)
+                       datetime.datetime(2011, 2, 9, 1, 36, 1),
+                       datetime.datetime(2011, 2, 9, 14, 50, 42)
                      ),
                      (
-                       datetime.datetime(2011, 2, 10, 1, 37, 0, 294325),
-                       datetime.datetime(2011, 2, 10, 14, 49, 47, 105564)
+                       datetime.datetime(2011, 2, 10, 1, 37, 0),
+                       datetime.datetime(2011, 2, 10, 14, 49, 47)
                      )
                    ]
         received = self.visibility.get_dark_intervals()
+
+        # Ignore microseconds for these tests
+        received = zero_out_microseconds(received)
 
         assert_equal(received, expected)
 
@@ -185,19 +216,22 @@ class TestIntervals(object):
         expected = [
                      (
                        datetime.datetime(2011, 2, 9, 0, 0),
-                       datetime.datetime(2011, 2, 9, 13, 6, 34, 127859)
+                       datetime.datetime(2011, 2, 9, 13, 6, 34)
                      ),
                      (
-                       datetime.datetime(2011, 2, 9, 18, 52, 15, 778256),
-                       datetime.datetime(2011, 2, 10, 13, 2, 38, 213278)
+                       datetime.datetime(2011, 2, 9, 18, 52, 15),
+                       datetime.datetime(2011, 2, 10, 13, 2, 38)
                      ),
                      (
-                       datetime.datetime(2011, 2, 10, 18, 48, 19, 841582),
+                       datetime.datetime(2011, 2, 10, 18, 48, 19),
                        datetime.datetime(2011, 2, 11, 0, 0)
                      )
                    ]
 
         received = self.visibility.get_target_intervals(self.capella, up=True)
+
+        # Ignore microseconds for these tests
+        received = zero_out_microseconds(received)
 
         assert_equal(received, expected)
 
@@ -227,12 +261,20 @@ class TestIntervals(object):
         received = v.get_target_intervals(rachels_target)
         expected = [
                      (
-                       datetime.datetime(2011, 10, 13, 2, 8, 2, 406269),
-                       datetime.datetime(2011, 10, 13, 11, 1, 25, 259816),
+                       datetime.datetime(2011, 10, 13, 2, 8, 2),
+                       datetime.datetime(2011, 10, 13, 11, 1, 25),
                      )
                     ]
 
-        assert_equal(received, expected)
+        # Ignore microseconds for these tests
+        before = received
+        received = zero_out_microseconds(received)
+
+        for i in range(len(received)):
+            assert_equal(received[i][0], expected[i][0])
+            assert_equal(received[i][1], expected[i][1])
+
+#        assert_equal(received, expected)
 
 
 
