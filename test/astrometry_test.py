@@ -5,9 +5,10 @@ from nose.tools import assert_equal, assert_almost_equal, raises
 import datetime
 
 #Import the module to test
-from rise_set.astrometry import (InvalidDateError, IncompleteTargetError, RiseSetError,
+from rise_set.astrometry import (InvalidDateTimeError, IncompleteTargetError, RiseSetError,
                                  RightAscension, Declination, Star, ProperMotion,
                                  gregorian_to_ut_mjd, mean_to_apparent,
+                                 date_to_tdb,
                                  calc_rise_set, calc_setting_day_fraction,
                                  calc_rise_set_hour_angle, calc_rising_day_fraction,
                                  calc_transit_day_fraction, day_frac_to_hms)
@@ -21,11 +22,22 @@ class YiannisIsTryingToBreakMyDateCalculator(object):
         self.year  = 1988
 
 
+class TestLeapSeconds(object):
+    '''Verification that leap seconds are up-to-date within SLALIB.'''
+
+    def test_pre2009_jan1_leapsecond(self):
+        date     = datetime.datetime(2008, 12, 31, 12, 0, 0)
+        received = date_to_tdb(date)
+        expected = 54831.5 + (65.184/86400)
+        assert_equal(received, expected)
+
+
+
 class TestAstrometry(object):
     '''Unit tests for the astrometry module.'''
 
     def setup(self):
-        self.date      = datetime.date(year=1988, month=3, day=20)
+        self.date      = datetime.datetime(year=1988, month=3, day=20)
         self.bad_month = YiannisIsTryingToBreakMyDateCalculator()
         self.mjd       = 47240.0
 
@@ -34,7 +46,14 @@ class TestAstrometry(object):
         assert_equal(gregorian_to_ut_mjd(self.date), self.mjd)
 
 
-    @raises(InvalidDateError)
+    def test_date_to_tdb(self):
+        date     = datetime.datetime(2013, 11, 4)
+        received = date_to_tdb(date)
+        expected = 56600.0 + (67.184/86400)
+        assert_equal(received, expected)
+
+
+    @raises(InvalidDateTimeError)
     def test_gregorian_to_ut_mjd_bad_month(self):
         gregorian_to_ut_mjd(self.bad_month)
 
@@ -283,7 +302,7 @@ class TestNGC2997FromCPT(object):
                }
 
 
-        self.date = datetime.date(2013, 3, 26)
+        self.date = datetime.datetime(2013, 3, 26)
 
         self.horizon = Angle(degrees=30)
 
@@ -333,7 +352,7 @@ class TestCanopusFromStAndrews(object):
         }
 
         # Date
-        self.date = datetime.date(year=2010, month=3, day=12)
+        self.date = datetime.datetime(year=2010, month=3, day=12)
 
 
     @raises(RiseSetError)
@@ -387,7 +406,7 @@ class TestCapellaFromStAndrews(object):
         }
 
         # Date
-        self.date = datetime.date(year=2010, month=3, day=12)
+        self.date = datetime.datetime(year=2010, month=3, day=12)
 
 
     @raises(RiseSetError)
@@ -444,7 +463,7 @@ class TestPolarisFromSidingSpring(object):
         }
 
         # Date
-        self.date = datetime.date(year = 2010, month = 3, day = 12)
+        self.date = datetime.datetime(year = 2010, month = 3, day = 12)
 
 
 
@@ -484,7 +503,7 @@ class TestMimosaFromSidingSpring(object):
         }
 
         # Date
-        self.date = datetime.date(year=2010, month=3, day=12)
+        self.date = datetime.datetime(year=2010, month=3, day=12)
 
 
     @raises(RiseSetError)
