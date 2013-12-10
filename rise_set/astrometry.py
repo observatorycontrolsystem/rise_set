@@ -121,18 +121,37 @@ class Star(object):
 def gregorian_to_ut_mjd(date):
     '''Convert Gregorian calendar date to UT MJD.'''
 
-    error = {
-            0 : 'OK',
-            1 : 'bad year (MJD not computed)',
-            2 : 'bad month (MJD not computed)',
-            3 : 'bad day (MJD not computed)',
-    }
-    status = 0
+    # Do the date part
+    caldj_error = {
+                     0 : 'OK',
+                     1 : 'bad year (MJD not computed)',
+                     2 : 'bad month (MJD not computed)',
+                     3 : 'bad day (MJD not computed)',
+                  }
+    caldj_status = 0
 
-    (mjd, status) = sla.sla_caldj(date.year, date.month, date.day)
+    mjd, caldj_status = sla.sla_caldj(date.year, date.month, date.day)
 
-    if (status != 0):
-        raise InvalidDateError('Error:' + error[status])
+    if caldj_status != 0:
+        raise InvalidDateTimeError('Error:' + caldj_error[caldj_status])
+
+
+    # Do the time part
+    dtf2d_error = {
+                    0 : 'OK',
+                    1 : 'IHOUR outside range 0-23',
+                    2 : 'IMIN outside range 0-59',
+                    3 : 'SEC outside range 0-59.999',
+                  }
+    dtf2d_status = 0
+
+    days, dtf2d_status = sla.sla_dtf2d(date.hour, date.minute, date.second)
+
+    if dtf2d_status != 0:
+        raise InvalidDateTimeError('Error:' + dtf2d_error[dtf2d_status])
+
+
+    mjd += days
 
     return mjd
 
@@ -731,7 +750,7 @@ def calculate_altitude(latitude, dec, local_hour_angle):
     return Angle(radians=altitude)
 
 
-class InvalidDateError(Exception):
+class InvalidDateTimeError(Exception):
     '''Raised when an invalid date is encountered.'''
     pass
 
