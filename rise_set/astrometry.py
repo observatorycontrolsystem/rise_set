@@ -119,7 +119,7 @@ class Star(object):
 
 
 def gregorian_to_ut_mjd(date):
-    '''Convert Gregorian calendar date to UT MJD.'''
+    '''Convert Gregorian calendar date to UTC MJD.'''
 
     # Do the date part
     caldj_error = {
@@ -158,7 +158,11 @@ def gregorian_to_ut_mjd(date):
 
 
 def ut_mjd_to_gmst(mjd):
-    '''Convert UT MJD to Greenwich mean sidereal time (an Angle).'''
+    '''Convert UTC MJD to Greenwich mean sidereal time (an Angle).
+       Note: We are assuming that UTC == UT1 here, which is what
+       sla_gmst really expects. UT1 can't be easily determined, and
+       we can only be out by less than 0.9s for as long as leap seconds
+       persist.'''
 
     gmst_in_radians = sla.sla_gmst(mjd)
 
@@ -170,16 +174,34 @@ def calc_apparent_sidereal_time(date):
     '''Return the apparent sidereal time (an Angle) for a given date.'''
 
     # Convert Gregorian to UT MJD
-    mjd = gregorian_to_ut_mjd(date)
+    mjd_utc = gregorian_to_ut_mjd(date)
+    mjd_tdb = date_to_tdb(date)
 
     # Convert UT MJD to Greenwich mean sidereal time (in radians)
-    gmst = ut_mjd_to_gmst(mjd)
+    gmst = ut_mjd_to_gmst(mjd_utc)
 
     # Find the apparent sidereal time (GAST)
     # GAST = GMST + Eqn. of equinoxes
-    gast_in_rads = gmst.in_radians() + sla.sla_eqeqx(mjd)
+    gast_in_rads = gmst.in_radians() + sla.sla_eqeqx(mjd_tdb)
 
     return Angle(radians=gast_in_rads)
+
+
+
+def calc_local_hour_angle(ra_app, longitude, date):
+    ''' Ast. Algorithms p.92 (with reversed longitude convention)
+        H = theta_0 + L - alpha
+
+        where:
+            theta_0 = GAST (Greenwich apparent sidereal time)
+            L       = Site longitude (east +ve)
+            alpha   = Apparent Right Ascension
+     '''
+    app_sidereal_time = calc_apparent_sidereal_time(date)
+
+    local_hour_angle = app_sidereal_time.in_degrees() + longitude - ra_app.in_degrees()
+
+    return local_hour_angle
 
 
 
@@ -386,6 +408,9 @@ def calc_rise_set(target, site, date, horizon=None):
        time offset for each event from the start of the provided date.
     '''
 
+    # Remove any time component of the provided datetime object
+    date = date.replace(hour=0, minute=0, second=0, microsecond=0)
+
     effective_horizon = apply_refraction_to_horizon(horizon)
     tdb = date_to_tdb(date)
 
@@ -429,6 +454,9 @@ def calc_sunrise_set(site, date, twilight):
     '''Return a tuple (transit, rise, set) of timedelta objects, describing the
        time offset for each event from the start of the provided date.
     '''
+
+    # Remove any time component of the provided datetime object
+    date = date.replace(hour=0, minute=0, second=0, microsecond=0)
 
     ut_mjd = gregorian_to_ut_mjd(date)
     tdb = ut_mjd + (sla.sla_dtt(ut_mjd)/86400)
@@ -738,7 +766,7 @@ def correct_rise_set(m, latitude, dec, local_hour_angle, std_altitude):
 
 def calculate_altitude(latitude, dec, local_hour_angle):
     '''Find the altitude of the target.
-       Eqn 12.6 Ast.Alg.
+       Eqn 13.6 Ast.Alg.
        sin h = sin(phi) sin(delta) + cos(phi)cos(delta)cos(H)
     '''
 
