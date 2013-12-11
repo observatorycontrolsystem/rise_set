@@ -1,17 +1,18 @@
 #!/usr/bin/python
 from __future__ import division
 
-from nose.tools import assert_equal, assert_almost_equal, raises
-import datetime
+from nose.tools import assert_equal, assert_almost_equal, assert_less, raises
+from datetime import datetime, timedelta
 
 #Import the module to test
 from rise_set.astrometry import (InvalidDateTimeError, IncompleteTargetError, RiseSetError,
                                  RightAscension, Declination, Star, ProperMotion,
                                  gregorian_to_ut_mjd, mean_to_apparent,
-                                 date_to_tdb,
+                                 date_to_tdb, calc_sunrise_set,
                                  calc_rise_set, calc_setting_day_fraction,
                                  calc_rise_set_hour_angle, calc_rising_day_fraction,
-                                 calc_transit_day_fraction, day_frac_to_hms)
+                                 calc_transit_day_fraction, day_frac_to_hms,
+                                 calc_local_hour_angle)
 
 from rise_set.angle import Angle
 
@@ -26,7 +27,7 @@ class TestLeapSeconds(object):
     '''Verification that leap seconds are up-to-date within SLALIB.'''
 
     def test_pre2009_jan1_leapsecond(self):
-        date     = datetime.datetime(2008, 12, 31, 12, 0, 0)
+        date     = datetime(2008, 12, 31, 12, 0, 0)
         received = date_to_tdb(date)
         expected = 54831.5 + (65.184/86400)
         assert_equal(received, expected)
@@ -37,7 +38,7 @@ class TestAstrometry(object):
     '''Unit tests for the astrometry module.'''
 
     def setup(self):
-        self.date      = datetime.datetime(year=1988, month=3, day=20)
+        self.date      = datetime(year=1988, month=3, day=20)
         self.bad_month = YiannisIsTryingToBreakMyDateCalculator()
         self.mjd       = 47240.0
 
@@ -47,7 +48,7 @@ class TestAstrometry(object):
 
 
     def test_date_to_tdb(self):
-        date     = datetime.datetime(2013, 11, 4)
+        date     = datetime(2013, 11, 4)
         received = date_to_tdb(date)
         expected = 56600.0 + (67.184/86400)
         assert_equal(received, expected)
@@ -73,6 +74,90 @@ class TestAstrometry(object):
         tdb = self.mjd
         target_missing_dec = dict(ra='02 46 55.51')
         mean_to_apparent(target_missing_dec, tdb)
+
+
+    def test_calc_local_hour_angle(self):
+        ra_app        = Angle(degrees=30)
+        elp_longitude = -104.015194444
+        date          = datetime(2013, 12, 10)
+
+        hour_angle = calc_local_hour_angle(ra_app, elp_longitude, date)
+
+        assert_almost_equal(hour_angle, -55.128564469690645, places=13)
+
+
+
+class TestSunriseSunset(object):
+
+    def setup(self):
+        self.lsc =  {
+                      'name'      : '1m0a.domb.lsc',
+                      'latitude'  : Angle(degrees=-30.1673472222),
+                      'longitude' : Angle(degrees=-70.8046722222),
+                    }
+
+        self.elp = {
+                     'name'      : '1m0a.doma.elp',
+                     'latitude'  : Angle(degrees=30.6801),
+                     'longitude' : Angle(degrees=-104.015194444),
+                   }
+
+
+
+    def test_nautical_twilight_from_lsc_no_time(self):
+        date = datetime(2013, 12, 10)
+        twilight = 'nautical'
+
+        expected = ('unknown', timedelta(hours=8, minutes=34),
+                    timedelta(hours=0, minutes=38))
+
+        received = calc_sunrise_set(self.lsc, date, twilight)
+
+        # We only know these to the nearest 30s from USNO online calculator
+        assert_less(abs(expected[1]-received[1]), timedelta(seconds=30))
+        assert_less(abs(expected[2]-received[2]), timedelta(seconds=30))
+
+
+    def test_nautical_twilight_from_lsc_with_time(self):
+        date = datetime(2013, 12, 10, 12)
+        twilight = 'nautical'
+
+        expected = ('unknown', timedelta(hours=8, minutes=34),
+                    timedelta(hours=0, minutes=38))
+
+        received = calc_sunrise_set(self.lsc, date, twilight)
+
+        # We only know these to the nearest 30s from USNO online calculator
+        assert_less(abs(expected[1]-received[1]), timedelta(seconds=30))
+        assert_less(abs(expected[2]-received[2]), timedelta(seconds=30))
+
+
+    def test_sunrise_set_from_elp_no_time(self):
+        date = datetime(2012, 5, 11)
+        twilight = 'sunrise'
+
+        expected = ('unknown', timedelta(hours=12, minutes=4),
+                    timedelta(hours=1, minutes=41))
+
+        received = calc_sunrise_set(self.elp, date, twilight)
+
+        # We only know these to the nearest 30s from USNO online calculator
+        assert_less(abs(expected[1]-received[1]), timedelta(seconds=30))
+        assert_less(abs(expected[2]-received[2]), timedelta(seconds=30))
+
+
+    def test_sunrise_set_from_elp_with_time(self):
+        date = datetime(2012, 5, 11, 17, 30)
+        twilight = 'sunrise'
+
+        expected = ('unknown', timedelta(hours=12, minutes=4),
+                    timedelta(hours=1, minutes=41))
+
+        received = calc_sunrise_set(self.elp, date, twilight)
+
+        # We only know these to the nearest 30s from USNO online calculator
+        assert_less(abs(expected[1]-received[1]), timedelta(seconds=30))
+        assert_less(abs(expected[2]-received[2]), timedelta(seconds=30))
 
 
 
@@ -153,7 +238,8 @@ class TestDenebFromMaui(object):
         }
 
         # Date
-        self.date = datetime.datetime(year=2010, month=10, day=25)
+        # We provide an hour to prove that this is ignored by rise_set
+        self.date = datetime(year=2010, month=10, day=25, hour=8)
 
 
     def test_rise_set(self):
@@ -169,7 +255,8 @@ class TestDenebFromMaui(object):
         exp_t_hr  = 4
         exp_t_min = 52   # Not 53, because we expect to round up seconds
 
-        transit_time = self.date + transit
+        the_date     = self.date.replace(hour=0, minute=0, second=0, microsecond=0)
+        transit_time = the_date + transit
 
         assert_equal(transit_time.hour, exp_t_hr)
         assert_equal(transit_time.minute, exp_t_min)
@@ -181,7 +268,7 @@ class TestDenebFromMaui(object):
         exp_r_hr  = 21
         exp_r_min = 16   # Not 17, because we expect to round up seconds
 
-        rise_time = self.date + rise
+        rise_time = the_date + rise
 
         assert_equal(rise_time.hour, exp_r_hr)
         assert_equal(rise_time.minute, exp_r_min)
@@ -192,7 +279,7 @@ class TestDenebFromMaui(object):
         exp_s_hr  = 12
         exp_s_min = 25   # Not 24, because we expect to round down seconds
 
-        set_time = self.date + sets
+        set_time = the_date + sets
 
         assert_equal(set_time.hour, exp_s_hr)
         assert_equal(set_time.minute, exp_s_min)
@@ -237,7 +324,7 @@ class TestCanopusFromSidingSpring(object):
         }
 
         # Date
-        self.date = datetime.datetime(year = 2010, month = 3, day = 12)
+        self.date = datetime(year = 2010, month = 3, day = 12)
 
 
     def test_rise_set(self):
@@ -302,7 +389,7 @@ class TestNGC2997FromCPT(object):
                }
 
 
-        self.date = datetime.datetime(2013, 3, 26)
+        self.date = datetime(2013, 3, 26)
 
         self.horizon = Angle(degrees=30)
 
@@ -352,7 +439,7 @@ class TestCanopusFromStAndrews(object):
         }
 
         # Date
-        self.date = datetime.datetime(year=2010, month=3, day=12)
+        self.date = datetime(year=2010, month=3, day=12)
 
 
     @raises(RiseSetError)
@@ -406,7 +493,7 @@ class TestCapellaFromStAndrews(object):
         }
 
         # Date
-        self.date = datetime.datetime(year=2010, month=3, day=12)
+        self.date = datetime(year=2010, month=3, day=12)
 
 
     @raises(RiseSetError)
@@ -463,7 +550,7 @@ class TestPolarisFromSidingSpring(object):
         }
 
         # Date
-        self.date = datetime.datetime(year = 2010, month = 3, day = 12)
+        self.date = datetime(year = 2010, month = 3, day = 12)
 
 
 
@@ -503,7 +590,7 @@ class TestMimosaFromSidingSpring(object):
         }
 
         # Date
-        self.date = datetime.datetime(year=2010, month=3, day=12)
+        self.date = datetime(year=2010, month=3, day=12)
 
 
     @raises(RiseSetError)
