@@ -22,7 +22,7 @@ import ast
 from datetime import timedelta
 
 def initialelemdict():
-    '''Create an inital empty orbital elements dictionary'''
+    '''Create an inital empty orbital elements dictionary.'''
     keys  = "Name H G epoch mean_anomaly long_node arg_perihelion inclination "
     keys += "eccentricity MDM semi_axis n_obs n_nights"
 
@@ -32,7 +32,7 @@ def initialelemdict():
 def extract_mpc_epoch(epochstring):
     '''Convert packed MPC epoch format (e.g. 'J974L') from NEOCP orbit files
     into a datetime.datetime epoch (e.g. '1997 4 21'). Returns -1 if invalid
-    length (no other sanity checking is done)'''
+    length (no other sanity checking is done).'''
 
     if len(epochstring) != 5: return -1
     year = 100 * (ord(epochstring[0]) - ord('A') + 10) + \
