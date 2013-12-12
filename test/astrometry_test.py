@@ -78,7 +78,7 @@ class TestAstrometry(object):
 
     def test_calc_local_hour_angle(self):
         ra_app        = Angle(degrees=30)
-        elp_longitude = -104.015194444
+        elp_longitude = Angle(degrees=-104.015194444)
         date          = datetime(2013, 12, 10)
 
         hour_angle = calc_local_hour_angle(ra_app, elp_longitude, date)
