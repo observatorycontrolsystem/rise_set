@@ -99,7 +99,7 @@ class TestSites(object):
     def test_initialise_sites(self):
         expected_keys = ['1m0a.doma.elp', '1m0a.doma.coj',
                          '1m0a.doma.cpt', '1m0a.doma.lsc']
-        sites = initialise_sites('telescopes.dat')
+        sites = initialise_sites('test/telescopes.dat')
 
         assert_equal(len(sites.sites), 4)
         assert_equal(sites.sites.keys(), expected_keys)
@@ -356,7 +356,7 @@ class TestMovingObjects(object):
                    'end'   : datetime(2013, 12, 10, 8, 30)
                  }
 
-        site_filename = 'telescopes.dat'
+        site_filename = 'test/telescopes.dat'
 
         chunksize = timedelta(minutes=15)
 
