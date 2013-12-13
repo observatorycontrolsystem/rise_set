@@ -121,7 +121,7 @@ class TestMovingObjects(object):
         # From 1313 observations at 37 oppositions, 1901-2013, mean residual 0".53.
 
         self.elements = {
-                          'epoch'          : datetime(2013, 11, 4),
+                          'epoch'          : 56600.0,
                           'inclination'    : Angle(degrees=7.22565),
                           'long_node'      : Angle(degrees=173.25052),
                           'arg_perihelion' : Angle(degrees=47.60658),
@@ -141,7 +141,7 @@ class TestMovingObjects(object):
 # rise_set format.
         expected = {
                      'Name': 'P109rXK',
-                     'epoch': datetime(2013, 11, 24, 0, 0),
+                     'epoch': 56620.0,
                      'long_node':  Angle(degrees=224.42273),
                      'eccentricity': 0.5131088,
                      'semi_axis': 2.0773493,
@@ -160,24 +160,24 @@ class TestMovingObjects(object):
         for e in expected.keys():
             assert_equal(expected[e], recieved[e])
 
-    def test_read_neocp_orbit1(self):
+    def test_read_neocp_orbit2(self):
 
 # Element dictionary produced by TAL's code from NEOCP orbit file, migrated to
 # rise_set format.
         expected = {
-                     'Name': 'K13TB7L',
-                     'epoch': datetime(2013, 11, 4, 0, 0),
-                     'long_node': Angle(degrees=3.36296),
-                     'eccentricity': 0.6898696,
-                     'semi_axis': 3.6038493,
-                     'mean_anomaly': Angle(degrees=344.69702),
-                     'arg_perihelion': Angle(degrees=112.20127),
-                     'inclination': Angle(degrees=9.36592),
-                     'MDM': Angle(degrees=0.14406356),
-                     'H': 17.7,
-                     'G': 0.15,
-                     'n_obs': 146,
-                     'n_nights': 2,
+                     'Name'           : 'K13TB7L',
+                     'epoch'          : 56600.0,
+                     'long_node'      : Angle(degrees=3.36296),
+                     'eccentricity'   : 0.6898696,
+                     'semi_axis'      : 3.6038493,
+                     'mean_anomaly'   : Angle(degrees=344.69702),
+                     'arg_perihelion' : Angle(degrees=112.20127),
+                     'inclination'    : Angle(degrees=9.36592),
+                     'MDM'            : Angle(degrees=0.14406356),
+                     'H'              : 17.7,
+                     'G'              : 0.15,
+                     'n_obs'          : 146,
+                     'n_nights'       : 2,
                    }
 
         recieved = read_neocp_orbit('test/2013TL117.neocp')
@@ -259,7 +259,7 @@ class TestMovingObjects(object):
 
         for e, r in zip(expected, received):
             assert_almost_equal(e['ra_app'].in_degrees(), r['ra_app'].in_degrees(), places=3)
-            assert_almost_equal(e['dec_app'].in_degrees(), r['dec_app'].in_degrees(), places=5)
+            assert_almost_equal(e['dec_app'].in_degrees(), r['dec_app'].in_degrees(), places=4)
             assert_equal(e['start'], r['start'])
             assert_equal(e['end'], r['end'])
 
