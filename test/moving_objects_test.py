@@ -137,51 +137,51 @@ class TestMovingObjects(object):
 
     def test_read_neocp_orbit1(self):
 
-# Element dictionary produced by TAL's code from NEOCP orbit file, migrated to 
+# Element dictionary produced by TAL's code from NEOCP orbit file, migrated to
 # rise_set format.
-        expected = { 
-                     'Name': 'P109rXK', 
-                     'epoch': datetime(2013, 11, 24, 0, 0), 
-                     'long_node':  Angle(degrees=224.42273), 
-                     'eccentricity': 0.5131088, 
-                     'semi_axis': 2.0773493, 
-                     'mean_anomaly':  Angle(degrees=322.22271), 
-                     'arg_perihelion': Angle(degrees=307.96804), 
+        expected = {
+                     'Name': 'P109rXK',
+                     'epoch': datetime(2013, 11, 24, 0, 0),
+                     'long_node':  Angle(degrees=224.42273),
+                     'eccentricity': 0.5131088,
+                     'semi_axis': 2.0773493,
+                     'mean_anomaly':  Angle(degrees=322.22271),
+                     'arg_perihelion': Angle(degrees=307.96804),
                      'inclination':  Angle(degrees=13.72592),
-                     'MDM':  Angle(degrees=0.3291848), 
-                     'H': 17.5, 
+                     'MDM':  Angle(degrees=0.3291848),
+                     'H': 17.5,
                      'G': 0.15,
-                     'n_obs': 4, 
-                     'n_nights': 1, 
+                     'n_obs': 4,
+                     'n_nights': 1,
                    }
 
         recieved = read_neocp_orbit('test/P109rXK.neocp')
-        
+
         for e in expected.keys():
             assert_equal(expected[e], recieved[e])
 
     def test_read_neocp_orbit1(self):
 
-# Element dictionary produced by TAL's code from NEOCP orbit file, migrated to 
+# Element dictionary produced by TAL's code from NEOCP orbit file, migrated to
 # rise_set format.
-        expected = { 
+        expected = {
                      'Name': 'K13TB7L',
                      'epoch': datetime(2013, 11, 4, 0, 0),
-                     'long_node': Angle(degrees=3.36296), 
+                     'long_node': Angle(degrees=3.36296),
                      'eccentricity': 0.6898696,
                      'semi_axis': 3.6038493,
-                     'mean_anomaly': Angle(degrees=344.69702), 
-                     'arg_perihelion': Angle(degrees=112.20127), 
+                     'mean_anomaly': Angle(degrees=344.69702),
+                     'arg_perihelion': Angle(degrees=112.20127),
                      'inclination': Angle(degrees=9.36592),
-                     'MDM': Angle(degrees=0.14406356), 
-                     'H': 17.7, 
+                     'MDM': Angle(degrees=0.14406356),
+                     'H': 17.7,
                      'G': 0.15,
                      'n_obs': 146,
                      'n_nights': 2,
                    }
 
         recieved = read_neocp_orbit('test/2013TL117.neocp')
-        
+
         for e in expected.keys():
             assert_equal(expected[e], recieved[e])
 

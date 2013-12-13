@@ -4,16 +4,17 @@ from __future__ import division
 
 from nose.tools import assert_equal, assert_almost_equals, assert_less
 from nose import SkipTest
-import datetime
+from datetime import datetime
 
 #Import the module to test
-from rise_set.visibility import (Visibility, set_airmass_limit,
-                                 coalesce_adjacent_intervals)
+from rise_set.visibility import Visibility, set_airmass_limit
 
 # Additional support modules
 from rise_set.angle import Angle
 from rise_set.sky_coordinates import RightAscension, Declination
 from rise_set.rates import ProperMotion
+
+from mock import patch
 
 
 def zero_out_microseconds(received):
@@ -31,49 +32,14 @@ class TestIntervals(object):
 
     def setup(self):
 
-        self.some_adjacent_intervals = [
-               # Two contiguous intervals
-               (datetime.datetime(year=2011, month=2, day=1, hour=12, minute=0),
-                datetime.datetime(year=2011, month=2, day=1, hour=12, minute=30)),
-               (datetime.datetime(year=2011, month=2, day=1, hour=12, minute=30),
-                datetime.datetime(year=2011, month=2, day=1, hour=13, minute=0)),
-               # Three contiguous intervals
-               (datetime.datetime(year=2011, month=2, day=1, hour=15, minute=0),
-                datetime.datetime(year=2011, month=2, day=1, hour=15, minute=30)),
-               (datetime.datetime(year=2011, month=2, day=1, hour=15, minute=30),
-                datetime.datetime(year=2011, month=2, day=1, hour=16, minute=0)),
-               (datetime.datetime(year=2011, month=2, day=1, hour=16, minute=0),
-                datetime.datetime(year=2011, month=2, day=1, hour=16, minute=30)),
-               # Two non-contiguous intervals
-               (datetime.datetime(year=2011, month=2, day=1, hour=17, minute=0),
-                datetime.datetime(year=2011, month=2, day=1, hour=17, minute=30)),
-               (datetime.datetime(year=2011, month=2, day=1, hour=18, minute=0),
-                datetime.datetime(year=2011, month=2, day=1, hour=18, minute=30)),
-              ]
-
-
-        self.expected_coalescence = [
-               # First coalescence
-               (datetime.datetime(year=2011, month=2, day=1, hour=12, minute=0),
-                datetime.datetime(year=2011, month=2, day=1, hour=13, minute=0)),
-               # Second coalescence
-               (datetime.datetime(year=2011, month=2, day=1, hour=15, minute=0),
-                datetime.datetime(year=2011, month=2, day=1, hour=16, minute=30)),
-               # Remaining, non-continous intervals
-               (datetime.datetime(year=2011, month=2, day=1, hour=17, minute=0),
-                datetime.datetime(year=2011, month=2, day=1, hour=17, minute=30)),
-               (datetime.datetime(year=2011, month=2, day=1, hour=18, minute=0),
-                datetime.datetime(year=2011, month=2, day=1, hour=18, minute=30)),
-            ]
-
         self.sun        = 'sun'
         self.bpl        = {
                           'latitude'  : Angle(degrees = 34.4332222222),
                           'longitude' : Angle(degrees = -119.863045833)
                           }
-        self.dt         = datetime.datetime(year=2011, month=2, day=9)
-        self.start_date = datetime.datetime(year=2011, month=2, day=9)
-        self.end_date   = datetime.datetime(year=2011, month=2, day=11)
+        self.dt         = datetime(year=2011, month=2, day=9)
+        self.start_date = datetime(year=2011, month=2, day=9)
+        self.end_date   = datetime(year=2011, month=2, day=11)
         self.horizon    = 0
         self.twilight   = 'sunrise'
 
@@ -100,28 +66,18 @@ class TestIntervals(object):
                       }
         visibility = Visibility(
                                  site=site,
-                                 start_date=datetime.datetime(2013, 10, 1, 0, 0),
-                                 end_date=datetime.datetime(2014, 4, 1, 0, 0),
+                                 start_date=datetime(2013, 10, 1, 0, 0),
+                                 end_date=datetime(2014, 4, 1, 0, 0),
                                  horizon=30,
                                  twilight='nautical',
                                )
 
         dark_intervals = visibility.get_dark_intervals()
 #        dark_intervals = visibility.get_target_intervals('sun', up=False)
-#        dark_intervals = visibility.find_when_target_is_up('sun', dt=datetime.datetime(2014, 3, 20))
+#        dark_intervals = visibility.find_when_target_is_up('sun', dt=datetime(2014, 3, 20))
 
         for start, end in dark_intervals:
             assert_less(start, end)
-
-
-    def test_coalesce_adjacent_intervals(self):
-        input_intervals = list(self.some_adjacent_intervals)
-        received = coalesce_adjacent_intervals(self.some_adjacent_intervals)
-
-        assert_equal(received, self.expected_coalescence)
-
-        # Confirm the input list was not modified in place
-        assert_equal(input_intervals, self.some_adjacent_intervals)
 
 
     def test_can_get_sun_up_intervals(self):
@@ -170,15 +126,15 @@ class TestIntervals(object):
 
 
     def test_sun_down_intervals_have_positive_duration(self):
-        dt = datetime.datetime(2013, 10, 31, 0, 0)
+        dt = datetime(2013, 10, 31, 0, 0)
         site        = {
                         'latitude': Angle(degrees=-30.1673305556),
                         'longitude': Angle(degrees=-70.8046611111),
                       }
         visibility = Visibility(
                                  site=site,
-                                 start_date=datetime.datetime(2013, 10, 1, 0, 0),
-                                 end_date=datetime.datetime(2014, 4, 1, 0, 0),
+                                 start_date=datetime(2013, 10, 1, 0, 0),
+                                 end_date=datetime(2014, 4, 1, 0, 0),
                                  horizon=30,
                                  twilight='nautical',
                                )
@@ -195,12 +151,12 @@ class TestIntervals(object):
 
         expected = [
                      (
-                       datetime.datetime(2011, 2, 9, 1, 36, 1),
-                       datetime.datetime(2011, 2, 9, 14, 50, 42)
+                       datetime(2011, 2, 9, 1, 36, 1),
+                       datetime(2011, 2, 9, 14, 50, 42)
                      ),
                      (
-                       datetime.datetime(2011, 2, 10, 1, 37, 0),
-                       datetime.datetime(2011, 2, 10, 14, 49, 47)
+                       datetime(2011, 2, 10, 1, 37, 0),
+                       datetime(2011, 2, 10, 14, 49, 47)
                      )
                    ]
         received = self.visibility.get_dark_intervals()
@@ -211,20 +167,20 @@ class TestIntervals(object):
         assert_equal(received, expected)
 
 
-    def test_get_target_up_intervals(self):
+    def test_get_target_intervals_ra_dec(self):
 
         expected = [
                      (
-                       datetime.datetime(2011, 2, 9, 0, 0),
-                       datetime.datetime(2011, 2, 9, 13, 6, 34)
+                       datetime(2011, 2, 9, 0, 0),
+                       datetime(2011, 2, 9, 13, 6, 34)
                      ),
                      (
-                       datetime.datetime(2011, 2, 9, 18, 52, 15),
-                       datetime.datetime(2011, 2, 10, 13, 2, 38)
+                       datetime(2011, 2, 9, 18, 52, 15),
+                       datetime(2011, 2, 10, 13, 2, 38)
                      ),
                      (
-                       datetime.datetime(2011, 2, 10, 18, 48, 19),
-                       datetime.datetime(2011, 2, 11, 0, 0)
+                       datetime(2011, 2, 10, 18, 48, 19),
+                       datetime(2011, 2, 11, 0, 0)
                      )
                    ]
 
@@ -236,9 +192,63 @@ class TestIntervals(object):
         assert_equal(received, expected)
 
 
+    @patch('rise_set.visibility.Visibility.get_ra_target_intervals')
+    @patch('rise_set.visibility.find_moving_object_up_intervals')
+    def test_get_target_intervals_empty_target(self, mock_func1, mock_func2):
+        target = {}
+
+        received = self.visibility.get_target_intervals(target)
+
+        assert_equal(mock_func1.call_count, 0)
+        assert_equal(mock_func2.call_count, 1)
+
+
+    @patch('rise_set.visibility.find_moving_object_up_intervals')
+    def test_get_target_intervals_type_specified(self, mock_func):
+        target = {
+                   'type'           : 'mpc_minor_planet',
+                   'epoch'          : datetime(2013, 11, 4),
+                   'inclination'    : Angle(degrees=7.22565),
+                   'long_node'      : Angle(degrees=173.25052),
+                   'arg_perihelion' : Angle(degrees=47.60658),
+                   'semi_axis'      : 2.4050925,
+                   'eccentricity'   : 0.0943494,
+                   'mean_anomaly'   : Angle(degrees=54.47380),
+                 }
+
+        mock_func.return_value = 1,2
+
+        received = self.visibility.get_target_intervals(target)
+
+        assert_equal(mock_func.call_count, 1)
+
+        args, kwargs = mock_func.call_args
+
+        expected_window = {
+                            'start' : datetime(2011, 2, 9, 0, 0),
+                            'end'   : datetime(2011, 2, 11, 0, 0)
+                          }
+        expected_target = target
+        expected_site   = {
+                            'latitude' : Angle(degrees=34.4332222222),
+                            'horizon'  : Angle(degrees=0.0),
+                            'longitude': Angle(degrees=-119.863045833)
+                          }
+
+        assert_equal(args[0], expected_window)
+        assert_equal(args[1], expected_target)
+        assert_equal(args[2], expected_site)
+
+
+
+
+
+
+
+
     def test_up_intervals_rise_set_transit_within_same_day(self):
-        start = datetime.datetime(year=2011, month=10, day=13, hour=4, minute=30)
-        end   = datetime.datetime(year=2011, month=10, day=13, hour=10, minute=30)
+        start = datetime(year=2011, month=10, day=13, hour=4, minute=30)
+        end   = datetime(year=2011, month=10, day=13, hour=10, minute=30)
 
         observatory = {
                 'latitude'  : Angle(degrees=34.4325),
@@ -261,8 +271,8 @@ class TestIntervals(object):
         received = v.get_target_intervals(rachels_target)
         expected = [
                      (
-                       datetime.datetime(2011, 10, 13, 2, 8, 2),
-                       datetime.datetime(2011, 10, 13, 11, 1, 25),
+                       datetime(2011, 10, 13, 2, 8, 2),
+                       datetime(2011, 10, 13, 11, 1, 25),
                      )
                     ]
 
@@ -292,8 +302,8 @@ class TestAirmassCalculation(object):
            'longitude' : Angle(degrees = -150.0)
         }
 
-        start = datetime.datetime(year=2010, month=10, day=25)
-        end   = datetime.datetime(year=2010, month=10, day=26)
+        start = datetime(year=2010, month=10, day=25)
+        end   = datetime(year=2010, month=10, day=26)
 
         # Target
         # Note: Aladin units are mas/yr...
