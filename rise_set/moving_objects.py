@@ -14,7 +14,7 @@ from __future__ import division
 
 from rise_set.astrometry import date_to_tdb, calc_local_hour_angle, calculate_altitude
 from rise_set.angle      import Angle
-from rise_set.visibility import coalesce_adjacent_intervals
+from rise_set.utils      import coalesce_adjacent_intervals
 
 import slalib as sla
 
@@ -229,7 +229,7 @@ def find_moving_object_network_up_intervals(window, elements, site_filename, chu
     return up_intervals_at
 
 
-def find_moving_object_up_intervals(window, elements, site, chunksize):
+def find_moving_object_up_intervals(window, elements, site, chunksize=timedelta(minutes=15)):
     coords = calc_ephemerides(window, elements, site, chunksize)
 
     intervals = []

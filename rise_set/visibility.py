@@ -18,8 +18,10 @@ import math
 import copy
 
 # Internal imports
-from rise_set.astrometry import calc_sunrise_set, calc_rise_set, RiseSetError, Star
-from rise_set.angle      import Angle
+from rise_set.astrometry     import calc_sunrise_set, calc_rise_set, RiseSetError, Star
+from rise_set.angle          import Angle
+from rise_set.moving_objects import find_moving_object_up_intervals
+from rise_set.utils          import coalesce_adjacent_intervals
 
 # Import logging modules
 import logging
@@ -59,29 +61,6 @@ def set_airmass_limit(airmass, horizon):
     return effective_horizon
 
 
-def coalesce_adjacent_intervals(intervals):
-    '''Combine a set of datetime 2-tuples, coalescing adjacent intervals into
-       larger intervals wherever possible.
-    '''
-
-    # Catch the special case where the target never rose
-    if len(intervals) == 0:
-        return intervals
-
-    coalesced_intervals = [intervals[0]]
-    for interval in intervals[1:]:
-
-        # If the current interval end matches the next interval start...
-        if coalesced_intervals[-1][1] == interval[0]:
-            # ...the two intervals are contiguous - combine them
-            coalesced_intervals[-1] = (coalesced_intervals[-1][0], interval[1])
-        else:
-            # ...the two intervals are not contiguous - store seperately
-            coalesced_intervals.append(interval)
-
-    return coalesced_intervals
-
-
 class Visibility(object):
 
     def __init__(self, site, start_date, end_date, horizon=0, twilight='sunrise'):
@@ -119,6 +98,29 @@ class Visibility(object):
         '''
         effective_horizon = set_airmass_limit(airmass, self.horizon.in_degrees())
 
+        # Handle moving objects differently from stars
+        if 'type' in target and target['type'].lower() == 'mpc_minor_planet':
+            intervals = self.get_moving_object_target_intervals(target, effective_horizon)
+        # The target has an RA/Dec
+        else:
+            intervals = self.get_ra_target_intervals(target, up, airmass, effective_horizon)
+
+        return intervals
+
+
+    def get_moving_object_target_intervals(self, target, effective_horizon):
+        window = {
+                   'start' : self.start_date,
+                   'end'   : self.end_date,
+                 }
+        site = self.site.copy()
+        site['horizon'] = Angle(degrees=effective_horizon)
+        intervals, _ = find_moving_object_up_intervals(window, target, site)
+
+        return intervals
+
+
+    def get_ra_target_intervals(self, target, up, airmass, effective_horizon):
         star = Star(self.site['latitude'], target, effective_horizon)
 
         if up:
