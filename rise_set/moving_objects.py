@@ -19,7 +19,7 @@ from rise_set.visibility import coalesce_adjacent_intervals
 import slalib as sla
 
 import ast
-from datetime import timedelta
+from datetime import datetime,timedelta
 
 def initialelemdict():
     '''Create an inital empty orbital elements dictionary.'''
