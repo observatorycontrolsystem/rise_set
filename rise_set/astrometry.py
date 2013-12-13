@@ -205,8 +205,8 @@ def calc_local_hour_angle(ra_app, longitude, date):
 
 
 
-def make_target(ra, dec, ra_proper_motion=None, dec_proper_motion=None, parallax=None,
-                rad_vel=None, epoch=None):
+def make_ra_dec_target(ra, dec, ra_proper_motion=None, dec_proper_motion=None, parallax=None,
+                       rad_vel=None, epoch=None):
 
     target = {
                 'ra'                : ra,
@@ -216,6 +216,23 @@ def make_target(ra, dec, ra_proper_motion=None, dec_proper_motion=None, parallax
                 'parallax'          : parallax or 0.0,
                 'rad_vel'           : rad_vel or 0.0,
                 'epoch'             : epoch or 2000,
+             }
+
+    return target
+
+
+def make_moving_object_target(target_type, epoch, inclination, long_node, arg_perihelion,
+                              semi_axis, eccentricity, mean_anomaly):
+
+    target = {
+               'type'           : target_type,
+               'epoch'          : epoch,
+               'inclination'    : Angle(degrees=inclination),
+               'long_node'      : Angle(degrees=long_node),
+               'arg_perihelion' : Angle(degrees=arg_perihelion),
+               'semi_axis'      : semi_axis,
+               'eccentricity'   : eccentricity,
+               'mean_anomaly'   : Angle(degrees=mean_anomaly),
              }
 
     return target
@@ -233,12 +250,12 @@ def mean_to_apparent(target, tdb):
     if not target.get('dec'):
         raise IncompleteTargetError("Missing Declination in target definition")
 
-    target = make_target(target['ra'], target['dec'],
-                         ra_proper_motion=target.get('ra_proper_motion'),
-                         dec_proper_motion=target.get('dec_proper_motion'),
-                         parallax=target.get('parallax'),
-                         rad_vel=target.get('rad_vel'),
-                         epoch=target.get('epoch'))
+    target = make_ra_dec_target(target['ra'], target['dec'],
+                                ra_proper_motion=target.get('ra_proper_motion'),
+                                dec_proper_motion=target.get('dec_proper_motion'),
+                                parallax=target.get('parallax'),
+                                rad_vel=target.get('rad_vel'),
+                                epoch=target.get('epoch'))
 
 
 
