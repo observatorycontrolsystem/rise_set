@@ -12,7 +12,8 @@ December 2013
 
 from __future__ import division
 
-from rise_set.astrometry import date_to_tdb, calc_local_hour_angle, calculate_altitude
+from rise_set.astrometry import (gregorian_to_ut_mjd, date_to_tdb,
+                                 calc_local_hour_angle, calculate_altitude)
 from rise_set.angle      import Angle
 from rise_set.utils      import coalesce_adjacent_intervals
 
@@ -66,7 +67,10 @@ def read_neocp_orbit(orbfile):
         elements['Name']           = chunks[0]
         elements['H']              = float(chunks[1])
         elements['G']              = float(chunks[2])
-        elements['epoch']          = extract_mpc_epoch(chunks[3])
+
+        epoch_dt                   = extract_mpc_epoch(chunks[3])
+        elements['epoch']          = gregorian_to_ut_mjd(epoch_dt)
+
         elements['mean_anomaly']   = Angle(degrees=float(chunks[4]))
         elements['arg_perihelion'] = Angle(degrees=float(chunks[5]))
         elements['long_node']      = Angle(degrees=float(chunks[6]))
@@ -163,15 +167,13 @@ def elem_to_topocentric_apparent(dt, elements, site):
     MINOR_PLANET_JFORM = 2
     MDM_PLACEHOLDER    = 0.0  # Only used for major planets
 
-    epoch_mjd = date_to_tdb(elements['epoch'])
-
     status = 0
     ra_app_rads, dec_app_rads, earth_obj_dist, status = sla.sla_plante(
                                                     tdb,
                                                     site['longitude'].in_radians(),
                                                     site['latitude'].in_radians(),
                                                     MINOR_PLANET_JFORM,
-                                                    epoch_mjd,
+                                                    elements['epoch'],
                                                     elements['inclination'].in_radians(),
                                                     elements['long_node'].in_radians(),
                                                     elements['arg_perihelion'].in_radians(),
