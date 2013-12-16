@@ -29,6 +29,7 @@ v.0.2.7 - Standardisations for Pylint and Sonar, many bad practice cleanups
 v.0.2.8 - Modified airmass handling
 v.0.2.9 - Factory method for safe client rise_set target dict construction
 v.0.2.10 - Fix for rare interpolation normalisation error, better reprs
+v.0.3.0 - Implemented moving object (minor planet) support
 
 Eric Saunders
 October 2012
