@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 '''
-moving_objects.py - Routines for moving object (asteroids, comets)
+moving_objects.py - Routines for moving object (asteroids, comets) calculations
 
 description
 
@@ -121,6 +121,9 @@ def initialise_sites(site_filename):
 
 
 class Sites(object):
+    '''Collection for a group of site dictionaries. Only the first site with a
+       given lat/long is stored. This allows us to conveniently read a
+       file with a list of telescopes, which may share the same site.'''
 
     def __init__(self):
         self.sites = {}
@@ -200,6 +203,8 @@ def elem_to_topocentric_apparent(dt, elements, site):
 
 
 def chunk_windows(window, chunksize):
+    '''Given a user window, split that window into interval tuples (start, end)
+       of size chunksize.'''
     chunk_start = window['start']
     chunk_end   = chunk_start + chunksize
 
@@ -220,6 +225,8 @@ def chunk_windows(window, chunksize):
 
 
 def find_moving_object_network_up_intervals(window, elements, site_filename, chunksize):
+    '''Network wide wrapper for find_moving_object_up_intervals.'''
+
     sites = initialise_sites(site_filename)
     up_intervals_at = {}
     for site in sites:
@@ -232,6 +239,8 @@ def find_moving_object_network_up_intervals(window, elements, site_filename, chu
 
 
 def find_moving_object_up_intervals(window, elements, site, chunksize=timedelta(minutes=15)):
+    '''Return only the (interval, altitude) pairs for which the moving object is
+       above the horizon at the provided site.'''
     coords = calc_ephemerides(window, elements, site, chunksize)
 
     intervals = []
@@ -265,8 +274,11 @@ def find_moving_object_up_intervals(window, elements, site, chunksize=timedelta(
     return up_intervals, up_altitudes
 
 
-def calc_ephemerides(interval, elements, site, chunksize=timedelta(minutes=15)):
-    chunked_intervals = chunk_windows(interval, chunksize)
+def calc_ephemerides(window, elements, site, chunksize=timedelta(minutes=15)):
+    '''Return the apparent RA/Dec for the moving object specified by elements, for a given
+       site, every chunksize minutes within the window.'''
+
+    chunked_intervals = chunk_windows(window, chunksize)
 
     coords = []
     for start, end in chunked_intervals:
