@@ -140,7 +140,7 @@ class TestMovingObjects(object):
 # Element dictionary produced by TAL's code from NEOCP orbit file, migrated to
 # rise_set format.
         expected = {
-                     'Name': 'P109rXK',
+                     'name': 'P109rXK',
                      'epoch': 56620.0,
                      'long_node':  Angle(degrees=224.42273),
                      'eccentricity': 0.5131088,
@@ -165,7 +165,7 @@ class TestMovingObjects(object):
 # Element dictionary produced by TAL's code from NEOCP orbit file, migrated to
 # rise_set format.
         expected = {
-                     'Name'           : 'K13TB7L',
+                     'name'           : 'K13TB7L',
                      'epoch'          : 56600.0,
                      'long_node'      : Angle(degrees=3.36296),
                      'eccentricity'   : 0.6898696,
