@@ -203,6 +203,7 @@ class TestIntervals(object):
         assert_equal(mock_func2.call_count, 1)
 
 
+
     @patch('rise_set.visibility.find_moving_object_up_intervals')
     def test_get_target_intervals_type_specified(self, mock_func):
         target = {
@@ -238,11 +239,6 @@ class TestIntervals(object):
         assert_equal(args[0], expected_window)
         assert_equal(args[1], expected_target)
         assert_equal(args[2], expected_site)
-
-
-
-
-
 
 
 

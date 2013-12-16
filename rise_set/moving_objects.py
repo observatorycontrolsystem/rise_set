@@ -23,7 +23,7 @@ import ast
 from datetime import datetime,timedelta
 
 def initialelemdict():
-    '''Create an inital empty orbital elements dictionary.'''
+    '''Create an inital empty orbital elements dictionary for use by read_neocp_orbit.'''
     keys  = "Name H G epoch mean_anomaly long_node arg_perihelion inclination "
     keys += "eccentricity MDM semi_axis n_obs n_nights"
 
@@ -64,7 +64,7 @@ def read_neocp_orbit(orbfile):
         line   = line.rstrip()
         chunks = line.split()
 
-        elements['Name']           = chunks[0]
+        elements['name']           = chunks[0]
         elements['H']              = float(chunks[1])
         elements['G']              = float(chunks[2])
 
