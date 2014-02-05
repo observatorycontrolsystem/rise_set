@@ -54,6 +54,17 @@ class TestIntervals(object):
                      'epoch'             : 2000,
                    }
 
+        self.rachels_target = {
+            'ra'                : RightAscension('00 00 34.23'),
+            'dec'               : Declination('-30 45 54.6'),
+            'ra_proper_motion'  : ProperMotion(RightAscension('00 00 00.0')),
+            'dec_proper_motion' : ProperMotion(Declination('-00 00 00.0')),
+            'parallax'          : 0.0,   # Units: arcsec
+            'rad_vel'           : 0.0,      # Units: km/s (-ve approaches)
+            'epoch'             : 2000,
+            }
+
+
 
         self.visibility = Visibility(self.bpl, self.start_date, self.end_date,
                                      self.horizon, self.twilight)
@@ -243,28 +254,17 @@ class TestIntervals(object):
 
 
     def test_up_intervals_rise_set_transit_within_same_day(self):
-        start = datetime(year=2011, month=10, day=13, hour=4, minute=30)
-        end   = datetime(year=2011, month=10, day=13, hour=10, minute=30)
+        start = datetime(year=2011, month=10, day=13, hour=0, minute=30)
+        end   = datetime(year=2011, month=10, day=13, hour=23, minute=30)
 
         observatory = {
                 'latitude'  : Angle(degrees=34.4325),
                 'longitude' : Angle('-119 51 46'),
                 }
 
-        rachels_target = {
-                     'ra'                : RightAscension('00 00 34.23'),
-                     'dec'               : Declination('-30 45 54.6'),
-                     'ra_proper_motion'  : ProperMotion(RightAscension('00 00 00.0')),
-                     'dec_proper_motion' : ProperMotion(Declination('-00 00 00.0')),
-                     'parallax'          : 0.0,   # Units: arcsec
-                     'rad_vel'           : 0.0,      # Units: km/s (-ve approaches)
-                     'epoch'             : 2000,
-                   }
-
-
         v = Visibility(observatory, start, end)
 
-        received = v.get_target_intervals(rachels_target)
+        received = v.get_target_intervals(self.rachels_target)
         expected = [
                      (
                        datetime(2011, 10, 13, 2, 8, 2),
@@ -280,7 +280,84 @@ class TestIntervals(object):
             assert_equal(received[i][0], expected[i][0])
             assert_equal(received[i][1], expected[i][1])
 
-#        assert_equal(received, expected)
+
+    def test_edge_interval(self):
+        start = datetime(year=2011, month=10, day=13, hour=4, minute=30)
+        end   = datetime(year=2011, month=10, day=13, hour=8, minute=30)
+
+        observatory = {
+            'latitude'  : Angle(degrees=34.4325),
+            'longitude' : Angle('-119 51 46'),
+            }
+
+        v = Visibility(observatory, start, end)
+
+        received = v.get_target_intervals(self.rachels_target)
+        expected = [
+                     (
+                       datetime(2011, 10, 13, 4, 30, 0, 0),
+                       datetime(2011, 10, 13, 8, 30, 0, 0),
+                     )
+                    ]
+
+        assert_equal(received, expected)
+
+
+    def test_visibility_end_loop(self):
+        start = datetime(year=2011, month=10, day=13, hour=4, minute=30)
+        end   = datetime(year=2011, month=10, day=14, hour=0, minute=30)
+
+        observatory = {
+            'latitude'  : Angle(degrees=34.4325),
+            'longitude' : Angle('-119 51 46'),
+            }
+
+        jasons_target = {
+            'ra'                : RightAscension('00 00 34.23'),
+            'dec'               : Declination('89 45 54.6'),
+            'ra_proper_motion'  : ProperMotion(RightAscension('00 00 00.0')),
+            'dec_proper_motion' : ProperMotion(Declination('-00 00 00.0')),
+            'parallax'          : 0.0,   # Units: arcsec
+            'rad_vel'           : 0.0,      # Units: km/s (-ve approaches)
+            'epoch'             : 2000,
+            }
+
+        v = Visibility(observatory, start, end)
+
+        received = v.get_target_intervals(jasons_target)
+        expected = [
+                     (
+                       datetime(2011, 10, 13, 4, 30, 0, 0),
+                       datetime(2011, 10, 14, 0, 30, 0, 0),
+                     )
+                    ]
+
+        assert_equal(received, expected)
+
+
+    def test_hour_angle(self):
+        expected = [(datetime(2013, 3, 22, 8, 24, 37, 986301),
+                     datetime(2013, 3, 22, 18, 22, 59, 690688))]
+        target = {
+            'ra'                : RightAscension('20 41 25.91'),
+            'dec'               : Declination('+20 00 00.00'),
+            'epoch'             : 2000,
+            }
+
+        site  = {
+                  'latitude':  Angle(degrees=-30.1673305556),
+                  'longitude': Angle(degrees=-70.8046611111),
+                }
+
+        start_date = datetime(year=2013, month=3, day=22)
+        end_date   = datetime(year=2013, month=3, day=23)
+
+        v = Visibility(site, start_date, end_date)
+
+        received = v.get_ha_intervals(target)
+
+        assert_equal(received, expected)
+
 
 
 

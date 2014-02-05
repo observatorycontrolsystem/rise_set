@@ -18,10 +18,12 @@ import math
 import copy
 
 # Internal imports
-from rise_set.astrometry     import calc_sunrise_set, calc_rise_set, RiseSetError, Star
+from rise_set.astrometry     import (calc_sunrise_set, calc_rise_set, RiseSetError,
+                                     Star, gregorian_to_ut_mjd, ut_mjd_to_gmst)
 from rise_set.angle          import Angle
 from rise_set.moving_objects import find_moving_object_up_intervals
-from rise_set.utils          import coalesce_adjacent_intervals
+from rise_set.utils          import (coalesce_adjacent_intervals, intersect_intervals,
+                                     intersect_many_intervals)
 
 # Import logging modules
 import logging
@@ -33,8 +35,6 @@ _log = logging.getLogger('rise_set.visibility')
 # Set convenient constants
 ONE_DAY  = datetime.timedelta(days=1)
 MIDNIGHT = datetime.time()
-
-
 
 
 def set_airmass_limit(airmass, horizon):
@@ -57,18 +57,21 @@ def set_airmass_limit(airmass, horizon):
     if airmass < horizon_airmass:
         effective_horizon = 90 - math.degrees(math.acos(1 / airmass))
 
-
     return effective_horizon
+
+
 
 
 class Visibility(object):
 
-    def __init__(self, site, start_date, end_date, horizon=0, twilight='sunrise'):
+    def __init__(self, site, start_date, end_date, horizon=0, twilight='sunrise',
+                 ha_limit=5):
         self.site       = site
         self.start_date = start_date
         self.end_date   = end_date
         self.horizon    = Angle(degrees=horizon)
         self.twilight   = twilight
+        self.ha_limit   = ha_limit
 
         self.dark_intervals = []
 
@@ -131,7 +134,7 @@ class Visibility(object):
         # Find rise/set/transit for each day
         intervals = []
         current_date = self.start_date
-        while current_date < self.end_date:
+        while current_date < self.end_date + ONE_DAY:
             one_day_intervals = day_interval_func(target, current_date, star, airmass)
 
             # Add today's intervals to the accumulating list of intervals
@@ -142,6 +145,67 @@ class Visibility(object):
 
         # Collapse adjacent intervals into continuous larger intervals
         intervals = coalesce_adjacent_intervals(intervals)
+        intervals = intersect_intervals(intervals, [(self.start_date,self.end_date)])
+
+        return intervals
+
+
+    def get_ha_intervals(self, target):
+
+        '''Returns a set of datetime 2-tuples, each of which represents an interval
+           of uninterrupted time when the target was within the Hour Angle limits of the
+           telescope. The set of tuples gives the complete in range intervals
+           between the Visibility object's start and end date.
+           See p 39 of J Meeus "Astronomical formulae for calculators"
+           and Marc Buie's lst2jd.pro
+        '''
+
+        # Find hour angle limits for each day
+        intervals = []
+        current_date = self.start_date
+        while current_date < self.end_date + ONE_DAY:
+
+            mjd    = gregorian_to_ut_mjd(current_date)
+            gmst   = ut_mjd_to_gmst(mjd)
+
+            # the rise time
+            hour_rise = -self.ha_limit + target['ra'].degrees/15.0 - \
+                self.site['longitude'].degrees/15.0 - gmst.degrees/15.0
+            hour_rise /= 1.002737909350
+
+            # the set time
+            hour_set =  self.ha_limit + target['ra'].degrees/15.0 - \
+                self.site['longitude'].degrees/15.0 - gmst.degrees/15.0
+            hour_set /= 1.002737909350
+
+            if hour_rise < 0:
+                hour_rise += 24
+                hour_set  += 24
+
+            intervals.append((current_date + datetime.timedelta(hours=hour_rise),
+                              current_date + datetime.timedelta(hours=hour_set)))
+
+            current_date += ONE_DAY
+
+        # do not exceed start/end dates
+        intervals = intersect_intervals(intervals,[(self.start_date,self.end_date)])
+
+        return intervals
+
+
+    def get_observable_intervals(self, target):
+        '''Returns a set of datetime 2-tuples, each of which represents an interval
+           of uninterrupted time when the target is observable (sun down, target up,
+           target within the Hour Angle limits of the telescope.
+        '''
+
+        # get the intervals of each separately
+        dark               = self.get_dark_intervals()
+        above_horizon      = self.get_target_intervals(target)
+        within_hour_angle  = self.get_ha_intervals(target)
+
+        # find the overlapping intervals between them
+        intervals = intersect_many_intervals(dark, above_horizon, within_hour_angle)
 
         return intervals
 
