@@ -121,6 +121,13 @@ class Angle(object):
 
 
 
+    def in_hours(self):
+        '''Return the value of the angle in hours of time.'''
+
+        return self.degrees / 15
+
+
+
     def in_sexegesimal(self, radians = False):
         "Convert from degrees to sexegesimal degrees"
 
