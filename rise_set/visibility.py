@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+tes#!/usr/bin/env python
 
 '''
 visibility.py - Visibility interval calculations.
@@ -65,13 +65,14 @@ def set_airmass_limit(airmass, horizon):
 class Visibility(object):
 
     def __init__(self, site, start_date, end_date, horizon=0, twilight='sunrise',
-                 ha_limit=5):
+                 ha_limit_neg=-4.9,ha_limit_pos=4.9):
         self.site       = site
         self.start_date = start_date
         self.end_date   = end_date
         self.horizon    = Angle(degrees=horizon)
         self.twilight   = twilight
-        self.ha_limit   = ha_limit
+        self.ha_limit_neg   = ha_limit_neg
+        self.ha_limit_pos   = ha_limit_pos
 
         self.dark_intervals = []
 
@@ -170,12 +171,12 @@ class Visibility(object):
             gmst   = ut_mjd_to_gmst(mjd)
 
             # the rise time
-            hour_rise = -self.ha_limit + target['ra'].in_hours() - \
+            hour_rise = self.ha_limit_neg + target['ra'].in_hours() - \
                 self.site['longitude'].in_hours() - gmst.in_hours()
             hour_rise /= SIDEREAL_SOLAR_DAY_RATIO
 
             # the set time
-            hour_set =  self.ha_limit + target['ra'].in_hours() - \
+            hour_set  = self.ha_limit_pos + target['ra'].in_hours() - \
                 self.site['longitude'].in_hours() - gmst.in_hours()
             hour_set /= SIDEREAL_SOLAR_DAY_RATIO
 

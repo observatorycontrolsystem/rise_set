@@ -6,11 +6,22 @@
 # It included the entire currently deployed 1m network.
 # 3xCPT, 3xLSC, 1xELP, 2xCOJ
 # Latitude and longitude are the site values, as specified in the configdb.
+#
+# Roll limits 
+# Northern sites (add padding for TPOINT errors):
+#    ha_limit_neg = L1_NEG_LIMIT_POSITION/15 + 0.1
+#    ha_limit_pos = L1_POS_LIMIT_POSITION/15 - 0.1
+# Southern sites (add padding for TPOINT errors):
+#    ha_limit_neg = -L1_POS_LIMIT_POSITION/15 + 0.1
+#    ha_limit_pos = -L1_NEG_LIMIT_POSITION/15 - 0.1
+
 [
     {
         'name'      : '1m0a.doma.cpt',
         'tel_class' : '1m0',
-        'horizon'   : 30,
+	'horizon'   : 15,
+	'ha_limit_neg' : -4.9, 
+	'ha_limit_pos' : 5.1,	
         'latitude'  : -32.38059,
         'longitude' :  20.8101083333,
         'status' : 'online',
@@ -18,7 +29,9 @@
     {
         'name'      : '1m0a.domb.cpt',
         'tel_class' : '1m0',
-        'horizon'   : 30,
+        'horizon'   : 15,
+	'ha_limit_neg' : -4.9, 
+	'ha_limit_pos' : 5.1,	
         'latitude'  : -32.38059,
         'longitude' :  20.8101083333,
         'status' : 'online',
@@ -26,57 +39,71 @@
     {
         'name'      : '1m0a.domc.cpt',
         'tel_class' : '1m0',
+        'horizon'   : 15,
+	'ha_limit_neg' : -4.9, 
+	'ha_limit_pos' : 5.1,	
         'latitude'  : -32.38059,
         'longitude' :  20.8101083333,
-        'horizon'   : 30,
         'status' : 'online',
     },
     {
         'name'      : '1m0a.doma.lsc',
         'tel_class' : '1m0',
+        'horizon'   : 15,
+	'ha_limit_neg' : -4.9, 
+	'ha_limit_pos' : 5.1,	
         'latitude'  : -30.1673472222,
         'longitude' : -70.8046722222,
-        'horizon'   : 30,
         'status' : 'online',
     },
     {
         'name'      : '1m0a.domb.lsc',
         'tel_class' : '1m0',
+        'horizon'   : 15,
+	'ha_limit_neg' : -4.9, 
+	'ha_limit_pos' : 5.1,	
         'latitude'  : -30.1673472222,
         'longitude' : -70.8046722222,
-        'horizon'   : 30,
         'status' : 'online',
     },
     {
         'name'      : '1m0a.domc.lsc',
         'tel_class' : '1m0',
+        'horizon'   : 15,
+	'ha_limit_neg' : -4.9, 
+	'ha_limit_pos' : 5.1,	
         'latitude'  : -30.1673472222,
         'longitude' : -70.8046722222,
-        'horizon'   : 30,
         'status' : 'online',
     },
     {
         'name'      : '1m0a.doma.elp',
+        'horizon'   : 15,
+	'ha_limit_neg' : -5.1, 
+	'ha_limit_pos' : 4.9,	
         'tel_class' : '1m0',
         'latitude'  : 30.6801,
         'longitude' : -104.015194444,
-        'horizon'   : 30,
         'status' : 'online',
     },
     {
         'name'      : '1m0a.doma.coj',
         'tel_class' : '1m0',
+        'horizon'   : 15,
+	'ha_limit_neg' : -4.9, 
+	'ha_limit_pos' : 5.1,	
         'latitude'  : -31.273,
         'longitude' : 149.070593,
-        'horizon'   : 30,
         'status' : 'online',
     },
     {
         'name'      : '1m0a.domb.coj',
         'tel_class' : '1m0',
+        'horizon'   : 15,
+	'ha_limit_neg' : -4.9, 
+	'ha_limit_pos' : 5.1,	
         'latitude'  : -31.273,
         'longitude' : 149.070593,
-        'horizon'   : 30,
         'status' : 'online',
     },
 ]

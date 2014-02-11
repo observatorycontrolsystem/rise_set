@@ -13,6 +13,7 @@ from rise_set.visibility import Visibility, set_airmass_limit
 from rise_set.angle import Angle
 from rise_set.sky_coordinates import RightAscension, Declination
 from rise_set.rates import ProperMotion
+from rise_set.moving_objects import initialise_sites
 
 from mock import patch
 
@@ -352,14 +353,33 @@ class TestIntervals(object):
         start_date = datetime(year=2013, month=3, day=22)
         end_date   = datetime(year=2013, month=3, day=23)
 
-        v = Visibility(site, start_date, end_date)
+        v = Visibility(site, start_date, end_date, 
+                       ha_limit_neg=-5.0, ha_limit_pos=5.0)
 
         received = v.get_ha_intervals(target)
 
         assert_equal(received, expected)
 
+'''
+this test most certainly doesn't work
+    def test_sites(self):
+        expected = []
+        target = {
+            'ra'                : RightAscension('20 41 25.91'),
+            'dec'               : Declination('+20 00 00.00'),
+            'epoch'             : 2000,
+            }
+        start_date = datetime(year=2013, month=3, day=22)
+        end_date   = datetime(year=2013, month=3, day=23)
+        sites = initialise_sites(site_filename)
+        received = []
+        
+        for site in sites:
+            v = Visibility(site,start_date,end_date)
+            received.append(v.get_observable_intervals)
 
-
+        assert_equal(received,expected)
+'''
 
 class TestAirmassCalculation(object):
 
