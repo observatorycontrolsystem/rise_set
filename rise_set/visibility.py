@@ -1,4 +1,4 @@
-tes#!/usr/bin/env python
+#!/usr/bin/env python
 
 '''
 visibility.py - Visibility interval calculations.
