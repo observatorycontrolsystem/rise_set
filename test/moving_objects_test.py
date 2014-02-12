@@ -406,7 +406,7 @@ class TestMovingObjects(object):
                    'end'   : datetime(2013, 12, 10, 8, 30)
                  }
 
-        site_filename = 'test/telescopes.dat'
+        site_filename = 'test/thirty_degree_telescopes.dat'
 
         chunksize = timedelta(minutes=15)
 
