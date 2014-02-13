@@ -145,6 +145,9 @@ class Sites(object):
             site_dict['latitude']  = Angle(degrees=site_dict['latitude'])
             site_dict['longitude'] = Angle(degrees=site_dict['longitude'])
             site_dict['horizon']   = Angle(degrees=site_dict['horizon'])
+# do we want to do this?
+#            site_dict['ha_limit_neg']   = Angle(degrees=site_dict['ha_limit_neg']*HOURS_TO_DEG)
+#            site_dict['ha_limit_pos']   = Angle(degrees=site_dict['ha_limit_pos']*HOURS_TO_DEG)
             self.sites[site_dict['name']] = site_dict
 
         return
