@@ -14,7 +14,7 @@ from rise_set.angle import Angle
 from rise_set.sky_coordinates import RightAscension, Declination
 from rise_set.rates import ProperMotion
 from rise_set.moving_objects import initialise_sites
-
+from rise_set.utils          import intersect_many_intervals
 from mock import patch
 
 
@@ -360,6 +360,41 @@ class TestIntervals(object):
 
         assert_equal(received, expected)
 
+    # for some windows/limits, the HA block did not start at the beginning of the window.
+    # This test fails prior to 2013-02-20
+    def test_ha_wrong_day(self):
+        expected = [(datetime(2011, 11, 01, 06, 00, 00, 000000),datetime(2011, 11, 01, 07, 52, 00, 564199)),
+                    (datetime(2011, 11, 02, 02, 01, 50, 423880),datetime(2011, 11, 02, 06, 00, 00, 000000))]
+
+        target = {
+            'ra' : RightAscension(degrees=310.35795833333333),
+            'dec': Declination(degrees=45.280338888888885),
+            'epoch': 2000,
+            }
+        
+        site  = {
+            'latitude':  Angle(degrees=34.433157),
+            'longitude': Angle(degrees=-119.86308),
+            }
+
+        start_date = datetime(year=2011, month=11, day=1, hour=6)
+        end_date   = datetime(year=2011, month=11, day=2, hour=6)
+        
+        v = Visibility(site, start_date, end_date, twilight='nautical', horizon=25,
+                       ha_limit_neg=-12, ha_limit_pos=12)
+
+        
+#        # get the intervals of each separately
+#        dark               = v.get_dark_intervals()
+#        above_horizon      = v.get_target_intervals(target)
+#        within_hour_angle  = v.get_ha_intervals(target)
+#        # find the overlapping intervals between them
+#        received = intersect_many_intervals(dark, above_horizon, within_hour_angle)
+
+        received = v.get_observable_intervals(target)
+
+        assert_equal(received, expected)
+
     def test_sites(self):
         site_filename="test/telescopes.dat"
         
@@ -385,7 +420,7 @@ class TestIntervals(object):
         received = []
         
         for site in sites:
-            v = Visibility(site,start_date,end_date)
+            v = Visibility(site,start_date,end_date, ha_limit_neg=-4.9,ha_limit_pos=4.9)
             intervals = v.get_observable_intervals(target)
 
             for start,stop in intervals:

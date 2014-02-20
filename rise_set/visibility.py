@@ -162,9 +162,13 @@ class Visibility(object):
         '''
         SIDEREAL_SOLAR_DAY_RATIO = 1.002737909350
 
+        # if the span between hour angle limits is more than 24 hours, there is no limit
+#        if self.ha_limit_pos - self.ha_limit_neg >= 24.0:
+#            return [(self.start_date,self.end_date)]
+
         # Find hour angle limits for each day
         intervals = []
-        current_date = self.start_date
+        current_date = self.start_date - ONE_DAY
         while current_date < self.end_date + ONE_DAY:
 
             mjd    = gregorian_to_ut_mjd(current_date)
@@ -191,6 +195,7 @@ class Visibility(object):
             current_date += ONE_DAY
 
         # do not exceed start/end dates
+        intervals = coalesce_adjacent_intervals(intervals)
         intervals = intersect_intervals(intervals,[(self.start_date,self.end_date)])
 
         return intervals
