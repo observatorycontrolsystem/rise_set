@@ -31,6 +31,7 @@ v.0.2.9  - Factory method for safe client rise_set target dict construction
 v.0.2.10 - Fix for rare interpolation normalisation error, better reprs
 v.0.3.0  - Implemented moving object (minor planet) support
 v.0.3.1  - Added hour angle limit support to visibility objects (thanks Jason Eastman)
+v.0.3.2  - Bug fix for large hour angles, added hour angle validation
 
 Eric Saunders
 October 2012

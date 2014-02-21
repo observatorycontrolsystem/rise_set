@@ -61,18 +61,26 @@ def set_airmass_limit(airmass, horizon):
 
 
 
-
 class Visibility(object):
 
     def __init__(self, site, start_date, end_date, horizon=0, twilight='sunrise',
-                 ha_limit_neg=-4.9,ha_limit_pos=4.9):
-        self.site       = site
-        self.start_date = start_date
-        self.end_date   = end_date
-        self.horizon    = Angle(degrees=horizon)
-        self.twilight   = twilight
-        self.ha_limit_neg   = ha_limit_neg
-        self.ha_limit_pos   = ha_limit_pos
+                 ha_limit_neg=-4.9, ha_limit_pos=4.9):
+        self.site         = site
+        self.start_date   = start_date
+        self.end_date     = end_date
+        self.horizon      = Angle(degrees=horizon)
+        self.twilight     = twilight
+
+        if ha_limit_pos > 12.0 or ha_limit_pos < 0.0:
+            msg = "Positive hour angle limit must fall between 0 and 12 hours"
+            raise InvalidHourAngleLimit(msg)
+
+        if ha_limit_neg < -12.0 or ha_limit_neg > 0.0:
+            msg = "Negative hour angle limit must fall between -12 and 0 hours"
+            raise InvalidHourAngleLimit(msg)
+
+        self.ha_limit_neg = ha_limit_neg
+        self.ha_limit_pos = ha_limit_pos
 
         self.dark_intervals = []
 
@@ -161,10 +169,6 @@ class Visibility(object):
            and Marc Buie's lst2jd.pro.
         '''
         SIDEREAL_SOLAR_DAY_RATIO = 1.002737909350
-
-        # if the span between hour angle limits is more than 24 hours, there is no limit
-#        if self.ha_limit_pos - self.ha_limit_neg >= 24.0:
-#            return [(self.start_date,self.end_date)]
 
         # Find hour angle limits for each day
         intervals = []
@@ -399,3 +403,8 @@ class Visibility(object):
 
     def __hash__(self):
         return hash(self.__key())
+
+
+
+class InvalidHourAngleLimit(Exception):
+    pass
