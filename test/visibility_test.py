@@ -2,12 +2,12 @@
 
 from __future__ import division
 
-from nose.tools import assert_equal, assert_almost_equals, assert_less
+from nose.tools import assert_equal, assert_almost_equals, assert_less, raises
 from nose import SkipTest
 from datetime import datetime
 
 #Import the module to test
-from rise_set.visibility import Visibility, set_airmass_limit
+from rise_set.visibility import Visibility, set_airmass_limit, InvalidHourAngleLimit
 
 # Additional support modules
 from rise_set.angle import Angle
@@ -353,7 +353,7 @@ class TestIntervals(object):
         start_date = datetime(year=2013, month=3, day=22)
         end_date   = datetime(year=2013, month=3, day=23)
 
-        v = Visibility(site, start_date, end_date, 
+        v = Visibility(site, start_date, end_date,
                        ha_limit_neg=-5.0, ha_limit_pos=5.0)
 
         received = v.get_ha_intervals(target)
@@ -371,7 +371,7 @@ class TestIntervals(object):
             'dec': Declination(degrees=45.280338888888885),
             'epoch': 2000,
             }
-        
+
         site  = {
             'latitude':  Angle(degrees=34.433157),
             'longitude': Angle(degrees=-119.86308),
@@ -379,11 +379,11 @@ class TestIntervals(object):
 
         start_date = datetime(year=2011, month=11, day=1, hour=6)
         end_date   = datetime(year=2011, month=11, day=2, hour=6)
-        
+
         v = Visibility(site, start_date, end_date, twilight='nautical', horizon=25,
                        ha_limit_neg=-12, ha_limit_pos=12)
 
-        
+
 #        # get the intervals of each separately
 #        dark               = v.get_dark_intervals()
 #        above_horizon      = v.get_target_intervals(target)
@@ -395,9 +395,27 @@ class TestIntervals(object):
 
         assert_equal(received, expected)
 
+
+    @raises(InvalidHourAngleLimit)
+    def test_negative_hour_angle_too_big_is_rejected(self):
+        visibility = Visibility(None, None, None, ha_limit_neg=-13.0)
+
+    @raises(InvalidHourAngleLimit)
+    def test_negative_hour_angle_too_small_is_rejected(self):
+        visibility = Visibility(None, None, None, ha_limit_neg=1.0)
+
+    @raises(InvalidHourAngleLimit)
+    def test_positive_hour_angle_too_big_is_rejected(self):
+        visibility = Visibility(None, None, None, ha_limit_pos=13.0)
+
+    @raises(InvalidHourAngleLimit)
+    def test_positive_hour_angle_too_small_is_rejected(self):
+        visibility = Visibility(None, None, None, ha_limit_pos=-1.0)
+
+
     def test_sites(self):
         site_filename="test/telescopes.dat"
-        
+
         # expected for dec = 0
         expected = [(datetime(2013, 3, 22, 10, 43,  5, 768346),datetime(2013, 3, 22, 12, 57,  2,  28233)),
                     (datetime(2013, 3, 22, 17, 53, 31,  27509),datetime(2013, 3, 22, 20,  8, 49, 303466)),
@@ -406,7 +424,7 @@ class TestIntervals(object):
 
         # expected for dec = -60
         expected = [(datetime(2013, 3, 22, 17, 53, 31,  27509), datetime(2013, 3, 22, 20,  8, 49, 303466)),
-                    (datetime(2013, 3, 22,  2, 25,  9, 494210), datetime(2013, 3, 22,  4, 41, 27, 874760)), 
+                    (datetime(2013, 3, 22,  2, 25,  9, 494210), datetime(2013, 3, 22,  4, 41, 27, 874760)),
                     (datetime(2013, 3, 22,  8, 30, 37,   6004), datetime(2013, 3, 22, 10, 48,  0, 967403))]
 
         target = {
@@ -418,7 +436,7 @@ class TestIntervals(object):
         end_date   = datetime(year=2013, month=3, day=23)
         sites = initialise_sites(site_filename)
         received = []
-        
+
         for site in sites:
             v = Visibility(site,start_date,end_date, ha_limit_neg=-4.9,ha_limit_pos=4.9)
             intervals = v.get_observable_intervals(target)
