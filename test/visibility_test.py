@@ -416,35 +416,35 @@ class TestIntervals(object):
     def test_sites(self):
         site_filename="test/telescopes.dat"
 
-        # expected for dec = 0
-        expected = [(datetime(2013, 3, 22, 10, 43,  5, 768346),datetime(2013, 3, 22, 12, 57,  2,  28233)),
-                    (datetime(2013, 3, 22, 17, 53, 31,  27509),datetime(2013, 3, 22, 20,  8, 49, 303466)),
-                    (datetime(2013, 3, 22,  2, 25,  9, 494210),datetime(2013, 3, 22,  4, 41, 27, 874760)),
-                    (datetime(2013, 3, 22,  8, 30, 37,   6004),datetime(2013, 3, 22, 10, 48,  0, 967403))]
-
         # expected for dec = -60
-        expected = [(datetime(2013, 3, 22, 17, 53, 31,  27509), datetime(2013, 3, 22, 20,  8, 49, 303466)),
-                    (datetime(2013, 3, 22,  2, 25,  9, 494210), datetime(2013, 3, 22,  4, 41, 27, 874760)),
-                    (datetime(2013, 3, 22,  8, 30, 37,   6004), datetime(2013, 3, 22, 10, 48,  0, 967403))]
+        expected = {
+                     '1m0a.doma.elp' : [],
+                     '1m0a.doma.coj' : [(datetime(2013, 3, 22, 17, 53, 31,  27509),
+                                         datetime(2013, 3, 22, 20,  8, 49, 303466))],
+                     '1m0a.doma.cpt' : [(datetime(2013, 3, 22,  2, 25,  9, 494210),
+                                         datetime(2013, 3, 22,  4, 41, 27, 874760))],
+                     '1m0a.doma.lsc' : [(datetime(2013, 3, 22,  8, 30, 37,   6004),
+                                         datetime(2013, 3, 22, 10, 48,  0, 967403))]
+                   }
 
         target = {
-            'ra'                : RightAscension('20 41 25.91'),
-            'dec'               : Declination('-60 00 00.00'),
-            'epoch'             : 2000,
-            }
+                   'ra'                : RightAscension('20 41 25.91'),
+                   'dec'               : Declination('-60 00 00.00'),
+                   'epoch'             : 2000,
+                 }
+
         start_date = datetime(year=2013, month=3, day=22)
         end_date   = datetime(year=2013, month=3, day=23)
-        sites = initialise_sites(site_filename)
-        received = []
+        sites      = initialise_sites(site_filename)
+        received   = []
 
         for site in sites:
-            v = Visibility(site,start_date,end_date, ha_limit_neg=-4.9,ha_limit_pos=4.9)
+            v = Visibility(site, start_date, end_date, ha_limit_neg=-4.9, ha_limit_pos=4.9)
             intervals = v.get_observable_intervals(target)
 
-            for start,stop in intervals:
-                received.append((start,stop))
+            assert_equal(intervals, expected[site['name']])
 
-        assert_equal(received,expected)
+
 
 class TestAirmassCalculation(object):
 
