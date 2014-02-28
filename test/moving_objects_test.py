@@ -13,11 +13,15 @@ from rise_set.moving_objects import (Sites, initialise_sites,
                                      read_neocp_orbit,
                                      elem_to_topocentric_apparent,
                                      calc_ephemerides,
+                                     hour_angle_within_limits,
+                                     ephemeris_chunk_within_ha_limits,
+                                     ephemeris_chunk_above_horizon,
                                      find_moving_object_up_intervals,
                                      find_moving_object_network_up_intervals)
 
 from datetime import datetime, timedelta
 from nose.tools import assert_equal, assert_almost_equal, nottest
+from mock import patch
 
 
 def str_to_dt(dt_str):
@@ -140,6 +144,8 @@ class TestMovingObjects(object):
                      'latitude'  : Angle(degrees=30.6801),
                      'longitude' : Angle(degrees=-104.015194444),
                    }
+
+        self.HOURS_TO_DEGREES = 15
 
     def test_read_neocp_orbit1(self):
 
@@ -412,6 +418,141 @@ class TestMovingObjects(object):
             assert_almost_equal(e.in_degrees(), r.in_degrees(), places=3)
 
 
+    def test_hour_angle_beyond_neg_limit(self):
+        ha        = Angle(degrees=-8*self.HOURS_TO_DEGREES)
+        neg_limit = Angle(degrees=-4.6*self.HOURS_TO_DEGREES)
+        pos_limit = Angle(degrees=4.6*self.HOURS_TO_DEGREES)
+
+        assert_equal(hour_angle_within_limits(ha, neg_limit, pos_limit), False)
+
+
+    def test_hour_angle_beyond_pos_limit(self):
+        ha        = Angle(degrees=8*self.HOURS_TO_DEGREES)
+        neg_limit = Angle(degrees=-4.6*self.HOURS_TO_DEGREES)
+        pos_limit = Angle(degrees=4.6*self.HOURS_TO_DEGREES)
+
+        assert_equal(hour_angle_within_limits(ha, neg_limit, pos_limit), False)
+
+
+    def test_hour_angle_within_limits(self):
+        ha        = Angle(degrees=3*self.HOURS_TO_DEGREES)
+        neg_limit = Angle(degrees=-4.6*self.HOURS_TO_DEGREES)
+        pos_limit = Angle(degrees=4.6*self.HOURS_TO_DEGREES)
+
+        assert_equal(hour_angle_within_limits(ha, neg_limit, pos_limit), True)
+
+
+    def test_ephemeris_chunk_within_ha_limits(self):
+        ha1        = Angle(degrees=3*self.HOURS_TO_DEGREES)
+        ha2        = Angle(degrees=3.5*self.HOURS_TO_DEGREES)
+        neg_limit  = Angle(degrees=-4.6*self.HOURS_TO_DEGREES)
+        pos_limit  = Angle(degrees=4.6*self.HOURS_TO_DEGREES)
+
+        assert_equal(ephemeris_chunk_within_ha_limits(ha1, ha2, neg_limit, pos_limit), True)
+
+
+    def test_ephemeris_chunk_partially_outside_positive_ha_limit(self):
+        ha1        = Angle(degrees=4.5*self.HOURS_TO_DEGREES)
+        ha2        = Angle(degrees=4.7*self.HOURS_TO_DEGREES)
+        neg_limit  = Angle(degrees=-4.6*self.HOURS_TO_DEGREES)
+        pos_limit  = Angle(degrees=4.6*self.HOURS_TO_DEGREES)
+
+        assert_equal(ephemeris_chunk_within_ha_limits(ha1, ha2, neg_limit, pos_limit), False)
+
+
+    def test_ephemeris_chunk_fully_outside_positive_ha_limit(self):
+        ha1        = Angle(degrees=4.7*self.HOURS_TO_DEGREES)
+        ha2        = Angle(degrees=4.8*self.HOURS_TO_DEGREES)
+        neg_limit  = Angle(degrees=-4.6*self.HOURS_TO_DEGREES)
+        pos_limit  = Angle(degrees=4.6*self.HOURS_TO_DEGREES)
+
+        assert_equal(ephemeris_chunk_within_ha_limits(ha1, ha2, neg_limit, pos_limit), False)
+
+
+    def test_ephemeris_chunk_partially_outside_negative_ha_limit(self):
+        ha1        = Angle(degrees=-4.5*self.HOURS_TO_DEGREES)
+        ha2        = Angle(degrees=-4.7*self.HOURS_TO_DEGREES)
+        neg_limit  = Angle(degrees=-4.6*self.HOURS_TO_DEGREES)
+        pos_limit  = Angle(degrees=4.6*self.HOURS_TO_DEGREES)
+
+        assert_equal(ephemeris_chunk_within_ha_limits(ha1, ha2, neg_limit, pos_limit), False)
+
+
+    def test_ephemeris_chunk_fully_outside_negative_ha_limit(self):
+        ha1        = Angle(degrees=-4.7*self.HOURS_TO_DEGREES)
+        ha2        = Angle(degrees=-4.8*self.HOURS_TO_DEGREES)
+        neg_limit  = Angle(degrees=-4.6*self.HOURS_TO_DEGREES)
+        pos_limit  = Angle(degrees=4.6*self.HOURS_TO_DEGREES)
+
+        assert_equal(ephemeris_chunk_within_ha_limits(ha1, ha2, neg_limit, pos_limit), False)
+
+
+    def test_ephemeris_chunk_fully_above_horizon(self):
+        alt1    = Angle(degrees=20)
+        alt2    = Angle(degrees=21)
+        horizon = Angle(degrees=15)
+
+        assert_equal(ephemeris_chunk_above_horizon(alt1, alt2, horizon), True)
+
+
+    def test_ephemeris_chunk_partially_above_horizon(self):
+        alt1    = Angle(degrees=14)
+        alt2    = Angle(degrees=16)
+        horizon = Angle(degrees=15)
+
+        assert_equal(ephemeris_chunk_above_horizon(alt1, alt2, horizon), False)
+
+
+    def test_ephemeris_chunk_below_horizon(self):
+        alt1    = Angle(degrees=10)
+        alt2    = Angle(degrees=11)
+        horizon = Angle(degrees=15)
+
+        assert_equal(ephemeris_chunk_above_horizon(alt1, alt2, horizon), False)
+
+
+    @patch('rise_set.moving_objects.calc_ephemerides')
+    @patch('rise_set.moving_objects.calc_local_hour_angle')
+    @patch('rise_set.moving_objects.calculate_altitude')
+    def test_moving_objects_respect_negative_hour_angle_limit(self, alt_mock,
+                                                              ha_mock, ephem_mock):
+        window   = None
+        elements = None
+        site_dict = {
+                        'name'         : '1m0a.doma.cpt',
+                        'latitude'     : Angle(degrees=-32.38059),
+                        'longitude'    : Angle(degrees=20.8101083333),
+                        'horizon'      : Angle(degrees=15),
+                        'ha_limit_neg' : Angle(degrees=-5.0*15),
+                        'ha_limit_pos' : Angle(degrees=5.0*15),
+                    }
+
+        ephem = [
+                    {
+                      'start' : 1,
+                      'end'   : 2,
+                      'ra_app' : Angle(3),
+                      'dec_app' : Angle(4),
+                    },
+                    {
+                      'start' : 5,
+                      'end'   : 6,
+                      'ra_app' : Angle(7),
+                      'dec_app' : Angle(8),
+                    },
+               ]
+
+        chunksize = timedelta(minutes=15)
+
+        alt_mock.return_value   = Angle(degrees=20)
+        ha_mock.return_value    = Angle(degrees=-7*15)
+        ephem_mock.return_value = ephem
+
+        received_ints, received_alts = find_moving_object_up_intervals(window, elements,
+                                                                  site_dict, chunksize)
+        assert_equal(received_ints, [])
+
+
     def test_find_moving_object_network_up_intervals(self):
         window = {
                    'start' : datetime(2013, 12, 10, 7, 30),
@@ -445,7 +586,6 @@ class TestMovingObjects(object):
         for site in expected.keys():
             print site
             assert_equal(expected[site], received[site])
-
 
 
     def test_chunk_windows(self):
