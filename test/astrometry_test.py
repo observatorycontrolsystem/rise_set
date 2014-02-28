@@ -83,7 +83,7 @@ class TestAstrometry(object):
 
         hour_angle = calc_local_hour_angle(ra_app, elp_longitude, date)
 
-        assert_almost_equal(hour_angle, -55.128564469690645, places=13)
+        assert_almost_equal(hour_angle.in_degrees(), -55.128564469690645, places=13)
 
 
 

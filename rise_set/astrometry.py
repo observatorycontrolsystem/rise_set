@@ -201,7 +201,7 @@ def calc_local_hour_angle(ra_app, longitude, date):
 
     local_hour_angle = app_sidereal_time.in_degrees() + longitude.in_degrees() - ra_app.in_degrees()
 
-    return local_hour_angle
+    return Angle(degrees=local_hour_angle)
 
 
 
