@@ -29,22 +29,28 @@ class TestSites(object):
 
     def setup(self):
         self.site_dict1 = {
-                            'name'      : '1m0a.doma.cpt',
-                            'latitude'  : -32.38059,
-                            'longitude' :  20.8101083333,
-                            'horizon'   : 30,
+                             'name'         : '1m0a.doma.cpt',
+                             'latitude'     : -32.38059,
+                             'longitude'    :  20.8101083333,
+                             'horizon'      : 30,
+                             'ha_limit_neg' : -12.0,
+                             'ha_limit_pos' : 12.0,
                           }
         self.site_dict2 = {
-                            'name'      : '1m0a.doma.lsc',
-                            'latitude'  : -30.1673472222,
-                            'longitude' : -70.8046722222,
-                            'horizon'   : 30,
+                             'name'         : '1m0a.doma.lsc',
+                             'latitude'     : -30.1673472222,
+                             'longitude'    : -70.8046722222,
+                             'horizon'      : 30,
+                             'ha_limit_neg' : -12.0,
+                             'ha_limit_pos' : 12.0,
                           }
         self.site_dict3 = {
-                            'name'      : '1m0b.domb.cpt',
-                            'latitude'  : -32.38059,
-                            'longitude' :  20.8101083333,
-                            'horizon'   : 30,
+                             'name'         : '1m0b.domb.cpt',
+                             'latitude'     : -32.38059,
+                             'longitude'    :  20.8101083333,
+                             'horizon'      : 30,
+                             'ha_limit_neg' : -12.0,
+                             'ha_limit_pos' : 12.0,
                           }
 
         self.sites = Sites()
@@ -270,10 +276,12 @@ class TestMovingObjects(object):
                    'end'   : datetime(2013, 12, 11)
                  }
         site_dict1 = {
-                        'name'      : '1m0a.doma.cpt',
-                        'latitude'  : Angle(degrees=-32.38059),
-                        'longitude' : Angle(degrees=20.8101083333),
-                        'horizon'   : Angle(degrees=30),
+                        'name'         : '1m0a.doma.cpt',
+                        'latitude'     : Angle(degrees=-32.38059),
+                        'longitude'    : Angle(degrees=20.8101083333),
+                        'horizon'      : Angle(degrees=30),
+                        'ha_limit_neg' : Angle(degrees=-12.0*15),
+                        'ha_limit_pos' : Angle(degrees=12.0*15),
                       }
 
         chunksize = timedelta(hours=3)
@@ -313,10 +321,12 @@ class TestMovingObjects(object):
                    'end'   : datetime(2013, 12, 10, 8, 30)
                  }
         site_dict1 = {
-                        'name'      : '1m0a.doma.cpt',
-                        'latitude'  : Angle(degrees=-32.38059),
-                        'longitude' : Angle(degrees=20.8101083333),
-                        'horizon'   : Angle(degrees=30),
+                        'name'         : '1m0a.doma.cpt',
+                        'latitude'     : Angle(degrees=-32.38059),
+                        'longitude'    : Angle(degrees=20.8101083333),
+                        'horizon'      : Angle(degrees=30),
+                        'ha_limit_neg' : Angle(degrees=-12.0*15),
+                        'ha_limit_pos' : Angle(degrees=12.0*15),
                       }
 
         chunksize = timedelta(minutes=15)
@@ -357,10 +367,12 @@ class TestMovingObjects(object):
                    'end'   : datetime(2013, 12, 10, 8, 31)
                  }
         site_dict1 = {
-                        'name'      : '1m0a.doma.cpt',
-                        'latitude'  : Angle(degrees=-32.38059),
-                        'longitude' : Angle(degrees=20.8101083333),
-                        'horizon'   : Angle(degrees=30),
+                        'name'         : '1m0a.doma.cpt',
+                        'latitude'     : Angle(degrees=-32.38059),
+                        'longitude'    : Angle(degrees=20.8101083333),
+                        'horizon'      : Angle(degrees=30),
+                        'ha_limit_neg' : Angle(degrees=-12.0*15),
+                        'ha_limit_pos' : Angle(degrees=12.0*15),
                       }
 
         chunksize = timedelta(minutes=15)

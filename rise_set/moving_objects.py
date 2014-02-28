@@ -139,15 +139,15 @@ class Sites(object):
 
     def add_site(self, site_dict):
         lat_long = (site_dict['latitude'], site_dict['longitude'])
+        HOURS_TO_DEGREES = 15.0
 
         if lat_long not in self.site_lat_longs:
             self.site_lat_longs.append(lat_long)
-            site_dict['latitude']  = Angle(degrees=site_dict['latitude'])
-            site_dict['longitude'] = Angle(degrees=site_dict['longitude'])
-            site_dict['horizon']   = Angle(degrees=site_dict['horizon'])
-# do we want to do this?
-#            site_dict['ha_limit_neg']   = Angle(degrees=site_dict['ha_limit_neg']*HOURS_TO_DEG)
-#            site_dict['ha_limit_pos']   = Angle(degrees=site_dict['ha_limit_pos']*HOURS_TO_DEG)
+            site_dict['latitude']         = Angle(degrees=site_dict['latitude'])
+            site_dict['longitude']        = Angle(degrees=site_dict['longitude'])
+            site_dict['horizon']          = Angle(degrees=site_dict['horizon'])
+            site_dict['ha_limit_neg']     = Angle(degrees=site_dict['ha_limit_neg'] * HOURS_TO_DEGREES)
+            site_dict['ha_limit_pos']     = Angle(degrees=site_dict['ha_limit_pos'] * HOURS_TO_DEGREES)
             self.sites[site_dict['name']] = site_dict
 
         return
@@ -241,24 +241,51 @@ def find_moving_object_network_up_intervals(window, elements, site_filename, chu
     return up_intervals_at
 
 
+def hour_angle_within_limits(hour_angle, neg_limit, pos_limit):
+   if ( hour_angle.in_degrees() > neg_limit.in_degrees()  and
+        hour_angle.in_degrees() < pos_limit.in_degrees()):
+
+       return True
+
+   return False
+
+
+def ephemeris_chunk_within_ha_limits(ha1, ha2, neg_limit, pos_limit):
+    if ( hour_angle_within_limits(ha1, neg_limit, pos_limit) and
+         hour_angle_within_limits(ha2, neg_limit, pos_limit) ):
+           return True
+
+    return False
+
+
+def ephemeris_chunk_above_horizon(alt1, alt2, horizon):
+    if (  alt1.in_degrees() > horizon.in_degrees()  and
+          alt2.in_degrees() > horizon.in_degrees()  ):
+        return True
+
+    return False
+
+
 def find_moving_object_up_intervals(window, elements, site, chunksize=timedelta(minutes=15)):
     '''Return only the (interval, altitude) pairs for which the moving object is
        above the horizon at the provided site.'''
     coords = calc_ephemerides(window, elements, site, chunksize)
 
-    intervals = []
-    altitudes = []
+    intervals   = []
+    altitudes   = []
+    hour_angles = []
     for coord in coords:
         local_hour_angle = calc_local_hour_angle(coord['ra_app'],
                                                  site['longitude'],
                                                  coord['start'])
         altitude = calculate_altitude(site['latitude'].in_degrees(),
                                       coord['dec_app'].in_degrees(),
-                                      local_hour_angle)
+                                      local_hour_angle.in_degrees())
 
         interval = (coord['start'], coord['end'])
         altitudes.append(altitude)
         intervals.append(interval)
+        hour_angles.append(local_hour_angle)
 
 
     up_intervals = []
@@ -267,11 +294,16 @@ def find_moving_object_up_intervals(window, elements, site, chunksize=timedelta(
         # Keep the interval only if both it and the next are up
         # (in other words, throw away partial intervals)
         # This works because we have an extra pseudo-interval with size 0
-        if ( ( altitudes[i].in_degrees() > site['horizon'].in_degrees()   ) and
-             ( altitudes[i+1].in_degrees() > site['horizon'].in_degrees() ) ):
+        if not ephemeris_chunk_above_horizon(altitudes[i], altitudes[i+1], site['horizon']):
+            continue
 
-           up_intervals.append(intervals[i])
-           up_altitudes.append(altitudes[i])
+        if not ephemeris_chunk_within_ha_limits(hour_angles[i], hour_angles[i+1],
+                                                site['ha_limit_neg'],
+                                                site['ha_limit_pos']):
+            continue
+
+        up_intervals.append(intervals[i])
+        up_altitudes.append(altitudes[i])
 
 
     return up_intervals, up_altitudes
