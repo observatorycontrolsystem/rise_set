@@ -268,7 +268,10 @@ def ephemeris_chunk_above_horizon(alt1, alt2, horizon):
 
 def find_moving_object_up_intervals(window, elements, site, chunksize=timedelta(minutes=15)):
     '''Return only the (interval, altitude) pairs for which the moving object is
-       above the horizon at the provided site.'''
+       above the horizon and within the hour angle limits at the provided site.
+       If you just want rising and setting visible intevals, supply hour angle limits
+       of -12 and 12 in your site dict.
+    '''
     coords = calc_ephemerides(window, elements, site, chunksize)
 
     intervals   = []
@@ -287,7 +290,6 @@ def find_moving_object_up_intervals(window, elements, site, chunksize=timedelta(
         intervals.append(interval)
         hour_angles.append(local_hour_angle)
 
-
     up_intervals = []
     up_altitudes = []
     for i in xrange(len(intervals)-1):
@@ -304,7 +306,6 @@ def find_moving_object_up_intervals(window, elements, site, chunksize=timedelta(
 
         up_intervals.append(intervals[i])
         up_altitudes.append(altitudes[i])
-
 
     return up_intervals, up_altitudes
 
