@@ -33,6 +33,7 @@ v.0.3.0  - Implemented moving object (minor planet) support
 v.0.3.1  - Added hour angle limit support to visibility objects (thanks Jason Eastman)
 v.0.3.2  - Bug fix for large hour angles, added hour angle validation
 v.0.3.3  - Added hour angle limit support to moving objects
+v.0.3.4  - Added calc_local_sidereal_time
 
 Eric Saunders
 October 2012
