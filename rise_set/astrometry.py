@@ -187,6 +187,13 @@ def calc_apparent_sidereal_time(date):
     return Angle(radians=gast_in_rads)
 
 
+def calc_local_sidereal_time(longitude, date):
+    app_sidereal_time = calc_apparent_sidereal_time(date)
+
+    local_sidereal_time = Angle(degrees=app_sidereal_time.in_degrees() + longitude.in_degrees())
+
+    return local_sidereal_time
+
 
 def calc_local_hour_angle(ra_app, longitude, date):
     ''' Ast. Algorithms p.92 (with reversed longitude convention)
@@ -199,7 +206,7 @@ def calc_local_hour_angle(ra_app, longitude, date):
      '''
     app_sidereal_time = calc_apparent_sidereal_time(date)
 
-    local_hour_angle = app_sidereal_time.in_degrees() + longitude.in_degrees() - ra_app.in_degrees()
+    local_hour_angle = calc_local_sidereal_time(longitude, date).in_degrees() - ra_app.in_degrees()
 
     return Angle(degrees=local_hour_angle)
 
