@@ -360,9 +360,9 @@ class TestIntervals(object):
 
         assert_equal(received, expected)
 
-    # for some windows/limits, the HA block did not start at the beginning of the window.
-    # This test fails prior to 2013-02-20
     def test_ha_wrong_day(self):
+        # for some windows/limits, the HA block did not start at the beginning of the window.
+        # This test fails prior to 2013-02-20
         expected = [(datetime(2011, 11, 01, 06, 00, 00, 000000),datetime(2011, 11, 01, 07, 52, 00, 564199)),
                     (datetime(2011, 11, 02, 02, 01, 50, 423880),datetime(2011, 11, 02, 06, 00, 00, 000000))]
 
@@ -394,6 +394,39 @@ class TestIntervals(object):
         received = v.get_observable_intervals(target)
 
         assert_equal(received, expected)
+
+
+    def test_ha_ut_mjd_is_truncated(self):
+        # If a user window specifies a time, then hour angle calculations are entirely
+        # wrong unless that time is discarded. This unit test protects against regressions
+        # of this bug fix.
+        target = {
+            'ra'    : RightAscension(degrees=59.890410785),
+            'dec'   : Declination(degrees=-89.2641974447),
+            'epoch' : 2000,
+            }
+
+        site  = {
+                  'name'         : 'coj',
+                  'latitude'     : Angle(degrees=-31.273),
+                  'longitude'    : Angle(degrees=149.070593),
+                  'horizon'      : 30,
+                  'ha_limit_neg' : -4.6,
+                  'ha_limit_pos' : 4.6,
+                }
+
+        start_date = datetime(year=2014, month=6, day=1, hour=12, minute=10)
+        end_date   = datetime(year=2014, month=6, day=1, hour=12, minute=15)
+
+        v = Visibility(site, start_date, end_date,
+                       twilight='nautical',
+                       horizon=site['horizon'],
+                       ha_limit_neg=site['ha_limit_neg'],
+                       ha_limit_pos=site['ha_limit_pos'],
+                       )
+
+        assert_equal(v.get_observable_intervals(target), [])
+
 
 
     @raises(InvalidHourAngleLimit)

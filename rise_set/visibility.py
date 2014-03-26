@@ -175,7 +175,7 @@ class Visibility(object):
         current_date = self.start_date - ONE_DAY
         while current_date < self.end_date + ONE_DAY:
 
-            mjd    = gregorian_to_ut_mjd(current_date)
+            mjd    = long(gregorian_to_ut_mjd(current_date))
             gmst   = ut_mjd_to_gmst(mjd)
 
             # the rise time
