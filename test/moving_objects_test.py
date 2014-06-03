@@ -17,10 +17,11 @@ from rise_set.moving_objects import (Sites, initialise_sites,
                                      ephemeris_chunk_within_ha_limits,
                                      ephemeris_chunk_above_horizon,
                                      find_moving_object_up_intervals,
-                                     find_moving_object_network_up_intervals)
+                                     find_moving_object_network_up_intervals,
+                                     MovingViolation)
 
 from datetime import datetime, timedelta
-from nose.tools import assert_equal, assert_almost_equal, nottest
+from nose.tools import assert_equal, assert_almost_equal, nottest, assert_raises
 from mock import patch
 
 
@@ -140,6 +141,32 @@ class TestMovingObjects(object):
                           'mean_anomaly'   : Angle(degrees=54.47380),
                         }
 
+        # Element set for Comet C/2012 K1, formatted as an asteroid which 
+        # caused serious grief to the scheduler (Issue #7447)
+
+        self.elements2 = {
+                          'epoch'          : 56800.0,
+                          'inclination'    : Angle(degrees=142.4282),
+                          'long_node'      : Angle(degrees=317.7384),
+                          'arg_perihelion' : Angle(degrees=203.1103),
+                          'semi_axis'      : 2.9612496,
+                          'eccentricity'   : 1.0,
+                          'mean_anomaly'   : Angle(degrees=27.6567),
+                        }
+
+        # Fake element set to test MovingViolation handling in 
+        # elem_to_topocentric_apparent
+
+        self.elements3 = {
+                          'epoch'          : 56800.0,
+                          'inclination'    : Angle(degrees=142.4282),
+                          'long_node'      : Angle(degrees=317.7384),
+                          'arg_perihelion' : Angle(degrees=203.1103),
+                          'semi_axis'      : -2.9612496,
+                          'eccentricity'   : 0.99,
+                          'mean_anomaly'   : Angle(degrees=27.6567),
+                        }
+        
         self.elp = {
                      'latitude'  : Angle(degrees=30.6801),
                      'longitude' : Angle(degrees=-104.015194444),
@@ -219,6 +246,32 @@ class TestMovingObjects(object):
         # Coordinates from JPL Horizons: 225.22256  -5.29589
         assert_almost_equal(ra.in_degrees(), 225.22256, places=2)
         assert_almost_equal(dec.in_degrees(), -5.29589, places=2)
+
+
+    def test_elem_to_topocentric_apparent_bad_eccen(self):
+        dt = datetime(2014,  6, 14)
+        tdb = dt - timedelta(seconds=67.184)
+
+        assert_raises(MovingViolation, elem_to_topocentric_apparent, tdb, self.elements2, self.elp)
+        try:
+            ra, dec = elem_to_topocentric_apparent(tdb, self.elements2, self.elp)
+        except MovingViolation as e:
+            assert_equal(str(e), 'Error: -2 (illegal eccentricity)')
+        else:
+            assert False, "Didn't raise expected MovingViolation error"
+
+
+    def test_elem_to_topocentric_apparent_bad_meandist(self):
+        dt = datetime(2014,  6, 14)
+        tdb = dt - timedelta(seconds=67.184)
+
+        assert_raises(MovingViolation, elem_to_topocentric_apparent, tdb, self.elements3, self.elp)
+        try:
+            ra, dec = elem_to_topocentric_apparent(tdb, self.elements3, self.elp)
+        except MovingViolation as e:
+            assert_equal(str(e), 'Error: -3 (illegal mean distance)')
+        else:
+            assert False, "Didn't raise expected MovingViolation error"
 
 
     def test_calc_ephemerides(self):

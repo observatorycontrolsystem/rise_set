@@ -190,16 +190,16 @@ def elem_to_topocentric_apparent(dt, elements, site):
                                                   )
 
     error = {
-              0 : 'OK',
-              1 : 'illegal JFORM',
-              2 : 'illegal eccentricity',
-              3 : 'illegal mean distance',
-              4 : 'illegal mean daily motion',
-              5 : 'numerical error',
+               0 : 'OK',
+              -1 : 'illegal JFORM',
+              -2 : 'illegal eccentricity',
+              -3 : 'illegal mean distance',
+              -4 : 'illegal mean daily motion',
+              -5 : 'numerical error',
             }
 
     if (status != 0):
-        raise MovingViolation('Error:' + error[status])
+        raise MovingViolation('Error: ' + str(status) + ' (' + error[status] + ')')
 
     return Angle(radians=ra_app_rads), Angle(radians=dec_app_rads)
 
@@ -340,7 +340,7 @@ def calc_ephemerides(window, elements, site, chunksize=timedelta(minutes=15)):
     return coords
 
 
-class MovingViolation(object):
+class MovingViolation(Exception):
     '''Exception for moving object errors.'''
     pass
 
