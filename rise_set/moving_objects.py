@@ -24,7 +24,7 @@ from datetime import datetime,timedelta
 
 def initialelemdict():
     '''Create an inital empty orbital elements dictionary for use by read_neocp_orbit.'''
-    keys  = "Name H G epoch mean_anomaly long_node arg_perihelion inclination "
+    keys  = "name H G epoch mean_anomaly long_node arg_perihelion inclination "
     keys += "eccentricity MDM semi_axis n_obs n_nights"
 
     return {}.fromkeys(keys.split())
