@@ -86,8 +86,16 @@ def read_neocp_orbit(orbfile):
 
         # ...or if it's an MPCORB-style line...
         elif len(chunks) == 25 or len(chunks) == 23:
-            elements['n_obs']    = int(chunks[13])
-            elements['n_nights'] = int(chunks[14]) + 1
+            nobs_field = 12
+            if len(chunks) == 25:
+                nobs_field = 13
+            elements['n_obs']    = int(chunks[nobs_field])
+            try:
+                num_nights_or_years = int(chunks[14]) + 1
+            except ValueError:
+                num_nights_or_years = chunks[14]
+
+            elements['n_nights'] = num_nights_or_years
 
         # Otherwise complain
         else:
@@ -199,6 +207,10 @@ def elem_to_topocentric_apparent(dt, elements, site):
             }
 
     if (status != 0):
+        elem_string = 'Bad Elements:\n'
+        for key in elements.keys():
+            elem_string += key + ' = ' + str(elements[key]) + '\n'
+        print elem_string
         raise MovingViolation('Error: ' + str(status) + ' (' + error[status] + ')')
 
     return Angle(radians=ra_app_rads), Angle(radians=dec_app_rads)
