@@ -39,6 +39,8 @@ v.0.3.6  - Fix for incorrect exception handler in elem_to_topocentric_apparent.
          - Fix incorrect case in initial element dictionary which resulted in 'Name' and 'name' being created
          - Fix handling of multi-opposition/year orbits in read_neocp_orbit.
          - Dump the elements out if we raise a MovingViolation exception. (all above by Tim Lister)
+v.0.3.7  - Add comet support.
+         - Fix bug in gregorian_to_ut_mjd where fractional seconds were ignored. (all above by Tim Lister)
 
 Eric Saunders
 October 2012

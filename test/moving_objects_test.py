@@ -166,13 +166,45 @@ class TestMovingObjects(object):
                           'eccentricity'   : 0.99,
                           'mean_anomaly'   : Angle(degrees=27.6567),
                         }
+        # Element set for Comet C/2012 K1 from JPL HORIZONS on 2014-06-11
+
+        self.comet_elements1 = {
+                          'epochofperih'   : 56896.65636138478,
+                          'inclination'    : Angle(degrees=142.4281063052002),
+                          'long_node'      : Angle(degrees=317.731588784467),
+                          'arg_perihelion' : Angle(degrees=203.0929610210846),
+                          'perihdist'      : 1.054777188675267,
+                          'eccentricity'   : 1.000209136966309,
+                        }
+
         
+        # Element set for 2013 UQ4 from JPL HORIZONS on 2014-06-11
+
+        self.comet_elements2 = {
+                          'epochofperih'   : 56843.96309797978,
+                          'inclination'    : Angle(degrees=145.25830684677),
+                          'long_node'      : Angle(degrees=317.6619568986719),
+                          'arg_perihelion' : Angle(degrees=23.31494833774585),
+                          'perihdist'      : 1.080940992734334,
+                          'eccentricity'   : 0.9820934471344616,
+                        }
+
         self.elp = {
                      'latitude'  : Angle(degrees=30.6801),
                      'longitude' : Angle(degrees=-104.015194444),
                    }
 
         self.HOURS_TO_DEGREES = 15
+
+        self.cpt = {
+                        'name'      : '1m0a.doma.cpt',
+                        'latitude'  : Angle(degrees=-32.38059),
+                        'longitude' : Angle(degrees=20.8101083333),
+                        'horizon'      : Angle(degrees=30),
+                        'ha_limit_neg' : Angle(degrees=-12.0*self.HOURS_TO_DEGREES),
+                        'ha_limit_pos' : Angle(degrees=12.0*self.HOURS_TO_DEGREES),
+                    }
+
 
     def test_read_neocp_orbit1(self):
 
@@ -274,16 +306,48 @@ class TestMovingObjects(object):
             assert False, "Didn't raise expected MovingViolation error"
 
 
+    def test_elem_to_topocentric_apparent_bad_jform(self):
+        dt = datetime(2014,  6, 14)
+        tdb = dt - timedelta(seconds=67.184)
+
+        assert_raises(MovingViolation, elem_to_topocentric_apparent, tdb, self.comet_elements1, self.elp, 42)
+        try:
+            ra, dec = elem_to_topocentric_apparent(tdb, self.comet_elements1, self.elp, 42)
+        except MovingViolation as e:
+            assert_equal(str(e), 'Error: -1 (illegal JFORM)')
+        else:
+            assert False, "Didn't raise expected MovingViolation error"
+
+
+    def test_elem_to_topocentric_apparent_comet1(self):
+        dt = datetime(2014, 6, 14)
+        tdb = dt - timedelta(seconds=67.184)
+
+        ra, dec = elem_to_topocentric_apparent(tdb, self.comet_elements1, self.elp, 3)
+
+
+        # Coordinates from JPL Horizons: 153.36306  36.46146 
+        assert_almost_equal(ra.in_degrees(), 153.36306, places=2)
+        assert_almost_equal(dec.in_degrees(), 36.46146, places=2)
+
+
+    def test_elem_to_topocentric_apparent_comet2(self):
+        dt = datetime(2013, 12, 12, 6, 10)
+        tdb = dt - timedelta(seconds=67.184)
+
+        ra, dec = elem_to_topocentric_apparent(tdb, self.comet_elements2, self.cpt, 3)
+
+
+        # Coordinates from JPL Horizons:  37.78519 -31.04102 
+        assert_almost_equal(ra.in_degrees(),  37.78519, places=4)
+        assert_almost_equal(dec.in_degrees(),-31.04102, places=4)
+
+
     def test_calc_ephemerides(self):
         window = {
                    'start' : datetime(2013, 12, 10),
                    'end'   : datetime(2013, 12, 11)
                  }
-        site_dict1 = {
-                        'name'      : '1m0a.doma.cpt',
-                        'latitude'  : Angle(degrees=-32.38059),
-                        'longitude' : Angle(degrees=20.8101083333),
-                      }
 
         chunksize = timedelta(hours=6)
 
@@ -320,7 +384,7 @@ class TestMovingObjects(object):
                      },
                    ]
 
-        received = calc_ephemerides(window, self.elements, site_dict1, chunksize)
+        received = calc_ephemerides(window, self.elements, self.cpt, chunksize)
 
         for e, r in zip(expected, received):
             assert_almost_equal(e['ra_app'].in_degrees(), r['ra_app'].in_degrees(), places=3)
@@ -334,14 +398,6 @@ class TestMovingObjects(object):
                    'start' : datetime(2013, 12, 10),
                    'end'   : datetime(2013, 12, 11)
                  }
-        site_dict1 = {
-                        'name'         : '1m0a.doma.cpt',
-                        'latitude'     : Angle(degrees=-32.38059),
-                        'longitude'    : Angle(degrees=20.8101083333),
-                        'horizon'      : Angle(degrees=30),
-                        'ha_limit_neg' : Angle(degrees=-12.0*15),
-                        'ha_limit_pos' : Angle(degrees=12.0*15),
-                      }
 
         chunksize = timedelta(hours=3)
 
@@ -362,7 +418,7 @@ class TestMovingObjects(object):
 
         received_ints, received_alts = find_moving_object_up_intervals(window,
                                                                self.elements,
-                                                               site_dict1, chunksize)
+                                                               self.cpt, chunksize)
 
         assert_equal(len(expected_intervals), len(received_ints))
         assert_equal(len(expected_altitudes), len(received_alts))
@@ -379,14 +435,6 @@ class TestMovingObjects(object):
                    'start' : datetime(2013, 12, 10, 7, 30),
                    'end'   : datetime(2013, 12, 10, 8, 30)
                  }
-        site_dict1 = {
-                        'name'         : '1m0a.doma.cpt',
-                        'latitude'     : Angle(degrees=-32.38059),
-                        'longitude'    : Angle(degrees=20.8101083333),
-                        'horizon'      : Angle(degrees=30),
-                        'ha_limit_neg' : Angle(degrees=-12.0*15),
-                        'ha_limit_pos' : Angle(degrees=12.0*15),
-                      }
 
         chunksize = timedelta(minutes=15)
 
@@ -408,7 +456,7 @@ class TestMovingObjects(object):
 
         received_ints, received_alts = find_moving_object_up_intervals(window,
                                                                self.elements,
-                                                               site_dict1, chunksize)
+                                                               self.cpt, chunksize)
 
         assert_equal(len(expected_intervals), len(received_ints))
         assert_equal(len(expected_altitudes), len(received_alts))
@@ -425,14 +473,6 @@ class TestMovingObjects(object):
                    'start' : datetime(2013, 12, 10, 7, 30),
                    'end'   : datetime(2013, 12, 10, 8, 31)
                  }
-        site_dict1 = {
-                        'name'         : '1m0a.doma.cpt',
-                        'latitude'     : Angle(degrees=-32.38059),
-                        'longitude'    : Angle(degrees=20.8101083333),
-                        'horizon'      : Angle(degrees=30),
-                        'ha_limit_neg' : Angle(degrees=-12.0*15),
-                        'ha_limit_pos' : Angle(degrees=12.0*15),
-                      }
 
         chunksize = timedelta(minutes=15)
 
@@ -459,7 +499,7 @@ class TestMovingObjects(object):
 
         received_ints, received_alts = find_moving_object_up_intervals(window,
                                                                self.elements,
-                                                               site_dict1, chunksize)
+                                                               self.cpt, chunksize)
 
         assert_equal(len(expected_intervals), len(received_ints))
         assert_equal(len(expected_altitudes), len(received_alts))

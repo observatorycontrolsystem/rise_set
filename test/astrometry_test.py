@@ -46,6 +46,12 @@ class TestAstrometry(object):
     def test_gregorian_to_ut_mjd(self):
         assert_equal(gregorian_to_ut_mjd(self.date), self.mjd)
 
+    def test_gregorian_to_ut_mjd_microseconds(self):
+        dt = datetime(2014, 6, 14)
+        tdb = dt - timedelta(seconds=67.184)
+        mjd_micros = 56821.99922240741
+        assert_equal(gregorian_to_ut_mjd(tdb), mjd_micros)
+
 
     def test_date_to_tdb(self):
         date     = datetime(2013, 11, 4)

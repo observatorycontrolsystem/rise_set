@@ -145,7 +145,7 @@ def gregorian_to_ut_mjd(date):
                   }
     dtf2d_status = 0
 
-    days, dtf2d_status = sla.sla_dtf2d(date.hour, date.minute, date.second)
+    days, dtf2d_status = sla.sla_dtf2d(date.hour, date.minute, date.second + (date.microsecond / 1e6))
 
     if dtf2d_status != 0:
         raise InvalidDateTimeError('Error:' + dtf2d_error[dtf2d_status])
