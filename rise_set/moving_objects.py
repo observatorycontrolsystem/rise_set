@@ -171,18 +171,20 @@ class Sites(object):
 
 
 
-def elem_to_topocentric_apparent(dt, elements, site):
+def elem_to_topocentric_apparent(dt, elements, site, MINOR_PLANET_JFORM=2):
     '''Given a datetime, set of MPC orbital elements and a site, return the
        apparent topocentric RA/Dec. This is what you'd use for a rise/set
        calculation, for example.'''
     tdb = date_to_tdb(dt)
 
-    # Slalib convention - force minor planets only
-    MINOR_PLANET_JFORM = 2
+
     MDM_PLACEHOLDER    = 0.0  # Only used for major planets
+    MEANANOM_PLACEHOLDER    = 0.0  # Not applicable for comets
 
     status = 0
-    ra_app_rads, dec_app_rads, earth_obj_dist, status = sla.sla_plante(
+    if MINOR_PLANET_JFORM == 2:
+# Minor planets (asteroids)
+        ra_app_rads, dec_app_rads, earth_obj_dist, status = sla.sla_plante(
                                                     tdb,
                                                     site['longitude'].in_radians(),
                                                     site['latitude'].in_radians(),
@@ -196,6 +198,24 @@ def elem_to_topocentric_apparent(dt, elements, site):
                                                     elements['mean_anomaly'].in_radians(),
                                                     MDM_PLACEHOLDER,
                                                   )
+    elif MINOR_PLANET_JFORM == 3:
+# Comets
+        ra_app_rads, dec_app_rads, earth_obj_dist, status = sla.sla_plante(
+                                                    tdb,
+                                                    site['longitude'].in_radians(),
+                                                    site['latitude'].in_radians(),
+                                                    MINOR_PLANET_JFORM,
+                                                    elements['epochofperih'],
+                                                    elements['inclination'].in_radians(),
+                                                    elements['long_node'].in_radians(),
+                                                    elements['arg_perihelion'].in_radians(),
+                                                    elements['perihdist'],
+                                                    elements['eccentricity'],
+                                                    MEANANOM_PLACEHOLDER,
+                                                    MDM_PLACEHOLDER,
+                                                  )
+    else:
+        status = -1
 
     error = {
                0 : 'OK',
