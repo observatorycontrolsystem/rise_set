@@ -171,24 +171,27 @@ class Sites(object):
 
 
 
-def elem_to_topocentric_apparent(dt, elements, site, MINOR_PLANET_JFORM=2):
+def elem_to_topocentric_apparent(dt, elements, site, JFORM=2):
     '''Given a datetime, set of MPC orbital elements and a site, return the
        apparent topocentric RA/Dec. This is what you'd use for a rise/set
-       calculation, for example.'''
+       calculation, for example.
+       JFORM should be set to 2 (default) for asteroids/minor planets and
+       to 3 for comets'''
     tdb = date_to_tdb(dt)
 
-
+    MINOR_PLANET_JFORM = 2
+    COMET_JFORM = 3 
     MDM_PLACEHOLDER    = 0.0  # Only used for major planets
     MEANANOM_PLACEHOLDER    = 0.0  # Not applicable for comets
 
     status = 0
-    if MINOR_PLANET_JFORM == 2:
+    if JFORM == MINOR_PLANET_JFORM:
 # Minor planets (asteroids)
         ra_app_rads, dec_app_rads, earth_obj_dist, status = sla.sla_plante(
                                                     tdb,
                                                     site['longitude'].in_radians(),
                                                     site['latitude'].in_radians(),
-                                                    MINOR_PLANET_JFORM,
+                                                    JFORM,
                                                     elements['epoch'],
                                                     elements['inclination'].in_radians(),
                                                     elements['long_node'].in_radians(),
@@ -198,13 +201,13 @@ def elem_to_topocentric_apparent(dt, elements, site, MINOR_PLANET_JFORM=2):
                                                     elements['mean_anomaly'].in_radians(),
                                                     MDM_PLACEHOLDER,
                                                   )
-    elif MINOR_PLANET_JFORM == 3:
+    elif JFORM == COMET_JFORM:
 # Comets
         ra_app_rads, dec_app_rads, earth_obj_dist, status = sla.sla_plante(
                                                     tdb,
                                                     site['longitude'].in_radians(),
                                                     site['latitude'].in_radians(),
-                                                    MINOR_PLANET_JFORM,
+                                                    JFORM,
                                                     elements['epochofperih'],
                                                     elements['inclination'].in_radians(),
                                                     elements['long_node'].in_radians(),
@@ -342,7 +345,7 @@ def find_moving_object_up_intervals(window, elements, site, chunksize=timedelta(
     return up_intervals, up_altitudes
 
 
-def calc_ephemerides(window, elements, site, chunksize=timedelta(minutes=15)):
+def calc_ephemerides(window, elements, site, chunksize=timedelta(minutes=15), JFORM=2):
     '''Return the apparent RA/Dec for the moving object specified by elements, for a given
        site, every chunksize minutes within the window.'''
 
@@ -350,7 +353,7 @@ def calc_ephemerides(window, elements, site, chunksize=timedelta(minutes=15)):
 
     coords = []
     for start, end in chunked_intervals:
-        ra_app, dec_app = elem_to_topocentric_apparent(start, elements, site)
+        ra_app, dec_app = elem_to_topocentric_apparent(start, elements, site, JFORM)
         ephem = {
                   'ra_app'  : ra_app,
                   'dec_app' : dec_app,
@@ -360,7 +363,7 @@ def calc_ephemerides(window, elements, site, chunksize=timedelta(minutes=15)):
         coords.append(ephem)
 
     start, end = chunked_intervals[-1]
-    ra_app, dec_app = elem_to_topocentric_apparent(end, elements, site)
+    ra_app, dec_app = elem_to_topocentric_apparent(end, elements, site, JFORM)
     ephem = {
               'ra_app'  : ra_app,
               'dec_app' : dec_app,
