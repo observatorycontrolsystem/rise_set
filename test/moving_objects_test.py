@@ -745,3 +745,53 @@ class TestMovingObjects(object):
         received = chunk_windows(window, chunksize)
 
         assert_equal(received, expected)
+
+
+    def test_tims_target(self):
+        window = {
+                   'start'    : str_to_dt('2014-07-17 23:00:00'),
+                   'end'      : str_to_dt('2014-07-18 11:00:00'),
+                 }
+
+        elements = read_neocp_orbit('test/tim_is_kinda_cool.neocp')
+
+        for x, y in elements.items():
+            print x, y
+
+        site_filename = 'test/telescopes.dat'
+        chunksize = timedelta(minutes=10)
+
+        received = find_moving_object_network_up_intervals(window, elements,
+                                                           site_filename, chunksize)
+
+        expected = {
+                     '1m0a.doma.elp' : [
+                                         (
+                                           datetime(2014, 7, 18, 3, 50),
+                                           datetime(2014, 7, 18, 9, 10)
+                                         )
+                                       ],
+                     '1m0a.doma.coj' : [
+                                         (
+                                           datetime(2014, 7, 18, 8, 50),
+                                           datetime(2014, 7, 18, 11, 0)
+                                         )
+                                       ],
+                     '1m0a.doma.cpt' : [
+                                         (
+                                           datetime(2014, 7, 17, 23, 0),
+                                           datetime(2014, 7, 18, 3, 10)
+                                         )
+                                       ],
+                     '1m0a.doma.lsc' : [
+                                         (
+                                           datetime(2014, 7, 17, 23, 30),
+                                           datetime(2014, 7, 18, 9, 20)
+                                         )
+                                       ],
+                   }
+
+
+        for site in expected.keys():
+            print site
+            assert_equal(expected[site], received[site])

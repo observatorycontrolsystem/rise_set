@@ -41,6 +41,7 @@ v.0.3.6  - Fix for incorrect exception handler in elem_to_topocentric_apparent.
          - Dump the elements out if we raise a MovingViolation exception. (all above by Tim Lister)
 v.0.3.7  - Add comet support.
          - Fix bug in gregorian_to_ut_mjd where fractional seconds were ignored. (all above by Tim Lister)
+v.0.3.8  - Fix incorrect normalisation of hour angles
 
 Eric Saunders
 October 2012
