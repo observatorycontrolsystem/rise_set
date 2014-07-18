@@ -92,6 +92,25 @@ class TestAstrometry(object):
         assert_almost_equal(hour_angle.in_degrees(), -55.128564469690645, places=13)
 
 
+    def test_calc_local_hour_angle_normalises_negative_overrun(self):
+        ra_app        = Angle(degrees=288.75)
+        elp_longitude = Angle(degrees=-104.015194444)
+        date          = datetime(2014, 07, 18, 7)
+
+        hour_angle = calc_local_hour_angle(ra_app, elp_longitude, date)
+
+        assert_almost_equal(hour_angle.in_degrees(), 8.2509, places=4)
+
+
+    def test_calc_local_hour_angle_normalises_positive_overrun(self):
+        ra_app        = Angle(degrees=108.75)
+        coj_longitude = Angle(degrees=149.070593)
+        date          = datetime(2014, 1, 12, 14)
+
+        hour_angle = calc_local_hour_angle(ra_app, coj_longitude, date)
+
+        assert_almost_equal(hour_angle.in_degrees(), 2.3088, places=4)
+
 
 class TestSunriseSunset(object):
 
