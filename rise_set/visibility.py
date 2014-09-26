@@ -21,7 +21,7 @@ import copy
 from rise_set.astrometry     import (calc_sunrise_set, calc_rise_set, RiseSetError,
                                      Star, gregorian_to_ut_mjd, ut_mjd_to_gmst)
 from rise_set.angle          import Angle
-from rise_set.moving_objects import find_moving_object_up_intervals
+from rise_set.moving_objects import is_moving_object, find_moving_object_up_intervals
 from rise_set.utils          import (coalesce_adjacent_intervals, intersect_intervals,
                                      intersect_many_intervals)
 
@@ -111,15 +111,14 @@ class Visibility(object):
         effective_horizon = set_airmass_limit(airmass, self.horizon.in_degrees())
 
         # Handle moving objects differently from stars
-        if 'type' in target and (target['type'].lower()   == 'mpc_minor_planet'
-                                 or target['type'].lower() == 'mpc_comet'):
+
+        if is_moving_object(target):
             intervals = self.get_moving_object_target_intervals(target, effective_horizon)
         # The target has an RA/Dec
         else:
             intervals = self.get_ra_target_intervals(target, up, airmass, effective_horizon)
 
         return intervals
-
 
     def get_moving_object_target_intervals(self, target, effective_horizon):
         window = {
