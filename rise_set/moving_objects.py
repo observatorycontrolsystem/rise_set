@@ -25,7 +25,7 @@ from datetime import datetime,timedelta
 def initialelemdict():
     '''Create an inital empty orbital elements dictionary for use by read_neocp_orbit.'''
     keys  = "name H G epoch mean_anomaly long_node arg_perihelion inclination "
-    keys += "eccentricity MDM semi_axis n_obs n_nights"
+    keys += "eccentricity MDM semi_axis n_obs n_nights type"
 
     return {}.fromkeys(keys.split())
 
@@ -64,6 +64,7 @@ def read_neocp_orbit(orbfile):
         line   = line.rstrip()
         chunks = line.split()
 
+        elements['type']           = 'MPC_MINOR_PLANET'  # TODO: Hard-coded to asteroids for now
         elements['name']           = chunks[0]
         elements['H']              = float(chunks[1])
         elements['G']              = float(chunks[2])
@@ -307,7 +308,17 @@ def find_moving_object_up_intervals(window, elements, site, chunksize=timedelta(
        If you just want rising and setting visible intevals, supply hour angle limits
        of -12 and 12 in your site dict.
     '''
-    coords = calc_ephemerides(window, elements, site, chunksize)
+
+    # Map the type of moving object to SLALIB numeric convention
+    target_type = elements['type'].lower()
+    if target_type == 'mpc_minor_planet':
+        jform = 2
+    elif target_type == 'mpc_comet':
+        jform = 3
+    else:
+        raise MovingViolation("Unsupported target type: '%s'" % str(target_type))
+
+    coords = calc_ephemerides(window, elements, site, chunksize, jform)
 
     intervals   = []
     altitudes   = []

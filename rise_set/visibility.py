@@ -111,7 +111,8 @@ class Visibility(object):
         effective_horizon = set_airmass_limit(airmass, self.horizon.in_degrees())
 
         # Handle moving objects differently from stars
-        if 'type' in target and target['type'].lower() == 'mpc_minor_planet':
+        if 'type' in target and (target['type'].lower()   == 'mpc_minor_planet'
+                                 or target['type'].lower() == 'mpc_comet'):
             intervals = self.get_moving_object_target_intervals(target, effective_horizon)
         # The target has an RA/Dec
         else:
