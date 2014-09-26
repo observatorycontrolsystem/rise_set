@@ -280,6 +280,59 @@ class TestMovingObjects(object):
         for e in expected.keys():
             assert_equal(expected[e], recieved[e])
 
+
+    def test_read_neocp_comet_orbit1(self):
+
+# Hand-crafted element dictionary from MPC MPES output on 2014-09-26.
+# This test tests long-period comet parsing
+        expected = {
+                     'name': 'CK13A010',
+                     'epoch': 57000.0,
+                     'long_node':  Angle(degrees=300.9764),
+                     'eccentricity': 1.000434,
+                     'semi_axis': None,
+                     'mean_anomaly':  None,
+                     'arg_perihelion': Angle(degrees=2.4226),
+                     'inclination':  Angle(degrees=129.0428),
+                     'MDM':  None,
+                     'H': 8.2,
+                     'G': 2.4,
+                     'n_obs': None,
+                     'n_nights': None,
+                     'type' : 'MPC_COMET'
+                   }
+
+        recieved = read_neocp_orbit('test/Comet_SidingSpring.neocp')
+
+        for e in expected.keys():
+            assert_equal(expected[e], recieved[e])
+
+    def test_read_neocp_comet_orbit2(self):
+
+# Hand-crafted element dictionary from MPC MPES output on 2014-09-26.
+# This test tests periodic comet parsing
+        expected = {
+                     'name'           : '0299P',
+                     'epoch'          : 57000.0,
+                     'long_node'      : Angle(degrees=271.6800),
+                     'eccentricity'   : 0.282122,
+                     'semi_axis'      : None,
+                     'mean_anomaly'   : None,
+                     'arg_perihelion' : Angle(degrees=323.5091),
+                     'inclination'    : Angle(degrees=10.4798),
+                     'MDM'            : None,
+                     'H'              : 11.5,
+                     'G'              : 4.00,
+                     'n_obs': None,
+                     'n_nights': None,
+                     'type' : 'MPC_COMET'
+                   }
+
+        recieved = read_neocp_orbit('test/Comet_299P.neocp')
+
+        for e in expected.keys():
+            assert_equal(expected[e], recieved[e])
+
     def test_elem_to_topocentric_apparent_time1(self):
         dt = datetime(2013, 12, 9)
         tdb = dt - timedelta(seconds=67.184)

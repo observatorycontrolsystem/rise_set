@@ -63,7 +63,17 @@ def extract_mpc_epoch(epochstring):
 
 
 def read_neocp_orbit(orbfile):
-    '''Read an NEOCP orbit file, storing the contents as a dict.'''
+    '''Read an NEOCP orbit file, storing the contents as a dict.
+    Comet format is from
+    http://www.minorplanetcenter.net/iau/info/CometOrbitFormat.html (Ephemerides
+    and Orbital Elements Format), asteroid format is from battle-weary 
+    inference but is also documented at 
+    http://www.minorplanetcenter.net/iau/info/MPOrbitFormat.html'''
+
+    import re
+    
+    comet_regex = r'^\d{4}P'
+    comet_pat = re.compile(comet_regex)
 
     elements = initialelemdict()
 
@@ -76,45 +86,68 @@ def read_neocp_orbit(orbfile):
         line   = line.rstrip()
         chunks = line.split()
 
-        elements['type']           = 'MPC_MINOR_PLANET'  # TODO: Hard-coded to asteroids for now
-        elements['name']           = chunks[0]
-        elements['H']              = float(chunks[1])
-        elements['G']              = float(chunks[2])
-
-        epoch_dt                   = extract_mpc_epoch(chunks[3])
-        elements['epoch']          = gregorian_to_ut_mjd(epoch_dt)
-
-        elements['mean_anomaly']   = Angle(degrees=float(chunks[4]))
-        elements['arg_perihelion'] = Angle(degrees=float(chunks[5]))
-        elements['long_node']      = Angle(degrees=float(chunks[6]))
-        elements['inclination']    = Angle(degrees=float(chunks[7]))
-        elements['eccentricity']   = float(chunks[8])
-        elements['MDM']            = Angle(degrees=float(chunks[9]))
-        elements['semi_axis']      = float(chunks[10])
-
-        # If it's an NEOCP-style line...
-        if len(chunks) == 17:
-            elements['n_obs']    = int(chunks[11])
-            elements['n_nights'] = int(chunks[13]) + 1
-
-        # ...or if it's an MPCORB-style line...
-        elif len(chunks) == 25 or len(chunks) == 23:
-            nobs_field = 12
-            if len(chunks) == 25:
-                nobs_field = 13
-            elements['n_obs']    = int(chunks[nobs_field])
-            try:
-                num_nights_or_years = int(chunks[14]) + 1
-            except ValueError:
-                num_nights_or_years = chunks[14]
-
-            elements['n_nights'] = num_nights_or_years
-
-        # Otherwise complain
+# Check if it is a periodic (numbered) comet or long-period comet and
+# set type/scheme appropriately
+        if line.startswith('    C') or re.match(comet_pat, line):
+            elements['type']           = 'MPC_COMET'
+            comet = True
         else:
-            print "Unknown number of columns"
-            elements['n_obs']    = 0
-            elements['n_nights'] = 0
+            elements['type']           = 'MPC_MINOR_PLANET'
+            comet = False
+
+        elements['name']           = chunks[0]
+
+        if comet == True:
+            epoch_of_perih = datetime(year=int(chunks[1]), month=int(chunks[2]), day=int(float(chunks[3])))
+            epoch_of_perih = epoch_of_perih + timedelta(days=float(chunks[3])-int(float(chunks[3])))
+            elements['epochofperih'] = gregorian_to_ut_mjd(epoch_of_perih)
+            elements['perihdist'] = float(chunks[4])
+            elements['eccentricity']   = float(chunks[5])
+            elements['arg_perihelion'] = Angle(degrees=float(chunks[6]))
+            elements['long_node']      = Angle(degrees=float(chunks[7]))
+            elements['inclination']    = Angle(degrees=float(chunks[8]))
+            epoch_dt = datetime.strptime(chunks[9], '%Y%m%d')
+            elements['epoch']          = gregorian_to_ut_mjd(epoch_dt)
+            elements['H']              = float(chunks[10])
+            elements['G']              = float(chunks[11])
+        else:
+            elements['H']              = float(chunks[1])
+            elements['G']              = float(chunks[2])
+
+            epoch_dt                   = extract_mpc_epoch(chunks[3])
+            elements['epoch']          = gregorian_to_ut_mjd(epoch_dt)
+
+            elements['mean_anomaly']   = Angle(degrees=float(chunks[4]))
+            elements['arg_perihelion'] = Angle(degrees=float(chunks[5]))
+            elements['long_node']      = Angle(degrees=float(chunks[6]))
+            elements['inclination']    = Angle(degrees=float(chunks[7]))
+            elements['eccentricity']   = float(chunks[8])
+            elements['MDM']            = Angle(degrees=float(chunks[9]))
+            elements['semi_axis']      = float(chunks[10])
+
+            # If it's an NEOCP-style line...
+            if len(chunks) == 17:
+                elements['n_obs']    = int(chunks[11])
+                elements['n_nights'] = int(chunks[13]) + 1
+
+            # ...or if it's an MPCORB-style line...
+            elif len(chunks) == 25 or len(chunks) == 23:
+                nobs_field = 12
+                if len(chunks) == 25:
+                    nobs_field = 13
+                elements['n_obs']    = int(chunks[nobs_field])
+                try:
+                    num_nights_or_years = int(chunks[14]) + 1
+                except ValueError:
+                    num_nights_or_years = chunks[14]
+
+                elements['n_nights'] = num_nights_or_years
+
+            # Otherwise complain
+            else:
+                print "Unknown number of columns"
+                elements['n_obs']    = 0
+                elements['n_nights'] = 0
 
         # We only want the first non-header line
         break
