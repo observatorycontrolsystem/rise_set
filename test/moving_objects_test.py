@@ -8,7 +8,8 @@ December 2013
 '''
 
 from rise_set.angle import Angle
-from rise_set.moving_objects import (Sites, initialise_sites,
+from rise_set.moving_objects import (is_moving_object,
+                                     Sites, initialise_sites,
                                      chunk_windows,
                                      read_neocp_orbit,
                                      elem_to_topocentric_apparent,
@@ -21,7 +22,8 @@ from rise_set.moving_objects import (Sites, initialise_sites,
                                      MovingViolation)
 
 from datetime import datetime, timedelta
-from nose.tools import assert_equal, assert_almost_equal, nottest, assert_raises
+from nose.tools import (assert_equal, assert_almost_equal, nottest, assert_raises,
+                        assert_false, assert_true)
 from mock import patch
 
 
@@ -142,7 +144,7 @@ class TestMovingObjects(object):
                           'mean_anomaly'   : Angle(degrees=54.47380),
                         }
 
-        # Element set for Comet C/2012 K1, formatted as an asteroid which 
+        # Element set for Comet C/2012 K1, formatted as an asteroid which
         # caused serious grief to the scheduler (Issue #7447)
 
         self.elements2 = {
@@ -155,7 +157,7 @@ class TestMovingObjects(object):
                           'mean_anomaly'   : Angle(degrees=27.6567),
                         }
 
-        # Fake element set to test MovingViolation handling in 
+        # Fake element set to test MovingViolation handling in
         # elem_to_topocentric_apparent
 
         self.elements3 = {
@@ -178,7 +180,7 @@ class TestMovingObjects(object):
                           'eccentricity'   : 1.000209136966309,
                         }
 
-        
+
         # Element set for 2013 UQ4 from JPL HORIZONS on 2014-06-11
 
         self.comet_elements2 = {
@@ -205,6 +207,27 @@ class TestMovingObjects(object):
                         'ha_limit_neg' : Angle(degrees=-12.0*self.HOURS_TO_DEGREES),
                         'ha_limit_pos' : Angle(degrees=12.0*self.HOURS_TO_DEGREES),
                     }
+
+
+    def test_is_moving_object_defaults_to_extra_solar_objects(self):
+        target = {}
+        assert_false(is_moving_object(target))
+
+    def test_is_moving_object_understands_planets(self):
+        target = {'type' : 'MPC_MINOR_PLANET'}
+        assert_true(is_moving_object(target))
+
+    def test_is_moving_object_understands_comets(self):
+        target = {'type' : 'MPC_MINOR_PLANET'}
+        assert_true(is_moving_object(target))
+
+    def test_is_moving_object_is_case_insensitive(self):
+        target = {'type' : 'MpC_MiNoR_PlAnEt'}
+        assert_true(is_moving_object(target))
+
+    def test_is_moving_object_other_types_dont_move(self):
+        target = {'type' : 'TIMS_CAT'}
+        assert_false(is_moving_object(target))
 
 
     def test_read_neocp_orbit1(self):
@@ -327,7 +350,7 @@ class TestMovingObjects(object):
         ra, dec = elem_to_topocentric_apparent(tdb, self.comet_elements1, self.elp, 3)
 
 
-        # Coordinates from JPL Horizons: 153.36306  36.46146 
+        # Coordinates from JPL Horizons: 153.36306  36.46146
         assert_almost_equal(ra.in_degrees(), 153.36306, places=2)
         assert_almost_equal(dec.in_degrees(), 36.46146, places=2)
 
@@ -339,7 +362,7 @@ class TestMovingObjects(object):
         ra, dec = elem_to_topocentric_apparent(tdb, self.comet_elements2, self.cpt, 3)
 
 
-        # Coordinates from JPL Horizons:  37.78519 -31.04102 
+        # Coordinates from JPL Horizons:  37.78519 -31.04102
         assert_almost_equal(ra.in_degrees(),  37.78519, places=4)
         assert_almost_equal(dec.in_degrees(),-31.04102, places=4)
 
@@ -521,7 +544,7 @@ class TestMovingObjects(object):
         elements = {'type' : 'MPC_MINOR_PLANET'}
         site     = None
         find_moving_object_up_intervals(window, elements, site)
-        assert 2 in ephem_mock.call_args[0], 'expected jform=2 not passed to calc_ephemerides'
+        assert_equal(ephem_mock.call_args[0][4], 2)
 
 
     @patch('rise_set.moving_objects.calc_ephemerides')

@@ -22,6 +22,18 @@ import slalib as sla
 import ast
 from datetime import datetime,timedelta
 
+
+def is_moving_object(target):
+    # If a type is not specified, default to sidereal objects
+    if 'type' not in target:
+        return False
+
+    if target['type'].lower() in ('mpc_minor_planet', 'mpc_comet'):
+        return True
+
+    return False
+
+
 def initialelemdict():
     '''Create an inital empty orbital elements dictionary for use by read_neocp_orbit.'''
     keys  = "name H G epoch mean_anomaly long_node arg_perihelion inclination "
