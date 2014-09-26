@@ -205,8 +205,8 @@ class TestIntervals(object):
 
 
     @patch('rise_set.visibility.Visibility.get_ra_target_intervals')
-    @patch('rise_set.visibility.find_moving_object_up_intervals')
-    def test_get_target_intervals_empty_target(self, mock_func1, mock_func2):
+    @patch('rise_set.visibility.Visibility.get_moving_object_target_intervals')
+    def test_get_target_intervals_no_target_specified(self, mock_func1, mock_func2):
         target = {}
 
         received = self.visibility.get_target_intervals(target)
@@ -215,9 +215,20 @@ class TestIntervals(object):
         assert_equal(mock_func2.call_count, 1)
 
 
+    @patch('rise_set.visibility.Visibility.get_ra_target_intervals')
+    @patch('rise_set.visibility.Visibility.get_moving_object_target_intervals')
+    def test_get_target_intervals_mpc_comet_type_is_a_moving_object(self, moving_obj_func,
+                                                                    ra_dec_func):
+        target = {'type' : 'mpc_comet'}
+
+        received = self.visibility.get_target_intervals(target)
+
+        assert_equal(moving_obj_func.call_count, 1)
+        assert_equal(ra_dec_func.call_count, 0)
+
 
     @patch('rise_set.visibility.find_moving_object_up_intervals')
-    def test_get_target_intervals_type_specified(self, mock_func):
+    def test_get_target_intervals_mpc_minor_planet_type_gets_correct_intervals(self, mock_func):
         target = {
                    'type'           : 'mpc_minor_planet',
                    'epoch'          : datetime(2013, 11, 4),

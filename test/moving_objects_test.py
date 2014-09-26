@@ -132,6 +132,7 @@ class TestMovingObjects(object):
         # From 1313 observations at 37 oppositions, 1901-2013, mean residual 0".53.
 
         self.elements = {
+                          'type'           : 'MPC_MINOR_PLANET',
                           'epoch'          : 56600.0,
                           'inclination'    : Angle(degrees=7.22565),
                           'long_node'      : Angle(degrees=173.25052),
@@ -511,6 +512,43 @@ class TestMovingObjects(object):
             assert_almost_equal(e.in_degrees(), r.in_degrees(), places=3)
 
 
+    @patch('rise_set.moving_objects.calc_ephemerides')
+    @patch('rise_set.moving_objects.calc_local_hour_angle')
+    @patch('rise_set.moving_objects.calculate_altitude')
+    def test_find_moving_object_sets_asteroid_jform(self, alt_mock, ha_mock,
+                                                    ephem_mock):
+        window   = None
+        elements = {'type' : 'MPC_MINOR_PLANET'}
+        site     = None
+        find_moving_object_up_intervals(window, elements, site)
+        assert 2 in ephem_mock.call_args[0], 'expected jform=2 not passed to calc_ephemerides'
+
+
+    @patch('rise_set.moving_objects.calc_ephemerides')
+    @patch('rise_set.moving_objects.calc_local_hour_angle')
+    @patch('rise_set.moving_objects.calculate_altitude')
+    def test_find_moving_object_sets_comet_jform(self, alt_mock, ha_mock,
+                                                    ephem_mock):
+        window   = None
+        elements = {'type' : 'MPC_COMET'}
+        site     = None
+        find_moving_object_up_intervals(window, elements, site)
+        assert 3 in ephem_mock.call_args[0], 'expected jform=3 not passed to calc_ephemerides'
+
+
+    def test_find_moving_object_invalid_type_raises_exception(self):
+        window   = None
+        elements = {'type' : 'TIMS_CAT'}
+        site     = None
+
+        try:
+            find_moving_object_up_intervals(window, elements, site)
+        except MovingViolation as e:
+            assert_equal(str(e), "Unsupported target type: 'tims_cat'")
+        else:
+            assert False, "Didn't raise expected MovingViolation error"
+
+
     def test_hour_angle_beyond_neg_limit(self):
         ha        = Angle(degrees=-8*self.HOURS_TO_DEGREES)
         neg_limit = Angle(degrees=-4.6*self.HOURS_TO_DEGREES)
@@ -610,7 +648,7 @@ class TestMovingObjects(object):
     def test_moving_objects_respect_negative_hour_angle_limit(self, alt_mock,
                                                               ha_mock, ephem_mock):
         window   = None
-        elements = None
+        elements = {'type' : 'mpc_minor_planet'}
         site_dict = {
                         'name'         : '1m0a.doma.cpt',
                         'latitude'     : Angle(degrees=-32.38059),
