@@ -233,7 +233,7 @@ def make_ra_dec_target(ra, dec, ra_proper_motion=None, dec_proper_motion=None, p
     return target
 
 
-def make_moving_object_target(target_type, epoch, inclination, long_node, arg_perihelion,
+def make_minor_planet_target(target_type, epoch, inclination, long_node, arg_perihelion,
                               semi_axis, eccentricity, mean_anomaly):
 
     target = {
@@ -245,6 +245,23 @@ def make_moving_object_target(target_type, epoch, inclination, long_node, arg_pe
                'semi_axis'      : semi_axis,
                'eccentricity'   : eccentricity,
                'mean_anomaly'   : Angle(degrees=mean_anomaly),
+             }
+
+    return target
+
+
+def make_comet_target(target_type, epoch, epochofperih, inclination, long_node, arg_perihelion,
+                              perihdist, eccentricity):
+
+    target = {
+               'type'           : target_type,
+               'epoch'          : epoch,
+               'epochofperih'   : epochofperih,
+               'inclination'    : Angle(degrees=inclination),
+               'long_node'      : Angle(degrees=long_node),
+               'arg_perihelion' : Angle(degrees=arg_perihelion),
+               'perihdist'      : perihdist,
+               'eccentricity'   : eccentricity,
              }
 
     return target
