@@ -18,6 +18,7 @@ from rise_set.angle      import Angle
 from rise_set.utils      import coalesce_adjacent_intervals
 
 import slalib as sla
+import re
 
 import ast
 from datetime import datetime,timedelta
@@ -69,8 +70,6 @@ def read_neocp_orbit(orbfile):
     and Orbital Elements Format), asteroid format is from battle-weary 
     inference but is also documented at 
     http://www.minorplanetcenter.net/iau/info/MPOrbitFormat.html'''
-
-    import re
     
     comet_regex = r'^\d{4}P'
     comet_pat = re.compile(comet_regex)
@@ -90,18 +89,18 @@ def read_neocp_orbit(orbfile):
 # set type/scheme appropriately
         if line.startswith('    C') or re.match(comet_pat, line):
             elements['type']           = 'MPC_COMET'
-            comet = True
+            is_comet = True
         else:
             elements['type']           = 'MPC_MINOR_PLANET'
-            comet = False
+            is_comet = False
 
         elements['name']           = chunks[0]
 
-        if comet == True:
+        if is_comet == True:
             epoch_of_perih = datetime(year=int(chunks[1]), month=int(chunks[2]), day=int(float(chunks[3])))
             epoch_of_perih = epoch_of_perih + timedelta(days=float(chunks[3])-int(float(chunks[3])))
-            elements['epochofperih'] = gregorian_to_ut_mjd(epoch_of_perih)
-            elements['perihdist'] = float(chunks[4])
+            elements['epochofperih']   = gregorian_to_ut_mjd(epoch_of_perih)
+            elements['perihdist']      = float(chunks[4])
             elements['eccentricity']   = float(chunks[5])
             elements['arg_perihelion'] = Angle(degrees=float(chunks[6]))
             elements['long_node']      = Angle(degrees=float(chunks[7]))
