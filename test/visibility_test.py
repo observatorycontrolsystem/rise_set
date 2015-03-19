@@ -407,6 +407,38 @@ class TestIntervals(object):
         assert_equal(received, expected)
 
 
+    def test_ha_gets_all_intervals(self):
+        # For targets that cross 00 UTC, there was a missed interval
+        # This failed prior to 2015-03-19
+        expected = [(datetime(2015, 3, 16, 0, 5, 58, 794332),datetime(2015, 3, 16, 9, 16, 28, 362369)),
+                    (datetime(2015, 3, 17, 0, 2, 2, 884862),datetime(2015, 3, 17, 9, 12, 32, 452899)),
+                    (datetime(2015, 3, 17, 23, 58, 6, 975392),datetime(2015, 3, 18, 9, 8, 36,543429)),
+                    (datetime(2015, 3, 18, 23, 54, 11, 65922),datetime(2015, 3, 19, 9, 4, 40, 633959)),
+                    (datetime(2015, 3, 19, 23, 50, 15, 156452),datetime(2015, 3, 20, 9, 0, 44, 724489)),
+                    (datetime(2015, 3, 20, 23, 46, 19, 246982),datetime(2015, 3, 21, 8, 56, 48, 815019))]
+
+        target = {
+            'ra' : RightAscension(degrees=172.962037037),
+            'dec': Declination(degrees=-12.5255555556),
+            'epoch': 2000,
+            }
+
+        site  = {
+            'latitude':  Angle(degrees=-30.1673306),
+            'longitude': Angle(degrees=-70.8046611),
+            }
+
+        start_date = datetime(year=2015, month=3, day=15, hour=18)
+        end_date   = datetime(year=2015, month=3, day=21, hour=18)
+
+        v = Visibility(site, start_date, end_date, twilight='nautical', horizon=30,
+                       ha_limit_neg=-4.6, ha_limit_pos=4.6)
+
+        received = v.get_ha_intervals(target)
+
+        assert_equal(received, expected)
+
+
     def test_ha_ut_mjd_is_truncated(self):
         # If a user window specifies a time, then hour angle calculations are entirely
         # wrong unless that time is discarded. This unit test protects against regressions
@@ -463,7 +495,7 @@ class TestIntervals(object):
         # expected for dec = -60
         expected = {
                      '1m0a.doma.elp' : [],
-                     '1m0a.doma.coj' : [(datetime(2013, 3, 22, 17, 53, 31,  27509),
+                     '1m0a.doma.coj' : [(datetime(2013, 3, 22, 17, 49, 35, 118039),
                                          datetime(2013, 3, 22, 20,  8, 49, 303466))],
                      '1m0a.doma.cpt' : [(datetime(2013, 3, 22,  2, 25,  9, 494210),
                                          datetime(2013, 3, 22,  4, 41, 27, 874760))],

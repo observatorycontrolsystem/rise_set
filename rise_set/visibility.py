@@ -188,10 +188,6 @@ class Visibility(object):
                 self.site['longitude'].in_hours() - gmst.in_hours()
             hour_set /= SIDEREAL_SOLAR_DAY_RATIO
 
-            if hour_rise < 0:
-                hour_rise += 24
-                hour_set  += 24
-
             dt0 = current_date.replace(hour=0, minute=0, second=0, microsecond=0)
             intervals.append((dt0 + datetime.timedelta(hours=hour_rise),
                               dt0 + datetime.timedelta(hours=hour_set)))
