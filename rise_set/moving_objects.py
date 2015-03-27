@@ -123,30 +123,50 @@ def read_neocp_orbit(orbfile):
             elements['eccentricity']   = float(chunks[8])
             elements['MDM']            = Angle(degrees=float(chunks[9]))
             elements['semi_axis']      = float(chunks[10])
+            elements['uncertainty']    = chunks[11]
+            elements['reference']      = chunks[12]
+            
+            # The next bit is...complicated... depending on whether it's a 
+            # multi-opposition orbit or not
+            # From http://www.minorplanetcenter.net/iau/info/MPOrbitFormat.html
+            # 108 - 116  a9     Reference (chunks[12])
+            # 118 - 122  i5     Number of observations
+            # 124 - 126  i3     Number of oppositions
+            #
+            #    For multiple-opposition orbits:
+            #    128 - 131  i4     Year of first observation
+            #    132        a1     '-'
+            #    133 - 136  i4     Year of last observation
+            #
+            #    For single-opposition orbits:
+            #    128 - 131  i4     Arc length (days)
+            #    133 - 136  a4     'days'
+            #
+            # 138 - 141  f4.2   r.m.s residual (")
+            #
+            
+            # Extract a string section and decide whether it's single or  
+            # multiple opposition
+            opp_data = line[117:141]
+            single_opp = False
+            if 'days' in opp_data:
+                single_opp = True 
+            elements['n_obs']   = int(opp_data[0:5])
+            elements['n_oppos'] = int(opp_data[6:9])
+            elements['residual'] = float(opp_data[20:24])
+            # If it's a single opposition orbit, return arc length
+            if single_opp == True:
+                num_nights_or_years = int(opp_data[10:14])
 
-            # If it's an NEOCP-style line...
-            if len(chunks) == 17:
-                elements['n_obs']    = int(chunks[11])
-                elements['n_nights'] = int(chunks[13]) + 1
-
-            # ...or if it's an MPCORB-style line...
-            elif len(chunks) == 25 or len(chunks) == 23:
-                nobs_field = 12
-                if len(chunks) == 25:
-                    nobs_field = 13
-                elements['n_obs']    = int(chunks[nobs_field])
-                try:
-                    num_nights_or_years = int(chunks[14]) + 1
-                except ValueError:
-                    num_nights_or_years = chunks[14]
-
-                elements['n_nights'] = num_nights_or_years
-
-            # Otherwise complain
+            # ...or it's a multi-opposition orbit...
             else:
-                print "Unknown number of columns"
-                elements['n_obs']    = 0
-                elements['n_nights'] = 0
+                num_nights_or_years = opp_data[10:19]
+
+            elements['n_nights'] = num_nights_or_years
+            # Try and retrieve last obs date
+            if len(line) == 202:
+                 elements['last_obs'] = line[194:202]
+
 
         # We only want the first non-header line
         break

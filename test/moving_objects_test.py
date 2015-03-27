@@ -247,7 +247,8 @@ class TestMovingObjects(object):
                      'H': 17.5,
                      'G': 0.15,
                      'n_obs': 4,
-                     'n_nights': 1,
+                     'n_oppos' : 1,
+                     'n_nights': 0,
                    }
 
         recieved = read_neocp_orbit('test/P109rXK.neocp')
@@ -272,10 +273,39 @@ class TestMovingObjects(object):
                      'H'              : 17.7,
                      'G'              : 0.15,
                      'n_obs'          : 146,
-                     'n_nights'       : 2,
+                     'n_oppos'        : 1,
+                     'n_nights'       : 67,
                    }
 
         recieved = read_neocp_orbit('test/2013TL117.neocp')
+
+        for e in expected.keys():
+            assert_equal(expected[e], recieved[e])
+
+
+    def test_read_neocp_orbit3(self):
+
+        # Element dictionary produced by TAL's code from NEOCP orbit file, migrated to
+        # rise_set format.
+        # This test tests multi-opposition orbits
+        expected = {
+                     'name'           : '00001',
+                     'epoch'          : 57200.0,
+                     'long_node'      : Angle(degrees=80.3272),
+                     'eccentricity'   : 0.0757825,
+                     'semi_axis'      : 2.7679724,
+                     'mean_anomaly'   : Angle(degrees=138.66222),
+                     'arg_perihelion' : Angle(degrees= 72.65410),
+                     'inclination'    : Angle(degrees= 10.59230),
+                     'MDM'            : Angle(degrees=0.21402349),
+                     'H'              :  3.34,
+                     'G'              : 0.12,
+                     'n_obs'          : 6541,
+                     'n_oppos'        : 107,
+                     'n_nights'       : '1802-2014',
+                   }
+
+        recieved = read_neocp_orbit('test/00001_Ceres.neocp')
 
         for e in expected.keys():
             assert_equal(expected[e], recieved[e])
