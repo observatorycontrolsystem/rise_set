@@ -340,6 +340,36 @@ class TestMovingObjects(object):
         for e in expected.keys():
             assert_equal(expected[e], recieved[e])
 
+
+
+    def test_read_neocp_orbit5(self):
+
+        # Element dictionary produced by TAL's code from NEOCP orbit file, migrated to
+        # rise_set format.
+        # This test tests very short orbits from find_ord with an arc length in
+        # hours
+        expected = {
+                     'name'           : 'LSCTLF3',
+                     'epoch'          : 57109.0,
+                     'mean_anomaly'   : Angle(degrees= 21.73763),
+                     'arg_perihelion' : Angle(degrees= 80.02788),
+                     'long_node'      : Angle(degrees= 64.35739),
+                     'inclination'    : Angle(degrees= 12.17788),
+                     'eccentricity'   : 0.3895454,
+                     'MDM'            : Angle(degrees=0.21752314),
+                     'semi_axis'      : 2.7382037,
+                     'H'              : 18.23,
+                     'G'              : 0.15,
+                     'n_obs'          : 10,
+                     'n_oppos'        : 1,
+                     'n_nights'       : 13.0/24.0,    # 13.0 hrs->days
+                   }
+
+        recieved = read_neocp_orbit('test/LSCTLF3_V2.neocp')
+
+        for e in expected.keys():
+            assert_equal(expected[e], recieved[e])
+
     def test_read_neocp_comet_orbit1(self):
 
         # Hand-crafted element dictionary from MPC MPES output on 2014-09-26.

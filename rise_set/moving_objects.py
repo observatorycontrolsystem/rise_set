@@ -149,7 +149,7 @@ def read_neocp_orbit(orbfile):
             # multiple opposition
             opp_data = line[117:141]
             single_opp = False
-            if 'days' in opp_data or 'min' in opp_data:
+            if 'days' in opp_data or 'min' in opp_data or 'hrs' in opp_data:
                 single_opp = True 
             elements['n_obs']   = int(opp_data[0:5])
             elements['n_oppos'] = int(opp_data[6:9])
@@ -158,6 +158,8 @@ def read_neocp_orbit(orbfile):
             if single_opp == True:
 	    	if 'min' in opp_data:
 		    num_nights_or_years = float(opp_data[10:14]) / 1440.0
+	    	elif 'hrs' in opp_data:
+		    num_nights_or_years = float(opp_data[10:14]) / 24.0
 		else:
                     num_nights_or_years = int(opp_data[10:14])
 
