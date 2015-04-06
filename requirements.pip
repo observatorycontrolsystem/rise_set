@@ -1,6 +1,4 @@
 --extra-index-url=http://versionsba.lco.gtn/svn/telsoft/Lco/PyPi/
-mock
-nose
-nosexcover
-pylint
-numpy
+--extra-index-url=http://buildsba/python
+
+.

@@ -1,40 +1,30 @@
-The rise_set package should be installed using the provided setup.py file. As well
-as installation, this handles the Fortran SLALIB and pyslalib dependencies.
+The rise_set package should be installed using tox, but pip or setuptools are also supported. As well
+as installation, this handles the Fortran SLALIB and pySLALIB dependencies. The pySLALIB module is packaged up on the build servers `http://buildsba/python/`
 
-* You must have installed numpy before beginning this process.
+* You must have installed numpy before beginning this process unless you use tox
 * You must have a working Fortran compiler on your path. I use gfortran.
-
 
 The steps are straightforward.
 
-1) Grab the bundled source-code release:
+[Install with Tox]
 
-wget http://pluto.lco.gtn/rise_set-VERSION.tar.gz
+1) Run tox from this directory. (pip install tox first if necessary)
 
+[Install with Pip]
 
-2) Extract the source:
+1) First install numpy (pip install numpy)
 
-tar xvzf rise_set-VERSION.tar.gz
+2) Then run pip install -r requirements.pip
 
+3) To run tests, rune pip install -r test_requirements.pip, followed by nosetests
 
-3) cd into the top level:
+[Install with Setuptools]
 
-cd rise_set-VERSION
+1) First install numpy (pip install numpy)
 
+2) Run `python setup.py [develop|test|install]`
 
-4) Install. It is recommended you install this to a virtualenv. If you are not
-installing to a virtualenv, then you probably want this to install to EPD. That
-means running as root, and replacing the 'python' below with '/opt/epd/bin/python'
-(or wherever you have EPD installed):
-
-python setup.py install
-
-
-5) Now, as a normal user (with EPD or preferred Python on your path), you should
-be able to use the module. Try running the example script, found in this directory:
+[Running Example]
 
 python example_rise_set.py
 
-
-6) If that works, congratulations! You can delete the tarball and the unpacked
-directory, and being using the package in your own code.
