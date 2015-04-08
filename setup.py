@@ -17,13 +17,13 @@ setup(
     author = 'Eric Saunders',
     author_email = 'esaunders@lcogt.net',
     packages = ['rise_set'],
-    dependency_links = [
-	"http://buildsba/python/pyslalib"
-    ],
+#    dependency_links = [
+#	"http://buildsba/python/pyslalib"
+ #   ],
     install_requires = [
 	"mock",
 	"pylint",
-        "pySLALIB"
+        "pyslalib"
     ],
     package_data = {
         '': ['*.conf'],
