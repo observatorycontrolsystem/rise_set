@@ -3,7 +3,8 @@
 '''
 moving_objects_test.py - Tests for moving object support
 
-Author: Eric Saunders
+Authors: Eric Saunders
+         Tim Lister
 December 2013
 '''
 
@@ -275,6 +276,8 @@ class TestMovingObjects(object):
                      'n_obs'          : 146,
                      'n_oppos'        : 1,
                      'n_nights'       : 67,
+                     'reference'      : 'E2013-X58',
+                     'uncertainty'    : '3',
                    }
 
         recieved = read_neocp_orbit('test/2013TL117.neocp')
@@ -303,6 +306,8 @@ class TestMovingObjects(object):
                      'n_obs'          : 6541,
                      'n_oppos'        : 107,
                      'n_nights'       : '1802-2014',
+                     'reference'      : 'MPO328644',
+                     'uncertainty'    : '0',
                    }
 
         recieved = read_neocp_orbit('test/00001_Ceres.neocp')
@@ -316,7 +321,7 @@ class TestMovingObjects(object):
 
         # Element dictionary produced by TAL's code from NEOCP orbit file, migrated to
         # rise_set format.
-        # This test tests very short orbits from find_ord with an arc length in
+        # This test tests very short orbits from find_orb with an arc length in
         # minutes
         expected = {
                      'name'           : 'LSCTLF3',
@@ -333,6 +338,9 @@ class TestMovingObjects(object):
                      'n_obs'          : 6,
                      'n_oppos'        : 1,
                      'n_nights'       : 18.8/1440.0,    # 18.8 mins->days
+                     'reference'      : 'FO 150328',
+                     'residual'       : 0.08,
+                     'uncertainty'    : 'U',
                    }
 
         recieved = read_neocp_orbit('test/LSCTLF3.neocp')
@@ -346,7 +354,7 @@ class TestMovingObjects(object):
 
         # Element dictionary produced by TAL's code from NEOCP orbit file, migrated to
         # rise_set format.
-        # This test tests very short orbits from find_ord with an arc length in
+        # This test tests very short orbits from find_orb with an arc length in
         # hours
         expected = {
                      'name'           : 'LSCTLF3',
@@ -363,12 +371,77 @@ class TestMovingObjects(object):
                      'n_obs'          : 10,
                      'n_oppos'        : 1,
                      'n_nights'       : 13.0/24.0,    # 13.0 hrs->days
+                     'reference'      : 'FO 150328',
+                     'residual'       : 0.09,
+                     'uncertainty'    : 'U',
                    }
 
         recieved = read_neocp_orbit('test/LSCTLF3_V2.neocp')
 
         for e in expected.keys():
             assert_equal(expected[e], recieved[e])
+
+
+
+    def test_read_neocp_orbit6(self):
+
+        # Element dictionary produced by TAL's code from NEOCP orbit file, migrated to
+        # rise_set format.
+        # This test tests NEOCP orbits without a rms residual.
+        expected = {
+                     'name'           : 'N007rdx',
+                     'epoch'          : 57120.0,
+                     'mean_anomaly'   : Angle(degrees=119.11683),
+                     'arg_perihelion' : Angle(degrees= 75.91136),
+                     'long_node'      : Angle(degrees=351.90874),
+                     'inclination'    : Angle(degrees=  3.64505),
+                     'eccentricity'   : 0.1054741,
+                     'MDM'            : Angle(degrees=1.07358714),
+                     'semi_axis'      : 0.9445925,
+                     'H'              : 21.8,
+                     'G'              : 0.15,
+                     'n_obs'          : 5,
+                     'n_oppos'        : 1,
+                     'n_nights'       : 0,
+                     'residual'       : 9.99,   # No value, assume default
+                     'reference'      : '',
+                   }
+
+        recieved = read_neocp_orbit('test/N007rdx.neocp')
+
+        for e in expected.keys():
+            assert_equal(expected[e], recieved[e])
+
+
+    def test_read_neocp_orbit7(self):
+
+        # Element dictionary produced by TAL's code from NEOCP orbit file, migrated to
+        # rise_set format.
+        # This test tests NEOCP orbits without an uncertainty.
+        expected = {
+                     'name'           : 'N007rdx',
+                     'epoch'          : 57120.0,
+                     'mean_anomaly'   : Angle(degrees=119.11683),
+                     'arg_perihelion' : Angle(degrees= 75.91136),
+                     'long_node'      : Angle(degrees=351.90874),
+                     'inclination'    : Angle(degrees=  3.64505),
+                     'eccentricity'   : 0.1054741,
+                     'MDM'            : Angle(degrees=1.07358714),
+                     'semi_axis'      : 0.9445925,
+                     'H'              : 21.8,
+                     'G'              : 0.15,
+                     'n_obs'          : 5,
+                     'n_oppos'        : 1,
+                     'n_nights'       : 0,
+                     'uncertainty'    : 'U',   # No value, assume default
+                     'reference'      : '',
+                   }
+
+        recieved = read_neocp_orbit('test/N007rdx.neocp')
+
+        for e in expected.keys():
+            assert_equal(expected[e], recieved[e])
+
 
     def test_read_neocp_comet_orbit1(self):
 

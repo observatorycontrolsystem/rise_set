@@ -123,12 +123,11 @@ def read_neocp_orbit(orbfile):
             elements['eccentricity']   = float(chunks[8])
             elements['MDM']            = Angle(degrees=float(chunks[9]))
             elements['semi_axis']      = float(chunks[10])
-            elements['uncertainty']    = chunks[11]
-            elements['reference']      = chunks[12]
             
             # The next bit is...complicated... depending on whether it's a 
             # multi-opposition orbit or not
             # From http://www.minorplanetcenter.net/iau/info/MPOrbitFormat.html
+            # 106        i1     Uncertainty parameter, U
             # 108 - 116  a9     Reference (chunks[12])
             # 118 - 122  i5     Number of observations
             # 124 - 126  i3     Number of oppositions
@@ -145,6 +144,17 @@ def read_neocp_orbit(orbfile):
             # 138 - 141  f4.2   r.m.s residual (")
             #
             
+            # Extract a string section and turn this into an uncertainty
+            # and a reference.
+            uncertainty = line[105:106]
+            if uncertainty == ' ':
+                uncertainty = 'U'
+            elements['uncertainty'] = uncertainty
+            reference = line[107:116]
+            if reference.strip() == '':
+                reference = ''
+            elements['reference'] = reference
+
             # Extract a string section and decide whether it's single or  
             # multiple opposition
             opp_data = line[117:141]
@@ -153,7 +163,10 @@ def read_neocp_orbit(orbfile):
                 single_opp = True 
             elements['n_obs']   = int(opp_data[0:5])
             elements['n_oppos'] = int(opp_data[6:9])
-            elements['residual'] = float(opp_data[20:24])
+            try:
+                elements['residual'] = float(opp_data[20:24])
+            except ValueError:
+                elements['residual'] = 9.99
             # If it's a single opposition orbit, return arc length
             if single_opp == True:
 	    	if 'min' in opp_data:
