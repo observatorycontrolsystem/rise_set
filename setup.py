@@ -21,8 +21,6 @@ setup(
 #	"http://buildsba/python/pyslalib"
  #   ],
     install_requires = [
-	"mock",
-	"pylint",
         "pyslalib"
     ],
     package_data = {
@@ -30,6 +28,8 @@ setup(
     },
 
     tests_require = [
+        "mock",
+        "pylint",
         "nose",
 	"nosexcover"
     ],
