@@ -17,11 +17,10 @@ setup(
     author = 'Eric Saunders',
     author_email = 'esaunders@lcogt.net',
     packages = ['rise_set'],
-#    dependency_links = [
-#	"http://buildsba/python/pyslalib"
- #   ],
     install_requires = [
-        "pyslalib"
+        "pyslalib",
+        "numpy",
+        "future",
     ],
     package_data = {
         '': ['*.conf'],
@@ -31,7 +30,12 @@ setup(
         "mock",
         "pylint",
         "nose",
-	"nosexcover"
+        "nosexcover"
     ],
     test_suite = 'nose.collector',
+    classifiers=[
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3.3',
+    ]
+
 )
