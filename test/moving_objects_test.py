@@ -118,12 +118,12 @@ class TestSites(object):
 
 
     def test_initialise_sites(self):
-        expected_keys = ['1m0a.doma.elp', '1m0a.doma.coj',
-                         '1m0a.doma.cpt', '1m0a.doma.lsc']
+        expected_keys = set(['1m0a.doma.elp', '1m0a.doma.coj',
+                         '1m0a.doma.cpt', '1m0a.doma.lsc'])
         sites = initialise_sites('test/telescopes.dat')
 
         assert_equal(len(sites.sites), 4)
-        assert_equal(list(sites.sites.keys()), expected_keys)
+        assert_equal(set(sites.sites.keys()), expected_keys)
 
 
 

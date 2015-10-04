@@ -167,7 +167,7 @@ class Angle(object):
         if negative:
             deg_hrs = "-" + str(deg_hrs)
 
-        return "%s %s %s" % (deg_hrs, mins, secs)
+        return "%s %s %.12g" % (deg_hrs, mins, secs)
 
     def __repr__(self):
         return "Angle(%s degrees)" % self.in_degrees()
