@@ -11,6 +11,7 @@ December 2013
 '''
 
 from __future__ import division
+from __future__ import print_function
 
 from rise_set.astrometry import (gregorian_to_ut_mjd, date_to_tdb,
                                  calc_local_hour_angle, calculate_altitude)
@@ -316,7 +317,7 @@ def elem_to_topocentric_apparent(dt, elements, site, JFORM=2):
         elem_string = 'Bad Elements:\n'
         for key in elements.keys():
             elem_string += key + ' = ' + str(elements[key]) + '\n'
-        print elem_string
+        print(elem_string)
         raise MovingViolation('Error: ' + str(status) + ' (' + error[status] + ')')
 
     return Angle(radians=ra_app_rads), Angle(radians=dec_app_rads)

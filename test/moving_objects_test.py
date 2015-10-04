@@ -7,6 +7,7 @@ Authors: Eric Saunders
          Tim Lister
 December 2013
 '''
+from __future__ import print_function
 
 from rise_set.angle import Angle
 from rise_set.moving_objects import (is_moving_object,
@@ -953,7 +954,7 @@ class TestMovingObjects(object):
                                                            site_filename, chunksize)
 
         for site in expected.keys():
-            print site
+            print(site)
             assert_equal(expected[site], received[site])
 
 
@@ -1032,7 +1033,7 @@ class TestMovingObjects(object):
         elements = read_neocp_orbit('test/tim_is_kinda_cool.neocp')
 
         for x, y in elements.items():
-            print x, y
+            print(x, y)
 
         site_filename = 'test/telescopes.dat'
         chunksize = timedelta(minutes=10)
@@ -1069,5 +1070,5 @@ class TestMovingObjects(object):
 
 
         for site in expected.keys():
-            print site
+            print(site)
             assert_equal(expected[site], received[site])

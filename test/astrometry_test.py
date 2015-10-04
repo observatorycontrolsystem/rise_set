@@ -95,7 +95,7 @@ class TestAstrometry(object):
     def test_calc_local_hour_angle_normalises_negative_overrun(self):
         ra_app        = Angle(degrees=288.75)
         elp_longitude = Angle(degrees=-104.015194444)
-        date          = datetime(2014, 07, 18, 7)
+        date          = datetime(2014, 0o7, 18, 7)
 
         hour_angle = calc_local_hour_angle(ra_app, elp_longitude, date)
 

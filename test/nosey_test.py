@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+from __future__ import print_function
 import rise_set.angle as angle
 from math import pi
 
@@ -15,7 +16,7 @@ def test_from_degrees():
 class SomeTestClassIJustMadeUp(object):
     def setup(self):
         self.angle = angle.Angle(degrees = 0)
-        print "Hello"
+        print("Hello")
 
     def test_from_degrees(self):
         self.angle.from_degrees(37)

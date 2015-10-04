@@ -374,8 +374,8 @@ class TestIntervals(object):
     def test_ha_wrong_day(self):
         # for some windows/limits, the HA block did not start at the beginning of the window.
         # This test fails prior to 2013-02-20
-        expected = [(datetime(2011, 11, 01, 06, 00, 00, 000000),datetime(2011, 11, 01, 07, 52, 00, 564199)),
-                    (datetime(2011, 11, 02, 02, 01, 50, 423880),datetime(2011, 11, 02, 06, 00, 00, 000000))]
+        expected = [(datetime(2011, 11, 0o1, 0o6, 00, 00, 000000),datetime(2011, 11, 0o1, 0o7, 52, 00, 564199)),
+                    (datetime(2011, 11, 0o2, 0o2, 0o1, 50, 423880),datetime(2011, 11, 0o2, 0o6, 00, 00, 000000))]
 
         target = {
             'ra' : RightAscension(degrees=310.35795833333333),
