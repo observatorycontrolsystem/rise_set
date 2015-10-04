@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
 from __future__ import division
+from builtins import range
+from builtins import object
 
 from nose.tools import assert_equal, assert_almost_equals, assert_less, raises
 from nose import SkipTest

@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 from __future__ import print_function
+from builtins import object
 import rise_set.angle as angle
 from math import pi
 

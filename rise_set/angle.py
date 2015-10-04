@@ -14,10 +14,21 @@ April 2011
 
 # Required for true (non-integer) division
 from __future__ import division
+from builtins import str
+from builtins import map
+from builtins import object
 
 # Standard library imports
 import math
 import re
+
+# Usually one would use the six.string_types for the following,
+# but since this is a small project we can use this to remove
+# the dependency on six.
+try:
+    basestring
+except NameError:
+    basestring = str
 
 
 class Angle(object):
@@ -55,8 +66,7 @@ class Angle(object):
     def from_degrees(self, degrees):
         '''Set the Angle using a value provided in degrees.'''
 
-        input_type = type(degrees)
-        if ( input_type == str ) or ( input_type == unicode ):
+        if isinstance(degrees, basestring):
             self.degrees = self.from_sexegesimal(degrees)
         else:
             if self.units == 'time':
@@ -69,8 +79,7 @@ class Angle(object):
     def from_radians(self, radians):
         '''Set the Angle using a value provided in radians.'''
 
-        input_type = type(radians)
-        if ( input_type == str ) or ( input_type == unicode ):
+        if isinstance(radians, basestring):
             radians = self.from_sexegesimal(radians)
 
         self.degrees = math.degrees(radians)
@@ -87,7 +96,7 @@ class Angle(object):
         # Check we extracted three numbers
         if ( match and len(match.groups()) == 4 ):
             sign = match.groups()[0]
-            hrs, mins, secs = map(float, match.groups()[1:4])
+            hrs, mins, secs = list(map(float, match.groups()[1:4]))
         else:
             error  = "Invalid sexegesimal format '%s': " % sexegesimal
             error += "Try colon or space delimiters instead (e.g. -12:34:56)"

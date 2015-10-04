@@ -11,6 +11,8 @@ February 2011
 
 # Required for true (non-integer) division
 from __future__ import division
+from builtins import range
+from builtins import object
 
 # Standard libary imports
 import datetime
@@ -175,7 +177,7 @@ class Visibility(object):
         current_date = self.start_date - ONE_DAY
         while current_date < self.end_date + ONE_DAY:
 
-            mjd    = long(gregorian_to_ut_mjd(current_date))
+            mjd    = int(gregorian_to_ut_mjd(current_date))
             gmst   = ut_mjd_to_gmst(mjd)
 
             # the rise time

@@ -16,6 +16,8 @@ May 2010
 
 # Required for true (non-integer) division
 from __future__ import division
+from builtins import str
+from builtins import object
 
 # Standard library imports
 # Trigonometry functions

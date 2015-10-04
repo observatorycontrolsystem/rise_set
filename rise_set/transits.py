@@ -2,6 +2,12 @@
 
 from __future__ import print_function
 from __future__ import absolute_import
+from __future__ import division
+from builtins import next
+from builtins import zip
+from builtins import str
+from builtins import range
+from past.utils import old_div
 import ast
 from datetime import datetime,timedelta
 from .visibility import Visibility
@@ -82,8 +88,8 @@ def readexo():
 def get_nexp(window, molecule):
 
     diff = window['end'] - window['start']
-    window_duration = diff.microseconds/1e6 + diff.seconds + diff.days*86400.0
-    molecule['exposure_count'] = int(window_duration/molecule['exposure_time'])
+    window_duration = old_div(diff.microseconds,1e6) + diff.seconds + diff.days*86400.0
+    molecule['exposure_count'] = int(old_div(window_duration,molecule['exposure_time']))
     
     while True:
         molecule_duration = calculate_duration([molecule])
@@ -165,9 +171,9 @@ def get_transit_intervals(target, ephemeris, site, start_date, end_date, verbose
     
     # calculate the epoch numbers that correspond to the observing window    
     startdiff = start_date-ephemeris['tt']
-    startepoch = int((startdiff.microseconds/864e10 + startdiff.seconds/86400 + startdiff.days)/ephemeris['period'])
+    startepoch = int(old_div((old_div(startdiff.microseconds,864e10) + old_div(startdiff.seconds,86400) + startdiff.days),ephemeris['period']))
     enddiff = end_date-ephemeris['tt']
-    stopepoch = int((enddiff.microseconds/864e10 + enddiff.seconds/86400 + enddiff.days)/ephemeris['period'])+1
+    stopepoch = int(old_div((old_div(enddiff.microseconds,864e10) + old_div(enddiff.seconds,86400) + enddiff.days),ephemeris['period']))+1
 
     sitestr = site['name']
     visible_transits = []
@@ -208,15 +214,15 @@ def get_transit_intervals(target, ephemeris, site, start_date, end_date, verbose
             
             # how much of the transit is visible?
             transitvis = min(contact4,visible[1])-max(contact1,visible[0])
-            transitfrac = max(round((transitvis.microseconds/864e10 + transitvis.seconds/86400.0 + transitvis.days)/ephemeris['t14'],3),0)
+            transitfrac = max(round(old_div((old_div(transitvis.microseconds,864e10) + old_div(transitvis.seconds,86400.0) + transitvis.days),ephemeris['t14']),3),0)
 
             # how much prior to ingress is visible?
             previs = min(contact1,visible[1]) - max(event_start,visible[0])
-            prefrac = round(max((previs.microseconds/864e10 + previs.seconds/86400.0 + previs.days)/ephemeris['t14'],0),3)
+            prefrac = round(max(old_div((old_div(previs.microseconds,864e10) + old_div(previs.seconds,86400.0) + previs.days),ephemeris['t14']),0),3)
 
             # how much after egress is visible?
             postvis = min(event_stop,visible[1])-max(contact4,visible[0])
-            postfrac = round(max((postvis.microseconds/864e10 + postvis.seconds/86400.0 + postvis.days)/ephemeris['t14'],0),3)
+            postfrac = round(max(old_div((old_div(postvis.microseconds,864e10) + old_div(postvis.seconds,86400.0) + postvis.days),ephemeris['t14']),0),3)
 
             # how much out of transit total is visible?
             ootfrac = prefrac + postfrac
@@ -259,7 +265,7 @@ def get_transit_intervals(target, ephemeris, site, start_date, end_date, verbose
 def get_exptime(vmag):
     defocus = 0.0
     m0 = 12.0
-    exptime = 25*10.0**((vmag-m0)/2.5)
+    exptime = 25*10.0**(old_div((vmag-m0),2.5))
     exptime = min(round(exptime,0),300)
     while exptime < 30:
         exptime += 10.0

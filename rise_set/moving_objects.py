@@ -12,6 +12,9 @@ December 2013
 
 from __future__ import division
 from __future__ import print_function
+from builtins import str
+from builtins import range
+from builtins import object
 
 from rise_set.astrometry import (gregorian_to_ut_mjd, date_to_tdb,
                                  calc_local_hour_angle, calculate_altitude)
@@ -68,10 +71,10 @@ def read_neocp_orbit(orbfile):
     '''Read an NEOCP orbit file, storing the contents as a dict.
     Comet format is from
     http://www.minorplanetcenter.net/iau/info/CometOrbitFormat.html (Ephemerides
-    and Orbital Elements Format), asteroid format is from battle-weary 
-    inference but is also documented at 
+    and Orbital Elements Format), asteroid format is from battle-weary
+    inference but is also documented at
     http://www.minorplanetcenter.net/iau/info/MPOrbitFormat.html'''
-    
+
     comet_regex = r'^\d{4}P'
     comet_pat = re.compile(comet_regex)
 
@@ -124,8 +127,8 @@ def read_neocp_orbit(orbfile):
             elements['eccentricity']   = float(chunks[8])
             elements['MDM']            = Angle(degrees=float(chunks[9]))
             elements['semi_axis']      = float(chunks[10])
-            
-            # The next bit is...complicated... depending on whether it's a 
+
+            # The next bit is...complicated... depending on whether it's a
             # multi-opposition orbit or not
             # From http://www.minorplanetcenter.net/iau/info/MPOrbitFormat.html
             # 106        i1     Uncertainty parameter, U
@@ -144,7 +147,7 @@ def read_neocp_orbit(orbfile):
             #
             # 138 - 141  f4.2   r.m.s residual (")
             #
-            
+
             # Extract a string section and turn this into an uncertainty
             # and a reference.
             uncertainty = line[105:106]
@@ -156,12 +159,12 @@ def read_neocp_orbit(orbfile):
                 reference = ''
             elements['reference'] = reference
 
-            # Extract a string section and decide whether it's single or  
+            # Extract a string section and decide whether it's single or
             # multiple opposition
             opp_data = line[117:141]
             single_opp = False
             if 'days' in opp_data or 'min' in opp_data or 'hrs' in opp_data:
-                single_opp = True 
+                single_opp = True
             elements['n_obs']   = int(opp_data[0:5])
             elements['n_oppos'] = int(opp_data[6:9])
             try:
@@ -170,11 +173,11 @@ def read_neocp_orbit(orbfile):
                 elements['residual'] = 9.99
             # If it's a single opposition orbit, return arc length
             if single_opp == True:
-	    	if 'min' in opp_data:
-		    num_nights_or_years = float(opp_data[10:14]) / 1440.0
-	    	elif 'hrs' in opp_data:
-		    num_nights_or_years = float(opp_data[10:14]) / 24.0
-		else:
+                if 'min' in opp_data:
+                    num_nights_or_years = float(opp_data[10:14]) / 1440.0
+                elif 'hrs' in opp_data:
+                    num_nights_or_years = float(opp_data[10:14]) / 24.0
+                else:
                     num_nights_or_years = int(opp_data[10:14])
 
             # ...or it's a multi-opposition orbit...
@@ -250,7 +253,7 @@ class Sites(object):
 
 
     def __iter__(self):
-        for site_dict in self.sites.values():
+        for site_dict in list(self.sites.values()):
             yield site_dict
 
 
@@ -264,7 +267,7 @@ def elem_to_topocentric_apparent(dt, elements, site, JFORM=2):
     tdb = date_to_tdb(dt)
 
     MINOR_PLANET_JFORM = 2
-    COMET_JFORM = 3 
+    COMET_JFORM = 3
     MDM_PLACEHOLDER    = 0.0  # Only used for major planets
     MEANANOM_PLACEHOLDER    = 0.0  # Not applicable for comets
 
@@ -315,7 +318,7 @@ def elem_to_topocentric_apparent(dt, elements, site, JFORM=2):
 
     if (status != 0):
         elem_string = 'Bad Elements:\n'
-        for key in elements.keys():
+        for key in list(elements.keys()):
             elem_string += key + ' = ' + str(elements[key]) + '\n'
         print(elem_string)
         raise MovingViolation('Error: ' + str(status) + ' (' + error[status] + ')')
@@ -421,7 +424,7 @@ def find_moving_object_up_intervals(window, elements, site, chunksize=timedelta(
 
     up_intervals = []
     up_altitudes = []
-    for i in xrange(len(intervals)-1):
+    for i in range(len(intervals)-1):
         # Keep the interval only if both it and the next are up
         # (in other words, throw away partial intervals)
         # This works because we have an extra pseudo-interval with size 0

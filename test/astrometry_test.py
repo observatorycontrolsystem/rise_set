@@ -1,5 +1,6 @@
 #!/usr/bin/python
 from __future__ import division
+from builtins import object
 
 from nose.tools import assert_equal, assert_almost_equal, assert_less, raises
 from datetime import datetime, timedelta

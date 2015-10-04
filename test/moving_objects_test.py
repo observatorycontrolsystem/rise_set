@@ -8,6 +8,11 @@ Authors: Eric Saunders
 December 2013
 '''
 from __future__ import print_function
+from __future__ import division
+from builtins import zip
+from builtins import str
+from past.utils import old_div
+from builtins import object
 
 from rise_set.angle import Angle
 from rise_set.moving_objects import (is_moving_object,
@@ -118,7 +123,7 @@ class TestSites(object):
         sites = initialise_sites('test/telescopes.dat')
 
         assert_equal(len(sites.sites), 4)
-        assert_equal(sites.sites.keys(), expected_keys)
+        assert_equal(list(sites.sites.keys()), expected_keys)
 
 
 
@@ -255,7 +260,7 @@ class TestMovingObjects(object):
 
         recieved = read_neocp_orbit('test/P109rXK.neocp')
 
-        for e in expected.keys():
+        for e in list(expected.keys()):
             assert_equal(expected[e], recieved[e])
 
     def test_read_neocp_orbit2(self):
@@ -283,7 +288,7 @@ class TestMovingObjects(object):
 
         recieved = read_neocp_orbit('test/2013TL117.neocp')
 
-        for e in expected.keys():
+        for e in list(expected.keys()):
             assert_equal(expected[e], recieved[e])
 
 
@@ -313,7 +318,7 @@ class TestMovingObjects(object):
 
         recieved = read_neocp_orbit('test/00001_Ceres.neocp')
 
-        for e in expected.keys():
+        for e in list(expected.keys()):
             assert_equal(expected[e], recieved[e])
 
 
@@ -338,7 +343,7 @@ class TestMovingObjects(object):
                      'G'              : 0.15,
                      'n_obs'          : 6,
                      'n_oppos'        : 1,
-                     'n_nights'       : 18.8/1440.0,    # 18.8 mins->days
+                     'n_nights'       : old_div(18.8,1440.0),    # 18.8 mins->days
                      'reference'      : 'FO 150328',
                      'residual'       : 0.08,
                      'uncertainty'    : 'U',
@@ -346,7 +351,7 @@ class TestMovingObjects(object):
 
         recieved = read_neocp_orbit('test/LSCTLF3.neocp')
 
-        for e in expected.keys():
+        for e in list(expected.keys()):
             assert_equal(expected[e], recieved[e])
 
 
@@ -371,7 +376,7 @@ class TestMovingObjects(object):
                      'G'              : 0.15,
                      'n_obs'          : 10,
                      'n_oppos'        : 1,
-                     'n_nights'       : 13.0/24.0,    # 13.0 hrs->days
+                     'n_nights'       : old_div(13.0,24.0),    # 13.0 hrs->days
                      'reference'      : 'FO 150328',
                      'residual'       : 0.09,
                      'uncertainty'    : 'U',
@@ -379,7 +384,7 @@ class TestMovingObjects(object):
 
         recieved = read_neocp_orbit('test/LSCTLF3_V2.neocp')
 
-        for e in expected.keys():
+        for e in list(expected.keys()):
             assert_equal(expected[e], recieved[e])
 
 
@@ -410,7 +415,7 @@ class TestMovingObjects(object):
 
         recieved = read_neocp_orbit('test/N007rdx.neocp')
 
-        for e in expected.keys():
+        for e in list(expected.keys()):
             assert_equal(expected[e], recieved[e])
 
 
@@ -440,7 +445,7 @@ class TestMovingObjects(object):
 
         recieved = read_neocp_orbit('test/N007rdx.neocp')
 
-        for e in expected.keys():
+        for e in list(expected.keys()):
             assert_equal(expected[e], recieved[e])
 
 
@@ -467,7 +472,7 @@ class TestMovingObjects(object):
 
         recieved = read_neocp_orbit('test/Comet_SidingSpring.neocp')
 
-        for e in expected.keys():
+        for e in list(expected.keys()):
             assert_equal(expected[e], recieved[e])
 
     def test_read_neocp_comet_orbit2(self):
@@ -493,7 +498,7 @@ class TestMovingObjects(object):
 
         recieved = read_neocp_orbit('test/Comet_299P.neocp')
 
-        for e in expected.keys():
+        for e in list(expected.keys()):
             assert_equal(expected[e], recieved[e])
 
     def test_elem_to_topocentric_apparent_time1(self):
@@ -953,7 +958,7 @@ class TestMovingObjects(object):
         received = find_moving_object_network_up_intervals(window, self.elements,
                                                            site_filename, chunksize)
 
-        for site in expected.keys():
+        for site in list(expected.keys()):
             print(site)
             assert_equal(expected[site], received[site])
 
@@ -1032,7 +1037,7 @@ class TestMovingObjects(object):
 
         elements = read_neocp_orbit('test/tim_is_kinda_cool.neocp')
 
-        for x, y in elements.items():
+        for x, y in list(elements.items()):
             print(x, y)
 
         site_filename = 'test/telescopes.dat'
@@ -1069,6 +1074,6 @@ class TestMovingObjects(object):
                    }
 
 
-        for site in expected.keys():
+        for site in list(expected.keys()):
             print(site)
             assert_equal(expected[site], received[site])

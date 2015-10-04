@@ -1,5 +1,6 @@
 #!/usr/bin/python
 from __future__ import division
+from builtins import object
 
 from nose.tools import raises
 

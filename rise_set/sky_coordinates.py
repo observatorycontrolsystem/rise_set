@@ -9,6 +9,7 @@ April 2011
 
 # Required for true (non-integer) division
 from __future__ import division
+from builtins import str
 
 # Internal imports
 from rise_set.angle import Angle, InvalidAngleError
