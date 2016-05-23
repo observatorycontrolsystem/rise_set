@@ -47,6 +47,7 @@ v.0.3.10 - Fix interval skipping in get_ha_intervals (thanks Curtis McCully)
          - Improved read_neocp_orbit() to handle single and multiple opposition orbits properly (Tim Lister)
 v.0.3.11 - Fixes for handling of missing uncertainty, reference and residual in
            read_neocp_orbit(). Add docstring to date_to_tdb() (Tim Lister)
+v.0.3.12 - Added function for getting airmasses for times for a target and observer, calculate_airmass_for_times
 
 Eric Saunders
 October 2012

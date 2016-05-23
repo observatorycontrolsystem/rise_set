@@ -8,11 +8,11 @@ from datetime import datetime, timedelta
 from rise_set.astrometry import (InvalidDateTimeError, IncompleteTargetError, RiseSetError,
                                  RightAscension, Declination, Star, ProperMotion,
                                  gregorian_to_ut_mjd, mean_to_apparent,
-                                 date_to_tdb, calc_sunrise_set,
+                                 date_to_tdb, calc_sunrise_set, calculate_airmass_at_times,
                                  calc_rise_set, calc_setting_day_fraction,
                                  calc_rise_set_hour_angle, calc_rising_day_fraction,
                                  calc_transit_day_fraction, day_frac_to_hms,
-                                 calc_local_hour_angle)
+                                 calc_local_hour_angle, make_ra_dec_target)
 
 from rise_set.angle import Angle
 
@@ -622,3 +622,21 @@ class TestMimosaFromSidingSpring(object):
     def test_rise_set(self):
         (transit, rise, sets) = calc_rise_set(self.mimosa, self.siding_spring,
                                               self.date)
+
+
+class TestGetAirmassForTarget(object):
+    '''Integration test: test getting the airmass for a target at a time'''
+    def setup(self):
+        self.target = make_ra_dec_target(ra=Angle(degrees=148.925583), dec=Angle(degrees=69.673889))
+
+        self.obs_latitude = Angle(degrees=20.7069444444)
+        self.obs_longitude = Angle(degrees=-156.258055556)
+        self.obs_height = 3065.0 # meters
+
+    def test_get_airmass_for_target(self):
+        time = datetime(2016, 5, 20, 23, 12, 32, 247312)
+
+        airmasses = calculate_airmass_at_times([time], self.target, self.obs_latitude, self.obs_longitude,
+                                               self.obs_height)
+        assert_equal(1, len(airmasses))
+        assert_almost_equal(2.50, airmasses[0], 2)

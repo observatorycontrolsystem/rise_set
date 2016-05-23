@@ -835,6 +835,54 @@ def calculate_altitude(latitude, dec, local_hour_angle):
     return Angle(radians=altitude)
 
 
+def calculate_airmass_at_times(times, target, obs_latitude, obs_longitude, obs_height):
+    airmasses = []
+    aop_params = None
+
+    # Assume standard atmosphere
+    temp_k = 273.15     # local ambient temperature (K; std=273.15)
+    pres_mb = 1013.25   # local atmospheric pressure (mb; std=1013.25D0)
+    rel_humid = 0.3     #  local relative humidity (in the range 0D0-1D0)
+    wavelen = 0.55      # effective wavelength (in microns e.g. 0.55D0 (approx V band))
+    tlr  = 0.0065       # tropospheric lapse rate (K per metre, e.g. 0.0065D0)
+    # Assume no polar motion
+    xp = yp = 0.0
+    # Assume UT1-UTC
+    dut = 0.0
+
+    for time in times:
+        mjd_utc = gregorian_to_ut_mjd(time)
+
+        if not aop_params:
+            aop_params = sla.sla_aoppa(mjd_utc, dut, obs_longitude.in_radians(), obs_latitude.in_radians(), obs_height, xp, yp,
+                                       temp_k, pres_mb, rel_humid, wavelen, tlr)
+        else:
+            aop_params = sla.sla_aoppat(mjd_utc, aop_params)
+
+        # Convert datetime to MJD_TDB
+        tdb = mjd_utc + (sla.sla_dtt(mjd_utc)/86400)  #not TDB but good enough
+        # Convert catalog mean RA, Dec at J2000 to apparent of date
+        ra_apparent, dec_apparent = mean_to_apparent(target, tdb)
+        airmass = apparent_to_airmass(ra_apparent, dec_apparent, aop_params)
+        airmasses.append(airmass)
+
+    return airmasses
+
+
+def apparent_to_airmass(ra, dec, aop_params):
+    azimuth, zd = apparent_to_altzd(ra, dec, aop_params)
+    airmass = sla.sla_airmas(zd.in_radians())
+
+    return airmass
+
+
+def apparent_to_altzd(ra, dec, aop_params):
+    # Perform apparent->observed place transformation
+    (obs_az, obs_zd, obs_ha, obs_dec, obs_ra) = sla.sla_aopqk(ra.in_radians(), dec.in_radians(), aop_params)
+
+    return Angle(radians=obs_az), Angle(radians=obs_zd)
+
+
 class InvalidDateTimeError(Exception):
     '''Raised when an invalid date is encountered.'''
     pass
