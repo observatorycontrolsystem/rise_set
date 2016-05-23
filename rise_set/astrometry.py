@@ -440,7 +440,6 @@ def apply_refraction_to_horizon(horizon):
     return effective_horizon
 
 
-
 def date_to_tdb(date):
     '''Converts a given UTC datetime (<date>; e.g. datetime(2015, 4, 8, 0, 0))
     to a *TT* Modified Julian Date (MJD; e.g. 57120.000777592591).
@@ -454,10 +453,15 @@ def date_to_tdb(date):
     relativstic clock corrections (e.g. sla_rcc) to produce TDB - max error
     is ~2ms'''
     ut_mjd = gregorian_to_ut_mjd(date)
-    tdb = ut_mjd + (sla.sla_dtt(ut_mjd)/86400)
+    tdb = ut_mjd_to_tdb(ut_mjd)
 
     return tdb
 
+
+def ut_mjd_to_tdb(ut_mjd):
+    tdb = ut_mjd + (sla.sla_dtt(ut_mjd)/86400)
+
+    return tdb
 
 
 def calc_rise_set(target, site, date, horizon=None):
@@ -502,9 +506,7 @@ def calc_rise_set(target, site, date, horizon=None):
     rises    = timedelta(days=m_1)
     sets     = timedelta(days=m_2)
 
-
     return (transits, rises, sets)
-
 
 
 def calc_sunrise_set(site, date, twilight):
@@ -563,7 +565,6 @@ def calc_sunrise_set(site, date, twilight):
     return (transits, rises, sets)
 
 
-
 def apparent_planet_pos(planet_name, tdb, site):
     '''Return the topocentric apparent position (ra, dec) tuple of a planet at
        a particular time, from a particular site.
@@ -600,7 +601,6 @@ def apparent_planet_pos(planet_name, tdb, site):
     return (app_ra, app_dec)
 
 
-
 def day_frac_to_hms(day_frac):
     '''Convert a fractional day into an (hr, min, sec) tuple.'''
 
@@ -623,7 +623,6 @@ def day_frac_to_hms(day_frac):
     secs = secs * 60
 
     return (hrs, mins, secs)
-
 
 
 def refine_day_fraction(app_sidereal_time, m_0, m_1, m_2, tdb, target, site,
@@ -745,7 +744,6 @@ def refine_day_fraction(app_sidereal_time, m_0, m_1, m_2, tdb, target, site,
     return (refined_m_0, refined_m_1, refined_m_2)
 
 
-
 def sidereal_time_at_greenwich(app_sidereal_time, m):
     sidereal_m =  app_sidereal_time.in_degrees() + (360.985647 * m)
 
@@ -755,11 +753,9 @@ def sidereal_time_at_greenwich(app_sidereal_time, m):
     return sidereal_m
 
 
-
 def calc_tabular_interval(m, tdb):
     '''Find n, the tabular interval (Ast.Alg., p.99).'''
     return m + (sla.sla_dtt(tdb) / 86400)
-
 
 
 def interpolate(y_2, n, a, b, c):
@@ -767,7 +763,6 @@ def interpolate(y_2, n, a, b, c):
     y = y_2 + (n/2) * (a + b + n*c)
 
     return y
-
 
 
 def correct_transit(m, local_hour_angle):
@@ -795,7 +790,6 @@ def correct_transit(m, local_hour_angle):
     return m + delta_m
 
 
-
 def correct_rise_set(m, latitude, dec, local_hour_angle, std_altitude):
     '''Given an hour angle and declination corrected for time of day, calculate
        and apply the correction to the rise or set time, as a fraction of a day.
@@ -820,7 +814,6 @@ def correct_rise_set(m, latitude, dec, local_hour_angle, std_altitude):
     return m + delta_m
 
 
-
 def calculate_altitude(latitude, dec, local_hour_angle):
     '''Find the altitude of the target.
        Eqn 13.6 Ast.Alg.
@@ -836,6 +829,17 @@ def calculate_altitude(latitude, dec, local_hour_angle):
 
 
 def calculate_airmass_at_times(times, target, obs_latitude, obs_longitude, obs_height):
+    '''
+        Calculate a list of airmasses given a list of times and a target and object lat/lon/height.
+        This uses the speedier slalib aop quick function which caches the object lat/lon/height and
+        refraction parameters.
+    :param times: list of datetime objects
+    :param target: target dictionary, must have at least 'ra' and 'dec' set
+    :param obs_latitude: Angle for the observers latitude
+    :param obs_longitude: Angle for the observers longitude
+    :param obs_height: observers altitude in meters
+    :return: list of airmass values corresponding to the input list of times
+    '''
     airmasses = []
     aop_params = None
 
@@ -853,14 +857,14 @@ def calculate_airmass_at_times(times, target, obs_latitude, obs_longitude, obs_h
     for time in times:
         mjd_utc = gregorian_to_ut_mjd(time)
 
-        if not aop_params:
+        if aop_params == None:
             aop_params = sla.sla_aoppa(mjd_utc, dut, obs_longitude.in_radians(), obs_latitude.in_radians(), obs_height, xp, yp,
                                        temp_k, pres_mb, rel_humid, wavelen, tlr)
         else:
             aop_params = sla.sla_aoppat(mjd_utc, aop_params)
 
         # Convert datetime to MJD_TDB
-        tdb = mjd_utc + (sla.sla_dtt(mjd_utc)/86400)  #not TDB but good enough
+        tdb = ut_mjd_to_tdb(mjd_utc)  #not TDB but good enough
         # Convert catalog mean RA, Dec at J2000 to apparent of date
         ra_apparent, dec_apparent = mean_to_apparent(target, tdb)
         airmass = apparent_to_airmass(ra_apparent, dec_apparent, aop_params)
@@ -870,6 +874,14 @@ def calculate_airmass_at_times(times, target, obs_latitude, obs_longitude, obs_h
 
 
 def apparent_to_airmass(ra, dec, aop_params):
+    '''
+        Perform apparent ra/ dec to airmass transformation on object, given aop_params which are generated from
+        slalibs sla_aoppa call
+    :param ra: apparent ra
+    :param dec: apparent dec
+    :param aop_params: slalibs aop params structure
+    :return: airmass
+    '''
     azimuth, zd = apparent_to_altzd(ra, dec, aop_params)
     airmass = sla.sla_airmas(zd.in_radians())
 
@@ -877,7 +889,14 @@ def apparent_to_airmass(ra, dec, aop_params):
 
 
 def apparent_to_altzd(ra, dec, aop_params):
-    # Perform apparent->observed place transformation
+    '''
+        Perform apparent->observed place transformation on a targets apparent ra and dec, given aop_params which
+        are generated from slalibs sla_aoppa call.
+    :param ra: apparent ra
+    :param dec: apparent dec
+    :param aop_params: slalibs aop params structure
+    :return: azimuth and zenith angles
+    '''
     (obs_az, obs_zd, obs_ha, obs_dec, obs_ra) = sla.sla_aopqk(ra.in_radians(), dec.in_radians(), aop_params)
 
     return Angle(radians=obs_az), Angle(radians=obs_zd)
