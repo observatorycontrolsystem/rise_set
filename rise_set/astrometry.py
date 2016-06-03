@@ -29,6 +29,7 @@ import slalib as sla
 from rise_set.angle import Angle
 from rise_set.sky_coordinates import RightAscension, Declination
 from rise_set.rates import ProperMotion
+from rise_set.utils import is_moving_object, MovingViolation
 
 # Import logging modules
 import logging
@@ -303,6 +304,73 @@ def mean_to_apparent(target, tdb):
 
     return (ra_apparent, dec_apparent)
 
+
+def elem_to_topocentric_apparent(dt, elements, site, JFORM=2):
+    '''Given a datetime, set of MPC orbital elements and a site, return the
+       apparent topocentric RA/Dec. This is what you'd use for a rise/set
+       calculation, for example.
+       JFORM should be set to 2 (default) for asteroids/minor planets and
+       to 3 for comets'''
+    tdb = date_to_tdb(dt)
+
+    MINOR_PLANET_JFORM = 2
+    COMET_JFORM = 3
+    MDM_PLACEHOLDER    = 0.0  # Only used for major planets
+    MEANANOM_PLACEHOLDER    = 0.0  # Not applicable for comets
+
+    status = 0
+    if JFORM == MINOR_PLANET_JFORM:
+        # Minor planets (asteroids)
+        ra_app_rads, dec_app_rads, earth_obj_dist, status = sla.sla_plante(
+                                                    tdb,
+                                                    site['longitude'].in_radians(),
+                                                    site['latitude'].in_radians(),
+                                                    JFORM,
+                                                    elements['epoch'],
+                                                    elements['inclination'].in_radians(),
+                                                    elements['long_node'].in_radians(),
+                                                    elements['arg_perihelion'].in_radians(),
+                                                    elements['semi_axis'],
+                                                    elements['eccentricity'],
+                                                    elements['mean_anomaly'].in_radians(),
+                                                    MDM_PLACEHOLDER,
+                                                  )
+    elif JFORM == COMET_JFORM:
+        # Comets
+        ra_app_rads, dec_app_rads, earth_obj_dist, status = sla.sla_plante(
+                                                    tdb,
+                                                    site['longitude'].in_radians(),
+                                                    site['latitude'].in_radians(),
+                                                    JFORM,
+                                                    elements['epochofperih'],
+                                                    elements['inclination'].in_radians(),
+                                                    elements['long_node'].in_radians(),
+                                                    elements['arg_perihelion'].in_radians(),
+                                                    elements['perihdist'],
+                                                    elements['eccentricity'],
+                                                    MEANANOM_PLACEHOLDER,
+                                                    MDM_PLACEHOLDER,
+                                                  )
+    else:
+        status = -1
+
+    error = {
+               0 : 'OK',
+              -1 : 'illegal JFORM',
+              -2 : 'illegal eccentricity',
+              -3 : 'illegal mean distance',
+              -4 : 'illegal mean daily motion',
+              -5 : 'numerical error',
+            }
+
+    if (status != 0):
+        elem_string = 'Bad Elements:\n'
+        for key in elements.keys():
+            elem_string += key + ' = ' + str(elements[key]) + '\n'
+        print elem_string
+        raise MovingViolation('Error: ' + str(status) + ' (' + error[status] + ')')
+
+    return Angle(radians=ra_app_rads), Angle(radians=dec_app_rads)
 
 
 def calc_rise_set_hour_angle(latitude, dec_apparent, std_altitude):
@@ -854,6 +922,12 @@ def calculate_airmass_at_times(times, target, obs_latitude, obs_longitude, obs_h
     # Assume UT1-UTC
     dut = 0.0
 
+    site = {
+            'longitude': obs_longitude,
+            'latitude': obs_latitude,
+            'altitude': obs_height
+    }
+
     for time in times:
         mjd_utc = gregorian_to_ut_mjd(time)
 
@@ -866,7 +940,10 @@ def calculate_airmass_at_times(times, target, obs_latitude, obs_longitude, obs_h
         # Convert datetime to MJD_TDB
         tdb = ut_mjd_to_tdb(mjd_utc)  #not TDB but good enough
         # Convert catalog mean RA, Dec at J2000 to apparent of date
-        ra_apparent, dec_apparent = mean_to_apparent(target, tdb)
+        if is_moving_object(target):
+            ra_apparent, dec_apparent = elem_to_topocentric_apparent(time, target, site, 2 if target['type'].lower() == 'mpc_minor_planet' else 3)
+        else:
+            ra_apparent, dec_apparent = mean_to_apparent(target, tdb)
         airmass = apparent_to_airmass(ra_apparent, dec_apparent, aop_params)
         airmasses.append(airmass)
 
