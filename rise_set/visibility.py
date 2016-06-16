@@ -212,7 +212,10 @@ class Visibility(object):
         # get the intervals of each separately
         dark               = self.get_dark_intervals()
         above_horizon      = self.get_target_intervals(target)
-        within_hour_angle  = self.get_ha_intervals(target)
+        if 'ra' in target:
+            within_hour_angle = self.get_ha_intervals(target)
+        else:
+            within_hour_angle = dark
 
         # find the overlapping intervals between them
         intervals = intersect_many_intervals(dark, above_horizon, within_hour_angle)
