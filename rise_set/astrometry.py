@@ -267,6 +267,22 @@ def make_comet_target(target_type, epoch, epochofperih, inclination, long_node, 
     return target
 
 
+def make_satellite_target(alt, az, diff_alt_rate, diff_az_rate, diff_alt_accel, diff_az_accel, diff_epoch_rate):
+
+    target = {
+                'type': 'Satellite',
+                'diff_epoch_rate': diff_epoch_rate,
+                'alt': alt,
+                'az': az,
+                'diff_alt_rate': diff_alt_rate,
+                'diff_az_rate': diff_az_rate,
+                'diff_alt_accel': diff_alt_accel,
+                'diff_az_accel': diff_az_accel
+             }
+
+    return target
+
+
 def mean_to_apparent(target, tdb):
     '''Given a target and TDB, return an apparent (RA, Dec) tuple.
        Thin wrapper for SLA_MAP.

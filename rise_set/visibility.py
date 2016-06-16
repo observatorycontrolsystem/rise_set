@@ -110,9 +110,11 @@ class Visibility(object):
         '''
         effective_horizon = set_airmass_limit(airmass, self.horizon.in_degrees())
 
+        # Handle Satellite objects by just returning the dark intervals
+        if 'type' in target and target['type'] == 'Satellite':
+            intervals = self.get_dark_intervals()
         # Handle moving objects differently from stars
-
-        if is_moving_object(target):
+        elif is_moving_object(target):
             intervals = self.get_moving_object_target_intervals(target, effective_horizon)
         # The target has an RA/Dec
         else:
