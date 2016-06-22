@@ -165,8 +165,6 @@ class Visibility(object):
            of uninterrupted time when the target was within the Hour Angle limits of the
            telescope. The set of tuples gives the complete in range intervals
            between the Visibility object's start and end date.
-           See p 39 of J Meeus "Astronomical formulae for calculators"
-           and Marc Buie's lst2jd.pro.
         '''
         SIDEREAL_SOLAR_DAY_RATIO = 1.002737909350
         SIDEREAL_SOLAR_DAY = datetime.timedelta(seconds=(ONE_DAY.total_seconds() / SIDEREAL_SOLAR_DAY_RATIO))
