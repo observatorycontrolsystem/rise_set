@@ -1,18 +1,18 @@
 #!/usr/bin/python
 from __future__ import division
 
-from nose.tools import assert_equal, assert_almost_equal, assert_less, raises
+from nose.tools import assert_equal, assert_almost_equal, assert_less, raises, assert_greater
 from datetime import datetime, timedelta
 
 #Import the module to test
 from rise_set.astrometry import (InvalidDateTimeError, IncompleteTargetError, RiseSetError,
                                  RightAscension, Declination, Star, ProperMotion,
                                  gregorian_to_ut_mjd, mean_to_apparent,
-                                 date_to_tdb, calc_sunrise_set,
+                                 date_to_tdb, calc_sunrise_set, calculate_airmass_at_times,
                                  calc_rise_set, calc_setting_day_fraction,
                                  calc_rise_set_hour_angle, calc_rising_day_fraction,
                                  calc_transit_day_fraction, day_frac_to_hms,
-                                 calc_local_hour_angle)
+                                 calc_local_hour_angle, make_ra_dec_target)
 
 from rise_set.angle import Angle
 
@@ -622,3 +622,78 @@ class TestMimosaFromSidingSpring(object):
     def test_rise_set(self):
         (transit, rise, sets) = calc_rise_set(self.mimosa, self.siding_spring,
                                               self.date)
+
+
+class TestGetAirmassForTarget(object):
+    '''Integration test: test getting the airmass for a target at a time. The values these results are compared to
+        were obtained from testing the same source/target on PyEphem and Astropy. All have differing values by ~0.1
+        but they are all close.
+    '''
+    def setup(self):
+        self.target_1 = make_ra_dec_target(ra=Angle(degrees=148.925583), dec=Angle(degrees=69.673889))
+        self.target_2 = make_ra_dec_target(ra=Angle(degrees=68.9791666667), dec=Angle(degrees=16.5))
+
+
+
+        self.target_3 = make_ra_dec_target(ra=Angle(degrees=5.392944), dec=Angle(degrees=-69.756111),
+                                           ra_proper_motion=ProperMotion(Angle(degrees=0.005519960155599643 / 3600.0, units='arc'), time='year'),
+                                           dec_proper_motion=ProperMotion(Angle(degrees=0.000229 / 3600.0, units='arc'), time='year'))
+
+        self.ogg_latitude = Angle(degrees=20.7069444444)
+        self.ogg_longitude = Angle(degrees=-156.258055556)
+        self.ogg_height = 3065.0 # meters
+
+        self.cpt_latitude = Angle(degrees=-32.3805542)
+        self.cpt_longitude = Angle(degrees=20.8101815)
+        self.cpt_height = 1804.0 # meters
+
+    def test_get_airmass_for_target_1_ogg(self):
+        time = datetime(2016, 5, 20, 23, 12, 32, 247312)
+
+        airmasses = calculate_airmass_at_times([time], self.target_1, self.ogg_latitude, self.ogg_longitude,
+                                               self.ogg_height)
+        assert_equal(1, len(airmasses))
+        assert_almost_equal(2.50, airmasses[0], 2)
+
+    def test_get_airmass_for_target_1_cpt_fail(self):
+        time = datetime(2016, 5, 20, 23, 12, 32, 247312)
+
+        airmasses = calculate_airmass_at_times([time], self.target_1, self.cpt_latitude, self.cpt_longitude,
+                                               self.cpt_height)
+        assert_equal(1, len(airmasses))
+        # assert airmass is so high its not visible
+        assert_greater(airmasses[0], 10)
+
+    def test_get_airmass_for_target_2_ogg(self):
+        time = datetime(2016, 5, 20, 20, 12, 32, 247312)
+
+        airmasses = calculate_airmass_at_times([time], self.target_2, self.ogg_latitude, self.ogg_longitude,
+                                               self.ogg_height)
+        assert_equal(1, len(airmasses))
+        assert_almost_equal(1.33, airmasses[0], 2)
+
+    def test_get_airmass_for_target_2_ogg_fail(self):
+        time = datetime(2016, 5, 20, 10, 12, 32, 247312)
+
+        airmasses = calculate_airmass_at_times([time], self.target_2, self.ogg_latitude, self.ogg_longitude,
+                                               self.ogg_height)
+        assert_equal(1, len(airmasses))
+        # assert airmass is so high its not visible
+        assert_greater(airmasses[0], 10)
+
+    def test_get_airmass_for_target_2_cpt(self):
+        time = datetime(2016, 5, 20, 11, 12, 32, 247312)
+
+        airmasses = calculate_airmass_at_times([time], self.target_2, self.cpt_latitude, self.cpt_longitude,
+                                               self.cpt_height)
+        assert_equal(1, len(airmasses))
+        assert_almost_equal(1.52, airmasses[0], 2)
+
+    def test_get_airmass_for_target_3_cpt(self):
+        time = datetime(2016, 5, 20, 3, 12, 32, 247312)
+
+        airmasses = calculate_airmass_at_times([time], self.target_3, self.cpt_latitude, self.cpt_longitude,
+                                               self.cpt_height)
+        assert_equal(1, len(airmasses))
+        assert_almost_equal(1.52, airmasses[0], 2)
+

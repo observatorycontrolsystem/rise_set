@@ -21,9 +21,9 @@ import copy
 from rise_set.astrometry     import (calc_sunrise_set, calc_rise_set, RiseSetError,
                                      Star, gregorian_to_ut_mjd, ut_mjd_to_gmst)
 from rise_set.angle          import Angle
-from rise_set.moving_objects import is_moving_object, find_moving_object_up_intervals
+from rise_set.moving_objects import find_moving_object_up_intervals
 from rise_set.utils          import (coalesce_adjacent_intervals, intersect_intervals,
-                                     intersect_many_intervals)
+                                     intersect_many_intervals, is_moving_object)
 
 # Import logging modules
 import logging
@@ -201,7 +201,7 @@ class Visibility(object):
         return intervals
 
 
-    def get_observable_intervals(self, target):
+    def get_observable_intervals(self, target, airmass=None):
         '''Returns a set of datetime 2-tuples, each of which represents an interval
            of uninterrupted time when the target is observable (sun down, target up,
            target within the Hour Angle limits of the telescope.
@@ -209,8 +209,11 @@ class Visibility(object):
 
         # get the intervals of each separately
         dark               = self.get_dark_intervals()
-        above_horizon      = self.get_target_intervals(target)
-        within_hour_angle  = self.get_ha_intervals(target)
+        above_horizon      = self.get_target_intervals(target, airmass=airmass)
+        if is_moving_object(target):
+            within_hour_angle  = above_horizon
+        else:
+            within_hour_angle  = self.get_ha_intervals(target)
 
         # find the overlapping intervals between them
         intervals = intersect_many_intervals(dark, above_horizon, within_hour_angle)
