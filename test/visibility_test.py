@@ -4,7 +4,7 @@ from __future__ import division
 
 from nose.tools import assert_equal, assert_almost_equals, assert_less, raises
 from nose import SkipTest
-from datetime import datetime
+from datetime import datetime, timedelta
 
 #Import the module to test
 from rise_set.visibility import Visibility, set_airmass_limit, InvalidHourAngleLimit
@@ -16,6 +16,22 @@ from rise_set.rates import ProperMotion
 from rise_set.moving_objects import initialise_sites
 from rise_set.utils          import intersect_many_intervals
 from mock import patch
+
+
+def intervals_almost_equal(received, expected, tolerance=1e-5):
+    """
+    Check if two interval lists are the same to some tolerance.
+
+    Args:
+        received: a list of datetimes
+        expected: a list of datetimes
+        tolerance: tolerance to say two intervals are close enough (seconds)
+
+    """
+    assert len(received) == len(expected)
+    for i in range(len(received)):
+        assert abs((received[i][0] - expected[i][0]).total_seconds()) < tolerance
+        assert abs((received[i][1] - expected[i][1]).total_seconds()) < tolerance
 
 
 def zero_out_microseconds(received):
@@ -118,7 +134,7 @@ class TestIntervals(object):
         # Ignore microseconds for these tests
         received = zero_out_microseconds(received)
 
-        assert_equal(received, expected)
+        intervals_almost_equal(received, expected, 1e-6)
 
 
     def test_can_get_sun_down_intervals(self):
@@ -285,12 +301,8 @@ class TestIntervals(object):
                     ]
 
         # Ignore microseconds for these tests
-        before = received
         received = zero_out_microseconds(received)
-
-        for i in range(len(received)):
-            assert_equal(received[i][0], expected[i][0])
-            assert_equal(received[i][1], expected[i][1])
+        intervals_almost_equal(received, expected, tolerance=1e-5)
 
 
     def test_edge_interval(self):
@@ -312,7 +324,7 @@ class TestIntervals(object):
                      )
                     ]
 
-        assert_equal(received, expected)
+        intervals_almost_equal(received, expected, tolerance=1e-5)
 
 
     def test_visibility_end_loop(self):
@@ -344,7 +356,7 @@ class TestIntervals(object):
                      )
                     ]
 
-        assert_equal(received, expected)
+        intervals_almost_equal(received, expected, tolerance=1e-5)
 
 
     def test_hour_angle(self):
@@ -369,7 +381,7 @@ class TestIntervals(object):
 
         received = v.get_ha_intervals(target)
 
-        assert_equal(received, expected)
+        intervals_almost_equal(received, expected, 1e-5)
 
     def test_ha_wrong_day(self):
         # for some windows/limits, the HA block did not start at the beginning of the window.
@@ -404,7 +416,7 @@ class TestIntervals(object):
 
         received = v.get_observable_intervals(target)
 
-        assert_equal(received, expected)
+        intervals_almost_equal(received, expected, tolerance=1e-5)
 
 
     def test_ha_gets_all_intervals(self):
@@ -435,8 +447,94 @@ class TestIntervals(object):
                        ha_limit_neg=-4.6, ha_limit_pos=4.6)
 
         received = v.get_ha_intervals(target)
+        intervals_almost_equal(received, expected, tolerance=1e-5)
 
-        assert_equal(received, expected)
+
+    def test_short_window_has_all_intervals(self):
+
+        window_start = datetime(2016, 3, 14, 21, 35, 7, 488985)
+
+        window_end = datetime(2016, 3, 15, 21, 35, 7, 488985)
+
+        sitecoords_coj = {'latitude': Angle(-31.2733), 'longitude': Angle(149.439)}
+
+        eff_horizon = 29.999999999999993
+
+        target = {'rad_vel': 0.0, 'ra': RightAscension(degrees=91.784167),
+                  'dec_proper_motion': 0.0, 'ra_proper_motion': 0.0,
+                  'dec': Declination(degrees=-45.181167), 'type': 'SIDEREAL', 'epoch': 2000, 'parallax': 0}
+
+        v1 = Visibility(site=sitecoords_coj, start_date=window_start, end_date=window_end,
+                        twilight='nautical', horizon=eff_horizon)
+        observable_intervals1 = v1.get_observable_intervals(target)
+
+        v2 = Visibility(site=sitecoords_coj, start_date=window_start,
+                        end_date=window_end + timedelta(days=1),
+                        twilight='nautical', horizon=eff_horizon)
+
+        observable_intervals2 = v2.get_observable_intervals(target)
+
+        intervals_almost_equal(observable_intervals1, observable_intervals2[:-1], tolerance=1e-5)
+
+
+    def test_short_window_has_all_intervals_lsc(self):
+        window_start = datetime(2016, 3, 14, 21, 35, 7, 488985)
+
+        window_end = datetime(2016, 3, 15, 21, 35, 7, 488985)
+
+        sitecoords_lsc = {'latitude': Angle(degrees=-30.167367),
+                          'longitude': Angle(degrees=-70.8049)}
+
+        eff_horizon = 29.999999999999993
+        target = {'rad_vel': 0.0, 'ra': RightAscension(degrees=91.784167),
+                  'dec_proper_motion': 0.0, 'ra_proper_motion': 0.0,
+                  'dec': Declination(degrees=-45.181167), 'type': 'SIDEREAL', 'epoch': 2000,
+                  'parallax': 0}
+
+        v1 = Visibility(site=sitecoords_lsc, start_date=window_start, end_date=window_end,
+                        twilight='nautical', horizon=eff_horizon)
+
+        observable_intervals1 = v1.get_observable_intervals(target)
+
+        v2 = Visibility(site=sitecoords_lsc, start_date=window_start,
+                        end_date=window_end + timedelta(days=1),
+                        twilight='nautical', horizon=eff_horizon)
+
+        observable_intervals2 = v2.get_observable_intervals(target)
+
+        assert len(observable_intervals2) == 2
+        intervals_almost_equal(observable_intervals1, observable_intervals2[:-1], tolerance=1e-5)
+
+        v3 = Visibility(site=sitecoords_lsc, start_date=window_start,
+                        end_date=window_end + timedelta(days=2),
+                        twilight='nautical', horizon=eff_horizon)
+        observable_intervals3 = v3.get_observable_intervals(target)
+        assert len(observable_intervals3) == 3
+        intervals_almost_equal(observable_intervals2, observable_intervals3[:-1])
+
+
+    def test_ha_where_interval_close_to_a_day(self):
+        site = {'latitude': Angle(degrees=-31.273),
+                'longitude': Angle(degrees=149.070593)}
+
+        target = {'rad_vel': 0.0, 'ra': RightAscension(degrees=251.3),
+                  'dec_proper_motion': 0.0, 'ra_proper_motion': 0.0,
+                  'dec': Declination(degrees=27.874), 'type': 'SIDEREAL', 'epoch': 2000,
+                  'parallax': 0}
+        start_date = datetime(2016, 6, 18, 22, 9, 6)
+        end_date = datetime(2016, 6, 19, 22, 9, 6)
+
+        v1 = Visibility(site, start_date, end_date, horizon=15, ha_limit_neg=-4.6, ha_limit_pos=4.6)
+
+        hi1 = v1.get_ha_intervals(target)
+        # returns no intervals before 2016-06-21
+
+        end_date = datetime(2016, 6, 19, 23, 9, 6)
+        v2 = Visibility(site, start_date, end_date, horizon=15, ha_limit_neg=-4.6, ha_limit_pos=4.6)
+
+        hi2 = v2.get_ha_intervals(target)
+        # returns an interval that should be within the previous set as well
+        intervals_almost_equal(hi1, hi2, tolerance=1e-5)
 
 
     def test_ha_ut_mjd_is_truncated(self):
@@ -518,7 +616,7 @@ class TestIntervals(object):
             v = Visibility(site, start_date, end_date, ha_limit_neg=-4.9, ha_limit_pos=4.9)
             intervals = v.get_observable_intervals(target)
 
-            assert_equal(intervals, expected[site['name']])
+            intervals_almost_equal(intervals, expected[site['name']], tolerance=1e-5)
 
 
 
