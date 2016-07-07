@@ -110,7 +110,8 @@ class Visibility(object):
         '''
         effective_horizon = set_airmass_limit(airmass, self.horizon.in_degrees())
 
-        # Handle Satellite objects by just returning the dark intervals
+        # Handle Satellite objects by just returning the dark intervals. This is because satellite observations
+        # windows and locations are calculated by the satellite pipeline before submission
         if 'type' in target and target['type'] == 'Satellite':
             intervals = self.get_dark_intervals()
         # Handle moving objects differently from stars
@@ -215,6 +216,8 @@ class Visibility(object):
         if 'ra' in target:
             within_hour_angle = self.get_ha_intervals(target)
         else:
+            # if the target type is such that there is no 'ra'/'dec' values, then we cannot calculate the ha intervals,
+            # so we just use the target intervals instead (since they are all intersected together next)
             within_hour_angle = above_horizon
 
         # find the overlapping intervals between them
