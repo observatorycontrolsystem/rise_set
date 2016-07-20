@@ -12,6 +12,7 @@ from rise_set.visibility import Visibility, set_airmass_limit, InvalidHourAngleL
 # Additional support modules
 from rise_set.angle import Angle
 from rise_set.sky_coordinates import RightAscension, Declination
+from rise_set.astrometry import make_satellite_target
 from rise_set.rates import ProperMotion
 from rise_set.moving_objects import initialise_sites
 from rise_set.utils          import intersect_many_intervals
@@ -229,6 +230,15 @@ class TestIntervals(object):
 
         assert_equal(mock_func1.call_count, 0)
         assert_equal(mock_func2.call_count, 1)
+
+
+    def test_get_target_intervals_satellite_target(self):
+        target = make_satellite_target(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+
+        target_intervals = self.visibility.get_target_intervals(target)
+        dark_intervals = self.visibility.get_dark_intervals()
+
+        assert_equal(target_intervals, dark_intervals)
 
 
     @patch('rise_set.visibility.Visibility.get_ra_target_intervals')

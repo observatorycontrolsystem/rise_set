@@ -110,9 +110,12 @@ class Visibility(object):
         '''
         effective_horizon = set_airmass_limit(airmass, self.horizon.in_degrees())
 
+        # Handle Satellite objects by just returning the dark intervals because we don't support explicit ephemeris
+        # calculations for these objects
+        if 'type' in target and target['type'] == 'Satellite':
+            intervals = self.get_dark_intervals()
         # Handle moving objects differently from stars
-
-        if is_moving_object(target):
+        elif is_moving_object(target):
             intervals = self.get_moving_object_target_intervals(target, effective_horizon)
         # The target has an RA/Dec
         else:
@@ -210,10 +213,13 @@ class Visibility(object):
         # get the intervals of each separately
         dark               = self.get_dark_intervals()
         above_horizon      = self.get_target_intervals(target, airmass=airmass)
-        if is_moving_object(target):
-            within_hour_angle  = above_horizon
+        if 'ra' in target:
+            within_hour_angle = self.get_ha_intervals(target)
         else:
-            within_hour_angle  = self.get_ha_intervals(target)
+            # if the target type is such that there is no 'ra'/'dec' values, then we cannot calculate the ha intervals,
+            # so we just use the target intervals instead (since they are all intersected together next). This is true
+            # for moving objects and satellite objects.
+            within_hour_angle = above_horizon
 
         # find the overlapping intervals between them
         intervals = intersect_many_intervals(dark, above_horizon, within_hour_angle)
