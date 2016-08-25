@@ -18,7 +18,7 @@ import math
 import copy
 
 # Internal imports
-from rise_set.astrometry     import (calc_sunrise_set, calc_rise_set, RiseSetError,
+from rise_set.astrometry     import (calc_sunrise_set, calc_planet_rise_set, calc_rise_set, RiseSetError,
                                      Star, gregorian_to_ut_mjd, ut_mjd_to_gmst)
 from rise_set.angle          import Angle
 from rise_set.moving_objects import find_moving_object_up_intervals
@@ -83,6 +83,7 @@ class Visibility(object):
         self.ha_limit_pos = ha_limit_pos
 
         self.dark_intervals = []
+        self.moon_dark_intervals = []
 
 
     def get_dark_intervals(self):
@@ -100,6 +101,23 @@ class Visibility(object):
         self.dark_intervals = self.get_target_intervals(target, up=False)
 
         return self.dark_intervals
+
+
+    def get_moon_dark_intervals(self):
+        '''Returns a set of datetime 2-tuples, each of which represents an interval
+           of uninterrupted darkness from the moon. The set of tuples gives the complete
+           moon dark intervals between the Visibility object's start and end date.
+        '''
+
+        # Don't compute this again if we've already done it
+        if self.moon_dark_intervals:
+            return self.moon_dark_intervals
+
+        target = 'moon'
+
+        self.moon_dark_intervals = self.get_target_intervals(target, up=False)
+
+        return self.moon_dark_intervals
 
 
     def get_target_intervals(self, target, up=True, airmass=None):
@@ -309,6 +327,8 @@ class Visibility(object):
 
         if target == 'sun':
             transits, rises, sets = calc_sunrise_set(self.site, dt, self.twilight)
+        elif target == 'moon':
+            transits, rises, sets = calc_planet_rise_set(self.site, dt, Angle(degrees=0), 'moon')
         else:
             # Test for circumpolarity
             if star.is_always_up(dt):

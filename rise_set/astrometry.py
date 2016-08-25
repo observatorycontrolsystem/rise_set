@@ -593,7 +593,7 @@ def calc_rise_set(target, site, date, horizon=None):
     return (transits, rises, sets)
 
 
-def calc_sunrise_set(site, date, twilight):
+def calc_planet_rise_set(site, date, twilight_altitude, planet):
     '''Return a tuple (transit, rise, set) of timedelta objects, describing the
        time offset for each event from the start of the provided date.
     '''
@@ -604,25 +604,15 @@ def calc_sunrise_set(site, date, twilight):
     ut_mjd = gregorian_to_ut_mjd(date)
     tdb = ut_mjd + (sla.sla_dtt(ut_mjd)/86400)
 
-    target = dict(planet = 'sun')
-    (app_ra, app_dec) = apparent_planet_pos(target['planet'], tdb, site)
+    (app_ra, app_dec) = apparent_planet_pos(planet, tdb, site)
 
     _log.info("RA, Dec (apparent, degrees) for %s: (%s, %s)",
-              target['planet'], app_ra.in_degrees(), app_dec.in_degrees())
+              planet, app_ra.in_degrees(), app_dec.in_degrees())
 
     app_sidereal_time = calc_apparent_sidereal_time(date)
 
-    sun_std_alt = {
-                     'sunrise'           : Angle(degrees=-5/6),
-                     'sunset'            : Angle(degrees=-5/6),
-                     'civil'             : Angle(degrees=-6),
-                     'nautical'          : Angle(degrees=-12),
-                     'astronomical'      : Angle(degrees=-18)
-                    }
-
-
     (hour_angle, msg) = calc_rise_set_hour_angle(site['latitude'], app_dec,
-                                                 sun_std_alt[twilight])
+                                                 twilight_altitude)
 
     if ( not hour_angle ):
         raise RiseSetError(msg)
@@ -640,13 +630,27 @@ def calc_sunrise_set(site, date, twilight):
     _log.info('Set time - unrefined (h, m, s): %s', sets)
 
     (m_0, m_1, m_2) = refine_day_fraction(app_sidereal_time, m_0, m_1, m_2, tdb,
-                                          target, site, sun_std_alt[twilight])
+                                          {'planet': planet}, site, twilight_altitude)
 
     transits = timedelta(days=m_0)
     rises    = timedelta(days=m_1)
     sets     = timedelta(days=m_2)
 
     return (transits, rises, sets)
+
+
+def calc_sunrise_set(site, date, twilight):
+    '''Return a tuple (transit, rise, set) of timedelta objects, describing the
+       time offset for each event from the start of the provided date.
+    '''
+    sun_std_alt = {
+                 'sunrise'           : Angle(degrees=-5/6),
+                 'sunset'            : Angle(degrees=-5/6),
+                 'civil'             : Angle(degrees=-6),
+                 'nautical'          : Angle(degrees=-12),
+                 'astronomical'      : Angle(degrees=-18)
+                }
+    return calc_planet_rise_set(site, date, sun_std_alt[twilight], 'sun')
 
 
 def apparent_planet_pos(planet_name, tdb, site):
