@@ -19,7 +19,8 @@ import copy
 
 # Internal imports
 from rise_set.astrometry     import (calc_sunrise_set, calc_planet_rise_set, calc_rise_set, RiseSetError,
-                                     Star, gregorian_to_ut_mjd, ut_mjd_to_gmst)
+                                     Star, gregorian_to_ut_mjd, ut_mjd_to_gmst, date_to_tdb, apparent_planet_pos,
+                                     mean_to_apparent, angular_distance_between)
 from rise_set.angle          import Angle
 from rise_set.moving_objects import find_moving_object_up_intervals
 from rise_set.utils          import (coalesce_adjacent_intervals, intersect_intervals,
@@ -118,6 +119,39 @@ class Visibility(object):
         self.moon_dark_intervals = self.get_target_intervals(target, up=False)
 
         return self.moon_dark_intervals
+
+
+    def get_moon_distance_intervals(self, target, target_intervals, moon_distance=Angle(degrees=30), chunksize=datetime.timedelta(minutes=30)):
+        '''Returns a set of datetime 2-tuples, each of which represents an interval
+           of time that the target is greater than moon_distance away from the moon.
+        '''
+        intervals = []
+
+        for start, end in target_intervals:
+            chunkstart = start
+            chunkend = min(chunkstart + chunksize, end)
+            while chunkend < end:
+                # get the tdb date of the start time of the interval
+                tdb = date_to_tdb(chunkstart)
+                # get the apparent ra/dec for the target, and for the moon at this timestamp
+                target_app_ra, target_app_dec = mean_to_apparent(target, tdb)
+                moon_app_ra, moon_app_dec = apparent_planet_pos('moon', tdb, self.site)
+                print target_app_ra
+                print target_app_dec
+                print moon_app_ra
+                print moon_app_dec
+                print moon_distance
+                # call slalib to get the angular moon distance
+                target_moon_dist = angular_distance_between(target_app_ra, target_app_dec, moon_app_ra, moon_app_dec)
+                # if that moon distance is > the constraint, add this interval to final intervals
+                if target_moon_dist >= moon_distance:
+                    intervals.append((chunkstart, chunkend))
+                # increment the chunkstart/end up
+                chunkstart = chunkend
+                chunkend = min(chunkstart + chunksize, end)
+
+        intervals = coalesce_adjacent_intervals(intervals)
+        return intervals
 
 
     def get_target_intervals(self, target, up=True, airmass=None):
@@ -222,7 +256,7 @@ class Visibility(object):
         return intervals
 
 
-    def get_observable_intervals(self, target, airmass=None):
+    def get_observable_intervals(self, target, airmass=None, moon_distance=Angle(degrees=30)):
         '''Returns a set of datetime 2-tuples, each of which represents an interval
            of uninterrupted time when the target is observable (sun down, target up,
            target within the Hour Angle limits of the telescope.
@@ -231,6 +265,10 @@ class Visibility(object):
         # get the intervals of each separately
         dark               = self.get_dark_intervals()
         above_horizon      = self.get_target_intervals(target, airmass=airmass)
+        if moon_distance.in_degrees() == 0:
+            moon_avoidance = above_horizon
+        else:
+            moon_avoidance = self.get_moon_distance_intervals(target, above_horizon, moon_distance)
         if 'ra' in target:
             within_hour_angle = self.get_ha_intervals(target)
         else:
@@ -240,7 +278,7 @@ class Visibility(object):
             within_hour_angle = above_horizon
 
         # find the overlapping intervals between them
-        intervals = intersect_many_intervals(dark, above_horizon, within_hour_angle)
+        intervals = intersect_many_intervals(dark, above_horizon, within_hour_angle, moon_avoidance)
 
         return intervals
 
@@ -328,7 +366,7 @@ class Visibility(object):
         if target == 'sun':
             transits, rises, sets = calc_sunrise_set(self.site, dt, self.twilight)
         elif target == 'moon':
-            transits, rises, sets = calc_planet_rise_set(self.site, dt, Angle(degrees=0), 'moon')
+            transits, rises, sets = calc_planet_rise_set(self.site, dt, Angle(degrees=0.125), 'moon')
         else:
             # Test for circumpolarity
             if star.is_always_up(dt):

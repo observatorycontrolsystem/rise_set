@@ -548,6 +548,12 @@ def ut_mjd_to_tdb(ut_mjd):
     return tdb
 
 
+def angular_distance_between(app_ra1, app_dec1, app_ra2, app_dec2):
+    radians_between = sla.sla_dsep(app_ra1.in_radians(), app_dec1.in_radians(),
+                                   app_ra2.in_radians(), app_dec2.in_radians())
+    return Angle(radians=radians_between)
+
+
 def calc_rise_set(target, site, date, horizon=None):
     '''Return a tuple (transit, rise, set) of timedelta objects, describing the
        time offset for each event from the start of the provided date.
@@ -558,7 +564,6 @@ def calc_rise_set(target, site, date, horizon=None):
 
     effective_horizon = apply_refraction_to_horizon(horizon)
     tdb = date_to_tdb(date)
-
 
     app_ra, app_dec   = mean_to_apparent(target, tdb)
     app_sidereal_time = calc_apparent_sidereal_time(date)
@@ -593,6 +598,7 @@ def calc_rise_set(target, site, date, horizon=None):
     return (transits, rises, sets)
 
 
+
 def calc_planet_rise_set(site, date, twilight_altitude, planet):
     '''Return a tuple (transit, rise, set) of timedelta objects, describing the
        time offset for each event from the start of the provided date.
@@ -601,8 +607,7 @@ def calc_planet_rise_set(site, date, twilight_altitude, planet):
     # Remove any time component of the provided datetime object
     date = date.replace(hour=0, minute=0, second=0, microsecond=0)
 
-    ut_mjd = gregorian_to_ut_mjd(date)
-    tdb = ut_mjd + (sla.sla_dtt(ut_mjd)/86400)
+    tdb = date_to_tdb(date)
 
     (app_ra, app_dec) = apparent_planet_pos(planet, tdb, site)
 

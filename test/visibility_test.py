@@ -424,7 +424,7 @@ class TestIntervals(object):
 #        # find the overlapping intervals between them
 #        received = intersect_many_intervals(dark, above_horizon, within_hour_angle)
 
-        received = v.get_observable_intervals(target)
+        received = v.get_observable_intervals(target, moon_distance=Angle(degrees=0))
 
         intervals_almost_equal(received, expected, tolerance=1e-5)
 
@@ -476,13 +476,13 @@ class TestIntervals(object):
 
         v1 = Visibility(site=sitecoords_coj, start_date=window_start, end_date=window_end,
                         twilight='nautical', horizon=eff_horizon)
-        observable_intervals1 = v1.get_observable_intervals(target)
+        observable_intervals1 = v1.get_observable_intervals(target, moon_distance=Angle(degrees=0))
 
         v2 = Visibility(site=sitecoords_coj, start_date=window_start,
                         end_date=window_end + timedelta(days=1),
                         twilight='nautical', horizon=eff_horizon)
 
-        observable_intervals2 = v2.get_observable_intervals(target)
+        observable_intervals2 = v2.get_observable_intervals(target, moon_distance=Angle(degrees=0))
 
         intervals_almost_equal(observable_intervals1, observable_intervals2[:-1], tolerance=1e-5)
 
@@ -504,13 +504,13 @@ class TestIntervals(object):
         v1 = Visibility(site=sitecoords_lsc, start_date=window_start, end_date=window_end,
                         twilight='nautical', horizon=eff_horizon)
 
-        observable_intervals1 = v1.get_observable_intervals(target)
+        observable_intervals1 = v1.get_observable_intervals(target, moon_distance=Angle(degrees=0))
 
         v2 = Visibility(site=sitecoords_lsc, start_date=window_start,
                         end_date=window_end + timedelta(days=1),
                         twilight='nautical', horizon=eff_horizon)
 
-        observable_intervals2 = v2.get_observable_intervals(target)
+        observable_intervals2 = v2.get_observable_intervals(target, moon_distance=Angle(degrees=0))
 
         assert len(observable_intervals2) == 2
         intervals_almost_equal(observable_intervals1, observable_intervals2[:-1], tolerance=1e-5)
@@ -518,7 +518,7 @@ class TestIntervals(object):
         v3 = Visibility(site=sitecoords_lsc, start_date=window_start,
                         end_date=window_end + timedelta(days=2),
                         twilight='nautical', horizon=eff_horizon)
-        observable_intervals3 = v3.get_observable_intervals(target)
+        observable_intervals3 = v3.get_observable_intervals(target, moon_distance=Angle(degrees=0))
         assert len(observable_intervals3) == 3
         intervals_almost_equal(observable_intervals2, observable_intervals3[:-1])
 
@@ -576,7 +576,7 @@ class TestIntervals(object):
                        ha_limit_pos=site['ha_limit_pos'],
                        )
 
-        assert_equal(v.get_observable_intervals(target), [])
+        assert_equal(v.get_observable_intervals(target, moon_distance=Angle(degrees=0)), [])
 
 
 
@@ -624,7 +624,7 @@ class TestIntervals(object):
 
         for site in sites:
             v = Visibility(site, start_date, end_date, ha_limit_neg=-4.9, ha_limit_pos=4.9)
-            intervals = v.get_observable_intervals(target)
+            intervals = v.get_observable_intervals(target, moon_distance=Angle(degrees=0))
 
             intervals_almost_equal(intervals, expected[site['name']], tolerance=1e-5)
 
