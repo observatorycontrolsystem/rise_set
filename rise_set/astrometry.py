@@ -634,8 +634,18 @@ def calc_planet_rise_set(site, date, twilight_altitude, planet):
     _log.info('Transit time - unrefined (h, m, s): %s', transits)
     _log.info('Set time - unrefined (h, m, s): %s', sets)
 
-    (m_0, m_1, m_2) = refine_day_fraction(app_sidereal_time, m_0, m_1, m_2, tdb,
+
+    if planet == 'moon':
+        _log.info('initial transit {}, rise {}, set {}'.format(timedelta(days=m_0), timedelta(days=m_1), timedelta(days=m_2)))
+        (m_0, m_1, m_2) = refine_day_fraction_no_interp(app_sidereal_time, m_0, m_1, m_2, date,
+                                              {'planet': planet}, site, twilight_altitude)
+        (m_0, m_1, m_2) = refine_day_fraction_no_interp(app_sidereal_time, m_0, m_1, m_2, date,
+                                              {'planet': planet}, site, twilight_altitude)
+        _log.info('final transit {}, rise {}, set {}'.format(timedelta(days=m_0), timedelta(days=m_1), timedelta(days=m_2)))
+    else:
+        (m_0, m_1, m_2) = refine_day_fraction(app_sidereal_time, m_0, m_1, m_2, tdb,
                                           {'planet': planet}, site, twilight_altitude)
+
 
     transits = timedelta(days=m_0)
     rises    = timedelta(days=m_1)
@@ -724,7 +734,6 @@ def refine_day_fraction(app_sidereal_time, m_0, m_1, m_2, tdb, target, site,
        across the date boundary to obtain corrections to the values. The
        refined times are accurate to the nearest minute.
     '''
-
 
     # Find the sidereal time at Greenwich (in degrees)
     sidereal_time_transit = sidereal_time_at_greenwich(app_sidereal_time, m_0)
@@ -828,6 +837,79 @@ def refine_day_fraction(app_sidereal_time, m_0, m_1, m_2, tdb, target, site,
 
     refined_m_2 = correct_rise_set(m_2, site['latitude'].in_degrees(),
                                    interp_delta_2_set, local_hour_angle_set,
+                                   std_altitude)
+
+    refined_m_0 = normalise_day(refined_m_0)
+    refined_m_1 = normalise_day(refined_m_1)
+    refined_m_2 = normalise_day(refined_m_2)
+
+    return (refined_m_0, refined_m_1, refined_m_2)
+
+
+def refine_day_fraction_no_interp(app_sidereal_time, m_0, m_1, m_2, date, target, site,
+                        std_altitude):
+    '''Take an approximate value for transit, rise and set, and refine the
+       values without interpolating - which is necessary for fast moving objects like the moon. The
+       refined times are accurate to the nearest minute.
+    '''
+
+    # Find the sidereal time at Greenwich (in degrees)
+    sidereal_time_transit = sidereal_time_at_greenwich(app_sidereal_time, m_0)
+    sidereal_time_rise    = sidereal_time_at_greenwich(app_sidereal_time, m_1)
+    sidereal_time_set     = sidereal_time_at_greenwich(app_sidereal_time, m_2)
+
+    _log.debug('gwich sidereal_time (rise): %s', sidereal_time_rise)
+    _log.debug('gwich sidereal_time (transit): %s', sidereal_time_transit)
+    _log.debug('gwich sidereal_time (set): %s', sidereal_time_set)
+
+    _log.debug('m_0: %s', m_0)
+    _log.debug('m_1: %s', m_1)
+    _log.debug('m_2: %s', m_2)
+
+    # calculate the new date, tdb, and then apparent ra/dec of the body for the transit, rise, and set estimates
+    date_0 = date + timedelta(days=m_0)
+    tdb_0 = date_to_tdb(date_0)
+    alpha_0, delta_0 = apparent_planet_pos(target['planet'], tdb_0, site)
+
+    date_1 = date + timedelta(days=m_1)
+    tdb_1 = date_to_tdb(date_1)
+    alpha_1, delta_1 = apparent_planet_pos(target['planet'], tdb_1, site)
+
+    date_2 = date + timedelta(days=m_2)
+    tdb_2 = date_to_tdb(date_2)
+    alpha_2, delta_2 = apparent_planet_pos(target['planet'], tdb_2, site)
+
+    # Calculate the local hour angle (in degrees)
+    local_hour_angle_transit = (sidereal_time_transit
+                                 + site['longitude'].in_degrees()
+                                 - alpha_0.in_degrees())
+
+    local_hour_angle_rise = (sidereal_time_rise + site['longitude'].in_degrees()
+                                 - alpha_1.in_degrees())
+
+    local_hour_angle_set = (sidereal_time_set + site['longitude'].in_degrees()
+                                 - alpha_2.in_degrees())
+
+    if local_hour_angle_transit > 180:
+        local_hour_angle_transit -= 360.0
+    if local_hour_angle_rise > 180:
+        local_hour_angle_rise -= 360.0
+    if local_hour_angle_set > 180:
+        local_hour_angle_set -= 360.0
+
+    # TODO: Check local hour angle lies between -180 and +180
+    _log.debug('local_hour_angle_rise: %s',    local_hour_angle_rise)
+    _log.debug('local_hour_angle_transit: %s', local_hour_angle_transit)
+    _log.debug('local_hour_angle_set: %s',     local_hour_angle_set)
+
+    refined_m_0 = correct_transit(m_0, local_hour_angle_transit)
+
+    refined_m_1 = correct_rise_set(m_1, site['latitude'].in_degrees(),
+                                   delta_1.in_degrees(), local_hour_angle_rise,
+                                   std_altitude)
+
+    refined_m_2 = correct_rise_set(m_2, site['latitude'].in_degrees(),
+                                   delta_2.in_degrees(), local_hour_angle_set,
                                    std_altitude)
 
     refined_m_0 = normalise_day(refined_m_0)

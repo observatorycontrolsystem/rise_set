@@ -136,11 +136,7 @@ class Visibility(object):
                 # get the apparent ra/dec for the target, and for the moon at this timestamp
                 target_app_ra, target_app_dec = mean_to_apparent(target, tdb)
                 moon_app_ra, moon_app_dec = apparent_planet_pos('moon', tdb, self.site)
-                print target_app_ra
-                print target_app_dec
-                print moon_app_ra
-                print moon_app_dec
-                print moon_distance
+
                 # call slalib to get the angular moon distance
                 target_moon_dist = angular_distance_between(target_app_ra, target_app_dec, moon_app_ra, moon_app_dec)
                 # if that moon distance is > the constraint, add this interval to final intervals
