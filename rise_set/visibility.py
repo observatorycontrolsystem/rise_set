@@ -130,7 +130,7 @@ class Visibility(object):
         for start, end in target_intervals:
             chunkstart = start
             chunkend = min(chunkstart + chunksize, end)
-            while chunkend < end:
+            while chunkstart != chunkend and chunkend <= end:
                 # get the tdb date of the start time of the interval
                 tdb = date_to_tdb(chunkstart)
                 # get the apparent ra/dec for the target, and for the moon at this timestamp
@@ -140,7 +140,7 @@ class Visibility(object):
                 # call slalib to get the angular moon distance
                 target_moon_dist = angular_distance_between(target_app_ra, target_app_dec, moon_app_ra, moon_app_dec)
                 # if that moon distance is > the constraint, add this interval to final intervals
-                if target_moon_dist >= moon_distance:
+                if target_moon_dist.in_degrees() >= moon_distance.in_degrees():
                     intervals.append((chunkstart, chunkend))
                 # increment the chunkstart/end up
                 chunkstart = chunkend
