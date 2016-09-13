@@ -609,15 +609,20 @@ def calc_planet_rise_set(site, date, twilight_altitude, planet):
 
     tdb = date_to_tdb(date)
 
-    (app_ra, app_dec) = apparent_planet_pos(planet, tdb, site)
+    (app_ra, app_dec, diameter) = apparent_planet_pos(planet, tdb, site)
 
-    _log.info("RA, Dec (apparent, degrees) for %s: (%s, %s)",
-              planet, app_ra.in_degrees(), app_dec.in_degrees())
+    h_0 = twilight_altitude
+    if planet == 'moon':
+        # if planet is the moon, apply semi diameter to the twilight altitude
+        h_0 = Angle(degrees=twilight_altitude.in_degrees() - diameter.in_degrees()/2.0)
+
+    _log.info("RA, Dec, Diameter (apparent, degrees) for %s: (%s, %s, %s)",
+              planet, app_ra.in_degrees(), app_dec.in_degrees(), diameter.in_degrees())
 
     app_sidereal_time = calc_apparent_sidereal_time(date)
 
     (hour_angle, msg) = calc_rise_set_hour_angle(site['latitude'], app_dec,
-                                                 twilight_altitude)
+                                                 h_0)
 
     if ( not hour_angle ):
         raise RiseSetError(msg)
@@ -641,15 +646,15 @@ def calc_planet_rise_set(site, date, twilight_altitude, planet):
         # The day for one test case that has no set time that day, going from day before to next day. An odd number of
         # refinements keeps this oscillation on the next day instead of the day before.
         (m_0, m_1, m_2) = refine_day_fraction_no_interp(app_sidereal_time, m_0, m_1, m_2, date,
-                                              {'planet': planet}, site, twilight_altitude)
+                                              {'planet': planet}, site, h_0)
         (m_0, m_1, m_2) = refine_day_fraction_no_interp(app_sidereal_time, m_0, m_1, m_2, date,
-                                              {'planet': planet}, site, twilight_altitude)
+                                              {'planet': planet}, site, h_0)
         (m_0, m_1, m_2) = refine_day_fraction_no_interp(app_sidereal_time, m_0, m_1, m_2, date,
-                                              {'planet': planet}, site, twilight_altitude)
+                                              {'planet': planet}, site, h_0)
         _log.info('final transit {}, rise {}, set {}'.format(timedelta(days=m_0), timedelta(days=m_1), timedelta(days=m_2)))
     else:
         (m_0, m_1, m_2) = refine_day_fraction(app_sidereal_time, m_0, m_1, m_2, tdb,
-                                          {'planet': planet}, site, twilight_altitude)
+                                          {'planet': planet}, site, h_0)
 
 
     transits = timedelta(days=m_0)
@@ -698,15 +703,16 @@ def apparent_planet_pos(planet_name, tdb, site):
                   )
 
 
-    (app_ra_rads, app_dec_rads, _) = sla.sla_rdplan(tdb,
+    (app_ra_rads, app_dec_rads, diameter_rads) = sla.sla_rdplan(tdb,
                                                     planet[planet_name],
                                                     longitude.in_radians(),
                                                     latitude.in_radians())
 
     app_ra  = Angle(radians=app_ra_rads)
     app_dec = Angle(radians=app_dec_rads)
+    diameter = Angle(radians=diameter_rads)
 
-    return (app_ra, app_dec)
+    return (app_ra, app_dec, diameter)
 
 
 def day_frac_to_hms(day_frac):
@@ -762,9 +768,9 @@ def refine_day_fraction(app_sidereal_time, m_0, m_1, m_2, tdb, target, site,
 
     # Calculate RA/Dec over 3 days for interpolation
     if ('planet' in target ):
-        (alpha_1, delta_1) = apparent_planet_pos(target['planet'], tdb-1, site)
-        (alpha_2, delta_2) = apparent_planet_pos(target['planet'], tdb, site)
-        (alpha_3, delta_3) = apparent_planet_pos(target['planet'], tdb+1, site)
+        (alpha_1, delta_1, diameter_1) = apparent_planet_pos(target['planet'], tdb-1, site)
+        (alpha_2, delta_2, diameter_2) = apparent_planet_pos(target['planet'], tdb, site)
+        (alpha_3, delta_3, diameter_3) = apparent_planet_pos(target['planet'], tdb+1, site)
     else:
         (alpha_1, delta_1) = mean_to_apparent(target, tdb-1)
         (alpha_2, delta_2) = mean_to_apparent(target, tdb)
@@ -874,15 +880,15 @@ def refine_day_fraction_no_interp(app_sidereal_time, m_0, m_1, m_2, date, target
     # calculate the new date, tdb, and then apparent ra/dec of the body for the transit, rise, and set estimates
     date_0 = date + timedelta(days=m_0)
     tdb_0 = date_to_tdb(date_0)
-    alpha_0, delta_0 = apparent_planet_pos(target['planet'], tdb_0, site)
+    alpha_0, delta_0, diameter_0 = apparent_planet_pos(target['planet'], tdb_0, site)
 
     date_1 = date + timedelta(days=m_1)
     tdb_1 = date_to_tdb(date_1)
-    alpha_1, delta_1 = apparent_planet_pos(target['planet'], tdb_1, site)
+    alpha_1, delta_1, diameter_1 = apparent_planet_pos(target['planet'], tdb_1, site)
 
     date_2 = date + timedelta(days=m_2)
     tdb_2 = date_to_tdb(date_2)
-    alpha_2, delta_2 = apparent_planet_pos(target['planet'], tdb_2, site)
+    alpha_2, delta_2, diameter_2 = apparent_planet_pos(target['planet'], tdb_2, site)
 
     # Calculate the local hour angle (in degrees)
     local_hour_angle_transit = (sidereal_time_transit

@@ -119,18 +119,21 @@ class TestMoon(object):
                         'latitude': Angle(degrees=-30.0),
                         'longitude': Angle(degrees=0.0)
                     }
+
+        self.h_0 = Angle(degrees=-0.5666667)
+
         # 5 arcsecond tolerance
         self.tolerance = 5.0 / 3600.0
 
         # rise/set/transit time tolerance in seconds
-        self.time_tolerance = 7.0 * 60.0
+        self.time_tolerance = 3.0 * 60.0
 
     def test_apparent_position(self):
         dt_tdb = gregorian_to_ut_mjd(datetime(2012, 1, 3))
 
         assert_equal(dt_tdb, 55929.0)
 
-        (apparent_ra, apparent_dec) = apparent_planet_pos("moon", dt_tdb, self.site)
+        (apparent_ra, apparent_dec, diameter) = apparent_planet_pos("moon", dt_tdb, self.site)
 
         # values from JPL Horizons
         expected_ra = Angle(degrees=26.63848)
@@ -144,12 +147,8 @@ class TestMoon(object):
         # parallax and semidiameter from astronomers almanac
         horizontal_parallax = Angle(degrees=0.9150694)
         semidiameter = Angle(degrees=0.2492556)
-        # this equation is from astronomers almanac
-        h_0 = Angle(degrees= 0.5666667 + semidiameter.in_degrees() - horizontal_parallax.in_degrees())
-        # this equation is from the astronomical algorithms book
-        h_0_2 = Angle(degrees= 0.7275*horizontal_parallax.in_degrees() - 0.5666667)
 
-        (transits, rises, sets) = calc_planet_rise_set(self.site, dt_utc, h_0_2, 'moon')
+        (transits, rises, sets) = calc_planet_rise_set(self.site, dt_utc, self.h_0, 'moon')
 
         # values from JPL Horizons
         # There is no expected set time for the january 2nd, 2012 - it spans the date boundary
@@ -166,18 +165,17 @@ class TestMoon(object):
         # parallax and semidiameter from astronomers almanac
         horizontal_parallax = Angle(degrees=0.9082611)
         semidiameter = Angle(degrees=0.2474)
-        # this equation is from astronomers almanac
-        h_0 = Angle(degrees= 0.5666667 + semidiameter.in_degrees() - horizontal_parallax.in_degrees())
-        # this equation is from the astronomical algorithms book
-        h_0_2 = Angle(degrees= 0.7275*horizontal_parallax.in_degrees() - 0.5666667)
 
-        (transits, rises, sets) = calc_planet_rise_set(self.site, dt_utc, h_0_2, 'moon')
+        (transits, rises, sets) = calc_planet_rise_set(self.site, dt_utc, self.h_0, 'moon')
 
         # values from JPL Horizons
         # There is no expected set time for the january 2nd, 2012 - it spans the date boundary
         expected_rise = timedelta(hours=12, minutes=23)
         expected_transit = timedelta(hours=18, minutes=9)
         expected_set = timedelta(hours=23, minutes=54)
+        print rises
+        print sets
+        print transits
 
         assert_less(abs(sets.total_seconds() - expected_set.total_seconds()), self.time_tolerance)
         assert_less(abs(rises.total_seconds() - expected_rise.total_seconds()), self.time_tolerance)
@@ -188,12 +186,8 @@ class TestMoon(object):
         # parallax and semidiameter from astronomers almanac
         horizontal_parallax = Angle(degrees=0.9043333)
         semidiameter = Angle(degrees=0.2463306)
-        # this equation is from astronomers almanac
-        h_0 = Angle(degrees= 0.5666667 + semidiameter.in_degrees() - horizontal_parallax.in_degrees())
-        # this equation is from the astronomical algorithms book
-        h_0_2 = Angle(degrees= 0.7275*horizontal_parallax.in_degrees() - 0.5666667)
 
-        (transits, rises, sets) = calc_planet_rise_set(self.site, dt_utc, h_0_2, 'moon')
+        (transits, rises, sets) = calc_planet_rise_set(self.site, dt_utc, self.h_0, 'moon')
 
         # values from JPL Horizons
         # There is no expected set time for the january 2nd, 2012 - it spans the date boundary
@@ -207,10 +201,8 @@ class TestMoon(object):
         dt_utc = datetime(2012, 1, 3)
         horizontal_parallax = Angle(degrees=0.9033333)
         semidiameter = Angle(degrees=0.2460583)
-        h_0 = Angle(degrees= 0.5666667 + semidiameter.in_degrees() - horizontal_parallax.in_degrees())
-        h_0_2 = Angle(degrees= 0.7275*horizontal_parallax.in_degrees() - 0.5666667)
 
-        (transits, rises, sets) = calc_planet_rise_set(self.site, dt_utc, h_0_2, 'moon')
+        (transits, rises, sets) = calc_planet_rise_set(self.site, dt_utc, self.h_0, 'moon')
 
         # values from JPL Horizons
         expected_set = timedelta(minutes=27)
@@ -225,10 +217,8 @@ class TestMoon(object):
         dt_utc = datetime(2012, 1, 4)
         horizontal_parallax = Angle(degrees=0.905125)
         semidiameter = Angle(degrees=0.2465472)
-        h_0 = Angle(degrees= 0.5666667 + semidiameter.in_degrees() - horizontal_parallax.in_degrees())
-        h_0_2 = Angle(degrees= 0.7275*horizontal_parallax.in_degrees() - 0.5666667)
 
-        (transits, rises, sets) = calc_planet_rise_set(self.site, dt_utc, h_0_2, 'moon')
+        (transits, rises, sets) = calc_planet_rise_set(self.site, dt_utc, self.h_0, 'moon')
 
         # values from JPL Horizons
         expected_set = timedelta(hours=1, minutes=4)
@@ -243,10 +233,8 @@ class TestMoon(object):
         dt_utc = datetime(2012, 1, 31)
         horizontal_parallax = Angle(degrees=0.9039722)
         semidiameter = Angle(degrees=0.2462306)
-        h_0 = Angle(degrees= 0.5666667 + semidiameter.in_degrees() - horizontal_parallax.in_degrees())
-        h_0_2 = Angle(degrees= 0.7275*horizontal_parallax.in_degrees() - 0.5666667)
 
-        (transits, rises, sets) = calc_planet_rise_set(self.site, dt_utc, h_0_2, 'moon')
+        (transits, rises, sets) = calc_planet_rise_set(self.site, dt_utc, self.h_0, 'moon')
 
         # values from JPL Horizons
         expected_set = timedelta(hours=23, minutes=40)
@@ -261,10 +249,8 @@ class TestMoon(object):
         dt_utc = datetime(2012, 2, 1)
         horizontal_parallax = Angle(degrees=0.9062222)
         semidiameter = Angle(degrees=0.2468444)
-        h_0 = Angle(degrees= 0.5666667 + semidiameter.in_degrees() - horizontal_parallax.in_degrees())
-        h_0_2 = Angle(degrees= 0.7275*horizontal_parallax.in_degrees() - 0.5666667)
 
-        (transits, rises, sets) = calc_planet_rise_set(self.site, dt_utc, h_0_2, 'moon')
+        (transits, rises, sets) = calc_planet_rise_set(self.site, dt_utc, self.h_0, 'moon')
 
         # values from JPL Horizons
         expected_set = timedelta(minutes=23)
@@ -279,10 +265,8 @@ class TestMoon(object):
         dt_utc = datetime(2012, 2, 2)
         horizontal_parallax = Angle(degrees=0.9113389)
         semidiameter = Angle(degrees=0.2482389)
-        h_0 = Angle(degrees= 0.5666667 + semidiameter.in_degrees() - horizontal_parallax.in_degrees())
-        h_0_2 = Angle(degrees= 0.7275*horizontal_parallax.in_degrees() - 0.5666667)
 
-        (transits, rises, sets) = calc_planet_rise_set(self.site, dt_utc, h_0_2, 'moon')
+        (transits, rises, sets) = calc_planet_rise_set(self.site, dt_utc, self.h_0, 'moon')
 
         # values from JPL Horizons
         expected_set = timedelta(minutes=23)
@@ -297,10 +281,8 @@ class TestMoon(object):
         dt_utc = datetime(2012, 2, 3)
         horizontal_parallax = Angle(degrees=0.9190528)
         semidiameter = Angle(degrees=0.2503389)
-        h_0 = Angle(degrees= 0.5666667 + semidiameter.in_degrees() - horizontal_parallax.in_degrees())
-        h_0_2 = Angle(degrees= 0.7275*horizontal_parallax.in_degrees() - 0.5666667)
 
-        (transits, rises, sets) = calc_planet_rise_set(self.site, dt_utc, h_0_2, 'moon')
+        (transits, rises, sets) = calc_planet_rise_set(self.site, dt_utc, self.h_0, 'moon')
 
         # values from JPL Horizons
         expected_set = timedelta(hours=1, minutes=11)
