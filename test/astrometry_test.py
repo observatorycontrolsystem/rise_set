@@ -173,9 +173,6 @@ class TestMoon(object):
         expected_rise = timedelta(hours=12, minutes=23)
         expected_transit = timedelta(hours=18, minutes=9)
         expected_set = timedelta(hours=23, minutes=54)
-        print rises
-        print sets
-        print transits
 
         assert_less(abs(sets.total_seconds() - expected_set.total_seconds()), self.time_tolerance)
         assert_less(abs(rises.total_seconds() - expected_rise.total_seconds()), self.time_tolerance)
@@ -288,6 +285,107 @@ class TestMoon(object):
         expected_set = timedelta(hours=1, minutes=11)
         expected_rise = timedelta(hours=15, minutes=31)
         expected_transit = timedelta(hours=20, minutes=47)
+
+        assert_less(abs(sets.total_seconds() - expected_set.total_seconds()), self.time_tolerance)
+        assert_less(abs(rises.total_seconds() - expected_rise.total_seconds()), self.time_tolerance)
+        assert_less(abs(transits.total_seconds() - expected_transit.total_seconds()), self.time_tolerance)
+
+
+    def test_rise_set_2_15(self):
+        dt_utc = datetime(2012, 2, 15)
+
+        (transits, rises, sets) = calc_planet_rise_set(self.site, dt_utc, self.h_0, 'moon')
+
+        # values from JPL Horizons
+        expected_set = timedelta(hours=13, minutes=35)
+        # moon doesnt rise on this day, but rise_set returns the rise time for the next day
+        expected_transit = timedelta(hours=6, minutes=26)
+
+        assert_less(abs(sets.total_seconds() - expected_set.total_seconds()), self.time_tolerance)
+        assert_less(abs(transits.total_seconds() - expected_transit.total_seconds()), self.time_tolerance)
+
+    def test_rise_set_3_1(self):
+        dt_utc = datetime(2012, 3, 1)
+
+        (transits, rises, sets) = calc_planet_rise_set(self.site, dt_utc, self.h_0, 'moon')
+
+        # values from JPL Horizons
+        expected_set = timedelta(hours=23, minutes=51)
+        expected_rise = timedelta(hours=13, minutes=20)
+        expected_transit = timedelta(hours=18, minutes=35)
+
+        assert_less(abs(sets.total_seconds() - expected_set.total_seconds()), self.time_tolerance)
+        assert_less(abs(rises.total_seconds() - expected_rise.total_seconds()), self.time_tolerance)
+        assert_less(abs(transits.total_seconds() - expected_transit.total_seconds()), self.time_tolerance)
+
+
+    def test_rise_set_5_1(self):
+        dt_utc = datetime(2012, 5, 1)
+
+        (transits, rises, sets) = calc_planet_rise_set(self.site, dt_utc, self.h_0, 'moon')
+
+        # values from JPL Horizons
+        expected_set = timedelta(hours=1, minutes=14)
+        expected_rise = timedelta(hours=14, minutes=3)
+        expected_transit = timedelta(hours=20, minutes=8)
+
+        assert_less(abs(sets.total_seconds() - expected_set.total_seconds()), self.time_tolerance)
+        assert_less(abs(rises.total_seconds() - expected_rise.total_seconds()), self.time_tolerance)
+        assert_less(abs(transits.total_seconds() - expected_transit.total_seconds()), self.time_tolerance)
+
+
+    def test_rise_set_6_15(self):
+        dt_utc = datetime(2012, 6, 15)
+
+        (transits, rises, sets) = calc_planet_rise_set(self.site, dt_utc, self.h_0, 'moon')
+
+        # values from JPL Horizons
+        expected_set = timedelta(hours=14, minutes=12)
+        expected_rise = timedelta(hours=3, minutes=13)
+        expected_transit = timedelta(hours=8, minutes=42)
+
+        assert_less(abs(sets.total_seconds() - expected_set.total_seconds()), self.time_tolerance)
+        assert_less(abs(rises.total_seconds() - expected_rise.total_seconds()), self.time_tolerance)
+        assert_less(abs(transits.total_seconds() - expected_transit.total_seconds()), self.time_tolerance)
+
+
+    def test_rise_set_8_1(self):
+        dt_utc = datetime(2012, 8, 1)
+
+        (transits, rises, sets) = calc_planet_rise_set(self.site, dt_utc, self.h_0, 'moon')
+
+        # values from JPL Horizons
+        expected_set = timedelta(hours=5, minutes=54)
+        expected_rise = timedelta(hours=17, minutes=5)
+        expected_transit = timedelta(hours=23, minutes=53)
+
+        assert_less(abs(sets.total_seconds() - expected_set.total_seconds()), self.time_tolerance)
+        assert_less(abs(rises.total_seconds() - expected_rise.total_seconds()), self.time_tolerance)
+        assert_less(abs(transits.total_seconds() - expected_transit.total_seconds()), self.time_tolerance)
+
+    def test_rise_set_9_15(self):
+        dt_utc = datetime(2012, 9, 15)
+
+        (transits, rises, sets) = calc_planet_rise_set(self.site, dt_utc, self.h_0, 'moon')
+
+        # values from JPL Horizons
+        expected_set = timedelta(hours=17, minutes=29)
+        expected_rise = timedelta(hours=5, minutes=13)
+        expected_transit = timedelta(hours=11, minutes=20)
+
+        assert_less(abs(sets.total_seconds() - expected_set.total_seconds()), self.time_tolerance)
+        assert_less(abs(rises.total_seconds() - expected_rise.total_seconds()), self.time_tolerance)
+        assert_less(abs(transits.total_seconds() - expected_transit.total_seconds()), self.time_tolerance)
+
+    def test_rise_set_11_1(self):
+        dt_utc = datetime(2012, 11, 1)
+
+        (transits, rises, sets) = calc_planet_rise_set(self.site, dt_utc, self.h_0, 'moon')
+
+        # values from JPL Horizons
+        expected_set = timedelta(hours=6, minutes=43)
+        expected_rise = timedelta(hours=20, minutes=52)
+        expected_transit = timedelta(hours=1, minutes=22)
 
         assert_less(abs(sets.total_seconds() - expected_set.total_seconds()), self.time_tolerance)
         assert_less(abs(rises.total_seconds() - expected_rise.total_seconds()), self.time_tolerance)
