@@ -362,7 +362,7 @@ class Visibility(object):
         if target == 'sun':
             transits, rises, sets = calc_sunrise_set(self.site, dt, self.twilight)
         elif target == 'moon':
-            transits, rises, sets = calc_planet_rise_set(self.site, dt, Angle(degrees=0.125), 'moon')
+            transits, rises, sets = calc_planet_rise_set(self.site, dt, Angle(degrees=-0.5666667), 'moon')
         else:
             # Test for circumpolarity
             if star.is_always_up(dt):
