@@ -716,6 +716,18 @@ class TestMoonDistanceCalculation(object):
 
         assert_equal(moon_distance_intervals, target_intervals)
 
+    def test_moon_distance_none_removed(self):
+        start = datetime(2012, 1, 2)
+        end = datetime(2012, 1, 3)
+        # low angle given, the distance is always greater for this target so it should allow all intervals
+        moon_distance_constraint = Angle(degrees=30)
+
+        v = Visibility(self.site, start, end, self.horizon)
+        target_intervals   = v.get_target_intervals(target=self.target)
+        moon_distance_intervals = v.get_moon_distance_intervals(self.target, target_intervals, moon_distance_constraint)
+
+        assert_equal(moon_distance_intervals, target_intervals)
+
     def test_moon_distance_half_removed(self):
         start = datetime(2012, 1, 2)
         end = datetime(2012, 1, 3)
@@ -730,7 +742,7 @@ class TestMoonDistanceCalculation(object):
         # test that just the evening interval is returned by the moon_distance_intervals
         assert_equal(moon_distance_intervals, [target_intervals[1]])
 
-    def test_moon_distance_half_removed(self):
+    def test_moon_distance_all_removed(self):
         start = datetime(2012, 1, 2)
         end = datetime(2012, 1, 3)
         # this target/site/date has no moon distances less than 75 degrees
