@@ -834,8 +834,13 @@ def refine_day_fraction(app_sidereal_time, m_0, m_1, m_2, tdb, target, site,
     local_hour_angle_set = (sidereal_time_set + site['longitude'].in_degrees()
                                  - interp_alpha_2_set)
 
+    while local_hour_angle_transit > 180:
+        local_hour_angle_transit -= 360.0
+    while local_hour_angle_rise > 180:
+        local_hour_angle_rise -= 360.0
+    while local_hour_angle_set > 180:
+        local_hour_angle_set -= 360.0
 
-    # TODO: Check local hour angle lies between -180 and +180
     _log.debug('local_hour_angle_rise: %s',    local_hour_angle_rise)
     _log.debug('local_hour_angle_transit: %s', local_hour_angle_transit)
     _log.debug('local_hour_angle_set: %s',     local_hour_angle_set)
@@ -901,14 +906,13 @@ def refine_day_fraction_no_interp(app_sidereal_time, m_0, m_1, m_2, date, target
     local_hour_angle_set = (sidereal_time_set + site['longitude'].in_degrees()
                                  - alpha_2.in_degrees())
 
-    if local_hour_angle_transit > 180:
+    while local_hour_angle_transit > 180:
         local_hour_angle_transit -= 360.0
-    if local_hour_angle_rise > 180:
+    while local_hour_angle_rise > 180:
         local_hour_angle_rise -= 360.0
-    if local_hour_angle_set > 180:
+    while local_hour_angle_set > 180:
         local_hour_angle_set -= 360.0
 
-    # TODO: Check local hour angle lies between -180 and +180
     _log.debug('local_hour_angle_rise: %s',    local_hour_angle_rise)
     _log.debug('local_hour_angle_transit: %s', local_hour_angle_transit)
     _log.debug('local_hour_angle_set: %s',     local_hour_angle_set)

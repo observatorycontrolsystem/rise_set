@@ -36,6 +36,8 @@ _log = logging.getLogger('rise_set.visibility')
 # Set convenient constants
 ONE_DAY  = datetime.timedelta(days=1)
 MIDNIGHT = datetime.time()
+# The average moon refraction from Astronomical Almanac A12: 34 minutes
+MOON_REFRACTION = Angle(degrees=-0.5666667)
 
 
 def set_airmass_limit(airmass, horizon):
@@ -255,13 +257,14 @@ class Visibility(object):
     def get_observable_intervals(self, target, airmass=None, moon_distance=Angle(degrees=30)):
         '''Returns a set of datetime 2-tuples, each of which represents an interval
            of uninterrupted time when the target is observable (sun down, target up,
-           target within the Hour Angle limits of the telescope.
+           target within the Hour Angle limits of the telescope, target at least moon_distance
+           away from the moon).
         '''
 
         # get the intervals of each separately
         dark               = self.get_dark_intervals()
         above_horizon      = self.get_target_intervals(target, airmass=airmass)
-        if moon_distance.in_degrees() == 0:
+        if moon_distance.in_degrees() <= 0.5:
             moon_avoidance = above_horizon
         else:
             moon_avoidance = self.get_moon_distance_intervals(target, above_horizon, moon_distance)
@@ -362,7 +365,7 @@ class Visibility(object):
         if target == 'sun':
             transits, rises, sets = calc_sunrise_set(self.site, dt, self.twilight)
         elif target == 'moon':
-            transits, rises, sets = calc_planet_rise_set(self.site, dt, Angle(degrees=-0.5666667), 'moon')
+            transits, rises, sets = calc_planet_rise_set(self.site, dt, MOON_REFRACTION, 'moon')
         else:
             # Test for circumpolarity
             if star.is_always_up(dt):

@@ -15,6 +15,7 @@ from rise_set.astrometry import (InvalidDateTimeError, IncompleteTargetError, Ri
                                  calc_local_hour_angle, make_ra_dec_target, apparent_planet_pos)
 
 from rise_set.angle import Angle
+from rise_set.visibility import MOON_REFRACTION
 
 class YiannisIsTryingToBreakMyDateCalculator(object):
     def __init__(self):
@@ -120,7 +121,7 @@ class TestMoon(object):
                         'longitude': Angle(degrees=0.0)
                     }
 
-        self.h_0 = Angle(degrees=-0.5666667)
+        self.h_0 = MOON_REFRACTION
 
         # 5 arcsecond tolerance
         self.tolerance = 5.0 / 3600.0
