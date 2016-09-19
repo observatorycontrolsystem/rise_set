@@ -51,6 +51,7 @@ v.0.3.12 - Fix to correctly calculate hour angle limit intervals. (Curtis McCull
 v.0.3.13 - Added function for getting airmasses for times for a target and observer, calculate_airmass_for_times
 v.0.3.14 - Adds a satellite target type and modifies Visibility to check for that target type and just return
            dark intervals for it (do no rise_set calculations).
+v.0.3.15 - Added moon rise/set functionality and a moon_distance constraint for target visibility intervals.
 
 Eric Saunders
 October 2012

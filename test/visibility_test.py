@@ -424,7 +424,7 @@ class TestIntervals(object):
 #        # find the overlapping intervals between them
 #        received = intersect_many_intervals(dark, above_horizon, within_hour_angle)
 
-        received = v.get_observable_intervals(target)
+        received = v.get_observable_intervals(target, moon_distance=Angle(degrees=0))
 
         intervals_almost_equal(received, expected, tolerance=1e-5)
 
@@ -476,13 +476,13 @@ class TestIntervals(object):
 
         v1 = Visibility(site=sitecoords_coj, start_date=window_start, end_date=window_end,
                         twilight='nautical', horizon=eff_horizon)
-        observable_intervals1 = v1.get_observable_intervals(target)
+        observable_intervals1 = v1.get_observable_intervals(target, moon_distance=Angle(degrees=0))
 
         v2 = Visibility(site=sitecoords_coj, start_date=window_start,
                         end_date=window_end + timedelta(days=1),
                         twilight='nautical', horizon=eff_horizon)
 
-        observable_intervals2 = v2.get_observable_intervals(target)
+        observable_intervals2 = v2.get_observable_intervals(target, moon_distance=Angle(degrees=0))
 
         intervals_almost_equal(observable_intervals1, observable_intervals2[:-1], tolerance=1e-5)
 
@@ -504,13 +504,13 @@ class TestIntervals(object):
         v1 = Visibility(site=sitecoords_lsc, start_date=window_start, end_date=window_end,
                         twilight='nautical', horizon=eff_horizon)
 
-        observable_intervals1 = v1.get_observable_intervals(target)
+        observable_intervals1 = v1.get_observable_intervals(target, moon_distance=Angle(degrees=0))
 
         v2 = Visibility(site=sitecoords_lsc, start_date=window_start,
                         end_date=window_end + timedelta(days=1),
                         twilight='nautical', horizon=eff_horizon)
 
-        observable_intervals2 = v2.get_observable_intervals(target)
+        observable_intervals2 = v2.get_observable_intervals(target, moon_distance=Angle(degrees=0))
 
         assert len(observable_intervals2) == 2
         intervals_almost_equal(observable_intervals1, observable_intervals2[:-1], tolerance=1e-5)
@@ -518,7 +518,7 @@ class TestIntervals(object):
         v3 = Visibility(site=sitecoords_lsc, start_date=window_start,
                         end_date=window_end + timedelta(days=2),
                         twilight='nautical', horizon=eff_horizon)
-        observable_intervals3 = v3.get_observable_intervals(target)
+        observable_intervals3 = v3.get_observable_intervals(target, moon_distance=Angle(degrees=0))
         assert len(observable_intervals3) == 3
         intervals_almost_equal(observable_intervals2, observable_intervals3[:-1])
 
@@ -576,7 +576,7 @@ class TestIntervals(object):
                        ha_limit_pos=site['ha_limit_pos'],
                        )
 
-        assert_equal(v.get_observable_intervals(target), [])
+        assert_equal(v.get_observable_intervals(target, moon_distance=Angle(degrees=0)), [])
 
 
 
@@ -624,7 +624,7 @@ class TestIntervals(object):
 
         for site in sites:
             v = Visibility(site, start_date, end_date, ha_limit_neg=-4.9, ha_limit_pos=4.9)
-            intervals = v.get_observable_intervals(target)
+            intervals = v.get_observable_intervals(target, moon_distance=Angle(degrees=0))
 
             intervals_almost_equal(intervals, expected[site['name']], tolerance=1e-5)
 
@@ -690,4 +690,68 @@ class TestAirmassCalculation(object):
         assert_less(interval_with_airmass, interval_without_airmass)
 
 
+class TestMoonDistanceCalculation(object):
+
+    def setup(self):
+        self.site = {
+           'latitude'  : Angle(degrees = 20.0),
+           'longitude' : Angle(degrees = -150.0)
+        }
+
+        self.horizon = 15.0
+        self.target = {
+           'ra'                : RightAscension('20 41 25.91'),
+           'dec'               : Declination('+20 00 00.00'),
+           'epoch'             : 2000,
+        }
+
+    def test_moon_distance_no_angle(self):
+        start = datetime(2012, 1, 2)
+        end = datetime(2012, 1, 3)
+        moon_distance_constraint = Angle(degrees=0)
+
+        v = Visibility(self.site, start, end, self.horizon)
+        target_intervals   = v.get_target_intervals(target=self.target)
+        moon_distance_intervals = v.get_moon_distance_intervals(self.target, target_intervals, moon_distance_constraint)
+
+        assert_equal(moon_distance_intervals, target_intervals)
+
+    def test_moon_distance_none_removed(self):
+        start = datetime(2012, 1, 2)
+        end = datetime(2012, 1, 3)
+        # low angle given, the distance is always greater for this target so it should allow all intervals
+        moon_distance_constraint = Angle(degrees=30)
+
+        v = Visibility(self.site, start, end, self.horizon)
+        target_intervals   = v.get_target_intervals(target=self.target)
+        moon_distance_intervals = v.get_moon_distance_intervals(self.target, target_intervals, moon_distance_constraint)
+
+        assert_equal(moon_distance_intervals, target_intervals)
+
+    def test_moon_distance_half_removed(self):
+        start = datetime(2012, 1, 2)
+        end = datetime(2012, 1, 3)
+        # this target/site/date has a morning and evening target interval on this day
+        # the morning interval has a moon/target distance < 70, and then evening interval is >70
+        moon_distance_constraint = Angle(degrees=70)
+
+        v = Visibility(self.site, start, end, self.horizon)
+        target_intervals   = v.get_target_intervals(target=self.target)
+        moon_distance_intervals = v.get_moon_distance_intervals(self.target, target_intervals, moon_distance_constraint)
+
+        # test that just the evening interval is returned by the moon_distance_intervals
+        assert_equal(moon_distance_intervals, [target_intervals[1]])
+
+    def test_moon_distance_all_removed(self):
+        start = datetime(2012, 1, 2)
+        end = datetime(2012, 1, 3)
+        # this target/site/date has no moon distances less than 75 degrees
+        moon_distance_constraint = Angle(degrees=75)
+
+        v = Visibility(self.site, start, end, self.horizon)
+        target_intervals   = v.get_target_intervals(target=self.target)
+        moon_distance_intervals = v.get_moon_distance_intervals(self.target, target_intervals, moon_distance_constraint)
+
+        # test that no moon distance intervals are returned due to the constraint of > 75 degrees distance
+        assert_equal(moon_distance_intervals, [])
 

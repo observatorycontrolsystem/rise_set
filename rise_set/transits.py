@@ -46,7 +46,7 @@ def distribute(interval, target, minoverlap=-1440, maxoverlap=1440, onepersite=T
                         ha_limit_neg=site['ha_limit_neg'],
                         ha_limit_pos=site['ha_limit_pos'],
                         )
-                    site_intervals = observability.get_observable_intervals(target)
+                    site_intervals = observability.get_observable_intervals(target, moon_distance=Angle(degrees=0))
                     for start,stop in site_intervals:
                         intervals.append((start,stop))
                         titles.append(target['name'] + ' (' + site['name'] + ')')
@@ -195,7 +195,7 @@ def get_transit_intervals(target, ephemeris, site, start_date, end_date, verbose
             ha_limit_neg=site['ha_limit_neg'],
             ha_limit_pos=site['ha_limit_pos'],
             )
-        observable_intervals = observability.get_observable_intervals(target)
+        observable_intervals = observability.get_observable_intervals(target, moon_distance=Angle(degrees=0))
 #        print observable_intervals
 
         for visible in observable_intervals:
