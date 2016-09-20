@@ -755,3 +755,16 @@ class TestMoonDistanceCalculation(object):
         # test that no moon distance intervals are returned due to the constraint of > 75 degrees distance
         assert_equal(moon_distance_intervals, [])
 
+    def test_moon_distance_ignored_for_satellite_target(self):
+        start = datetime(2012, 1, 2)
+        end = datetime(2012, 1, 3)
+        v = Visibility(self.site, start, end, self.horizon)
+
+        target = make_satellite_target(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+
+        observable_intervals = v.get_observable_intervals(target)
+        # check that this doesn't crash, and that intervals match night intervals
+        night_intervals = v.get_dark_intervals()
+        assert_equal(night_intervals, observable_intervals)
+
+

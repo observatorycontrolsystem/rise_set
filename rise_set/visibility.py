@@ -264,7 +264,7 @@ class Visibility(object):
         # get the intervals of each separately
         dark               = self.get_dark_intervals()
         above_horizon      = self.get_target_intervals(target, airmass=airmass)
-        if moon_distance.in_degrees() <= 0.5:
+        if moon_distance.in_degrees() <= 0.5 or 'ra' not in target:
             moon_avoidance = above_horizon
         else:
             moon_avoidance = self.get_moon_distance_intervals(target, above_horizon, moon_distance)
