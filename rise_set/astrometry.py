@@ -25,7 +25,7 @@ from math import sin, cos, asin, acos, radians, modf
 from datetime import timedelta
 
 # Third party imports
-import slalib as sla
+from pyslalib import slalib as sla
 
 # Internal imports
 from rise_set.angle import Angle

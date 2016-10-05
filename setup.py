@@ -17,8 +17,11 @@ setup(
     author = 'Eric Saunders',
     author_email = 'esaunders@lcogt.net',
     packages = ['rise_set'],
+    dependency_links = [
+        "http://github.com/LCOGT/pyslalib/tarball/master#egg=pyslalib",
+    ],
     install_requires = [
-        "pyslalib",
+        "pySLALIB",
         "numpy",
         "future",
     ],
