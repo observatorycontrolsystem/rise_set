@@ -65,32 +65,6 @@ def set_airmass_limit(airmass, horizon):
     return effective_horizon
 
 
-
-
-def set_airmass_limit(airmass, horizon):
-    ''' Compare the provided maximum airmass limit with the horizon of a telescope, and
-        return the effective horizon for rise/set purposes (whichever is higher elevation). If
-        no airmass is provided, we default to the horizon.
-
-        airmass = 1 / cos(zenith)
-        horizon = 90 - zenith'''
-
-    if not airmass:
-        return horizon
-
-    # We convert the horizon to airmass, not vice versa, to avoid small angle problems if a
-    # very large airmass is provided
-    zenith_distance = 90 - horizon
-    horizon_airmass = 1 / math.cos(math.radians(zenith_distance))
-
-    effective_horizon = horizon
-    if airmass < horizon_airmass:
-        effective_horizon = 90 - math.degrees(math.acos(1 / airmass))
-
-    return effective_horizon
-
-
-
 class Visibility(object):
 
     def __init__(self, site, start_date, end_date, horizon=0, twilight='sunrise',
