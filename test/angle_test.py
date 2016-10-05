@@ -2,7 +2,6 @@
 
 from __future__ import division
 from builtins import object
-
 from nose.tools import assert_equal, assert_almost_equal, raises
 
 from math import pi
@@ -216,8 +215,6 @@ class TestAngle(object):
         self.angle = Angle(degrees = '-12 00 00', units = 'time')
         assert_equal(self.angle.in_sexegesimal(), '-12 0 0')
 
-
-
     # Test returning radians in sexegesimal
     def test_in_sexegesimal_radians_str_arc(self):
         self.angle = Angle(radians = '12 30 30')
@@ -234,7 +231,6 @@ class TestAngle(object):
     def test_in_sexegesimal_radians_negative_str_time(self):
         self.angle = Angle(radians = '-3 00 00', units = 'time')
         assert_equal(self.angle.in_sexegesimal(radians = True), '-3 0 0')
-
 
 
     # Test converting degrees to radians sexegesimal

@@ -14,19 +14,21 @@ from builtins import str
 from past.utils import old_div
 from builtins import object
 
+
 from rise_set.angle import Angle
-from rise_set.moving_objects import (is_moving_object,
+from rise_set.moving_objects import (
                                      Sites, initialise_sites,
                                      chunk_windows,
                                      read_neocp_orbit,
-                                     elem_to_topocentric_apparent,
                                      calc_ephemerides,
                                      hour_angle_within_limits,
                                      ephemeris_chunk_within_ha_limits,
                                      ephemeris_chunk_above_horizon,
                                      find_moving_object_up_intervals,
                                      find_moving_object_network_up_intervals,
-                                     MovingViolation)
+                                     )
+from rise_set.utils import MovingViolation, is_moving_object
+from rise_set.astrometry import elem_to_topocentric_apparent
 
 from datetime import datetime, timedelta
 from nose.tools import (assert_equal, assert_almost_equal, nottest, assert_raises,
@@ -124,6 +126,7 @@ class TestSites(object):
 
         assert_equal(len(sites.sites), 4)
         assert_equal(set(sites.sites.keys()), expected_keys)
+
 
 
 

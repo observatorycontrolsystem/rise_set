@@ -97,6 +97,7 @@ class Angle(object):
         if ( match and len(match.groups()) == 4 ):
             sign = match.groups()[0]
             hrs, mins, secs = list(map(float, match.groups()[1:4]))
+
         else:
             error  = "Invalid sexegesimal format '%s': " % sexegesimal
             error += "Try colon or space delimiters instead (e.g. -12:34:56)"
@@ -129,12 +130,10 @@ class Angle(object):
         return math.radians(self.degrees)
 
 
-
     def in_hours(self):
         '''Return the value of the angle in hours of time.'''
 
         return self.degrees / 15
-
 
 
     def in_sexegesimal(self, radians = False):
@@ -168,6 +167,7 @@ class Angle(object):
             deg_hrs = "-" + str(deg_hrs)
 
         return "%s %s %.12g" % (deg_hrs, mins, secs)
+
 
     def __repr__(self):
         return "Angle(%s degrees)" % self.in_degrees()

@@ -16,27 +16,15 @@ from builtins import str
 from builtins import range
 from builtins import object
 
-from rise_set.astrometry import (gregorian_to_ut_mjd, date_to_tdb,
-                                 calc_local_hour_angle, calculate_altitude)
+from rise_set.astrometry import (gregorian_to_ut_mjd, elem_to_topocentric_apparent,
+                                 calc_local_hour_angle, calculate_altitude, date_to_tdb)
 from rise_set.angle      import Angle
-from rise_set.utils      import coalesce_adjacent_intervals
+from rise_set.utils      import coalesce_adjacent_intervals, MovingViolation
 
-import slalib as sla
 import re
 
 import ast
 from datetime import datetime,timedelta
-
-
-def is_moving_object(target):
-    # If a type is not specified, default to sidereal objects
-    if 'type' not in target:
-        return False
-
-    if target['type'].lower() in ('mpc_minor_planet', 'mpc_comet'):
-        return True
-
-    return False
 
 
 def initialelemdict():
@@ -128,7 +116,7 @@ def read_neocp_orbit(orbfile):
             elements['MDM']            = Angle(degrees=float(chunks[9]))
             elements['semi_axis']      = float(chunks[10])
 
-            # The next bit is...complicated... depending on whether it's a
+            # The next bit is...complicated... depending on whether it's a 
             # multi-opposition orbit or not
             # From http://www.minorplanetcenter.net/iau/info/MPOrbitFormat.html
             # 106        i1     Uncertainty parameter, U
@@ -147,7 +135,6 @@ def read_neocp_orbit(orbfile):
             #
             # 138 - 141  f4.2   r.m.s residual (")
             #
-
             # Extract a string section and turn this into an uncertainty
             # and a reference.
             uncertainty = line[105:106]
@@ -159,12 +146,11 @@ def read_neocp_orbit(orbfile):
                 reference = ''
             elements['reference'] = reference
 
-            # Extract a string section and decide whether it's single or
             # multiple opposition
             opp_data = line[117:141]
             single_opp = False
             if 'days' in opp_data or 'min' in opp_data or 'hrs' in opp_data:
-                single_opp = True
+                single_opp = True 
             elements['n_obs']   = int(opp_data[0:5])
             elements['n_oppos'] = int(opp_data[6:9])
             try:
@@ -255,76 +241,6 @@ class Sites(object):
     def __iter__(self):
         for site_dict in list(self.sites.values()):
             yield site_dict
-
-
-
-def elem_to_topocentric_apparent(dt, elements, site, JFORM=2):
-    '''Given a datetime, set of MPC orbital elements and a site, return the
-       apparent topocentric RA/Dec. This is what you'd use for a rise/set
-       calculation, for example.
-       JFORM should be set to 2 (default) for asteroids/minor planets and
-       to 3 for comets'''
-    tdb = date_to_tdb(dt)
-
-    MINOR_PLANET_JFORM = 2
-    COMET_JFORM = 3
-    MDM_PLACEHOLDER    = 0.0  # Only used for major planets
-    MEANANOM_PLACEHOLDER    = 0.0  # Not applicable for comets
-
-    status = 0
-    if JFORM == MINOR_PLANET_JFORM:
-# Minor planets (asteroids)
-        ra_app_rads, dec_app_rads, earth_obj_dist, status = sla.sla_plante(
-                                                    tdb,
-                                                    site['longitude'].in_radians(),
-                                                    site['latitude'].in_radians(),
-                                                    JFORM,
-                                                    elements['epoch'],
-                                                    elements['inclination'].in_radians(),
-                                                    elements['long_node'].in_radians(),
-                                                    elements['arg_perihelion'].in_radians(),
-                                                    elements['semi_axis'],
-                                                    elements['eccentricity'],
-                                                    elements['mean_anomaly'].in_radians(),
-                                                    MDM_PLACEHOLDER,
-                                                  )
-    elif JFORM == COMET_JFORM:
-# Comets
-        ra_app_rads, dec_app_rads, earth_obj_dist, status = sla.sla_plante(
-                                                    tdb,
-                                                    site['longitude'].in_radians(),
-                                                    site['latitude'].in_radians(),
-                                                    JFORM,
-                                                    elements['epochofperih'],
-                                                    elements['inclination'].in_radians(),
-                                                    elements['long_node'].in_radians(),
-                                                    elements['arg_perihelion'].in_radians(),
-                                                    elements['perihdist'],
-                                                    elements['eccentricity'],
-                                                    MEANANOM_PLACEHOLDER,
-                                                    MDM_PLACEHOLDER,
-                                                  )
-    else:
-        status = -1
-
-    error = {
-               0 : 'OK',
-              -1 : 'illegal JFORM',
-              -2 : 'illegal eccentricity',
-              -3 : 'illegal mean distance',
-              -4 : 'illegal mean daily motion',
-              -5 : 'numerical error',
-            }
-
-    if (status != 0):
-        elem_string = 'Bad Elements:\n'
-        for key in list(elements.keys()):
-            elem_string += key + ' = ' + str(elements[key]) + '\n'
-        print(elem_string)
-        raise MovingViolation('Error: ' + str(status) + ' (' + error[status] + ')')
-
-    return Angle(radians=ra_app_rads), Angle(radians=dec_app_rads)
-
 
 
 def chunk_windows(window, chunksize):
@@ -470,9 +386,3 @@ def calc_ephemerides(window, elements, site, chunksize=timedelta(minutes=15), JF
     coords.append(ephem)
 
     return coords
-
-
-class MovingViolation(Exception):
-    '''Exception for moving object errors.'''
-    pass
-

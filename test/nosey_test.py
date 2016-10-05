@@ -19,6 +19,7 @@ class SomeTestClassIJustMadeUp(object):
         self.angle = angle.Angle(degrees = 0)
         print("Hello")
 
+
     def test_from_degrees(self):
         self.angle.from_degrees(37)
         eq_(self.angle.in_degrees(), 37)

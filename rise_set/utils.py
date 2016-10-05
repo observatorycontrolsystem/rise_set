@@ -61,3 +61,19 @@ def intersect_many_intervals(*args):
         intersection = intersect_intervals(intersection,interval)
 
     return intersection
+
+
+def is_moving_object(target):
+    # If a type is not specified, default to sidereal objects
+    if 'type' not in target:
+        return False
+
+    if target['type'].lower() in ('mpc_minor_planet', 'mpc_comet'):
+        return True
+
+    return False
+
+
+class MovingViolation(Exception):
+    '''Exception for moving object errors.'''
+    pass

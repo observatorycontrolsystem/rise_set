@@ -47,6 +47,11 @@ v.0.3.10 - Fix interval skipping in get_ha_intervals (thanks Curtis McCully)
          - Improved read_neocp_orbit() to handle single and multiple opposition orbits properly (Tim Lister)
 v.0.3.11 - Fixes for handling of missing uncertainty, reference and residual in
            read_neocp_orbit(). Add docstring to date_to_tdb() (Tim Lister)
+v.0.3.12 - Fix to correctly calculate hour angle limit intervals. (Curtis McCully)
+v.0.3.13 - Added function for getting airmasses for times for a target and observer, calculate_airmass_for_times
+v.0.3.14 - Adds a satellite target type and modifies Visibility to check for that target type and just return
+           dark intervals for it (do no rise_set calculations).
+v.0.3.16 - Added moon rise/set functionality and a moon_distance constraint for target visibility intervals.
 
 Eric Saunders
 October 2012

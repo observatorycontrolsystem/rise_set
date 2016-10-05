@@ -10,9 +10,9 @@ from builtins import range
 from past.utils import old_div
 import ast
 from datetime import datetime,timedelta
-from .visibility import Visibility
-from .sky_coordinates import RightAscension, Declination
-from .angle import Angle
+from visibility import Visibility
+from sky_coordinates import RightAscension, Declination
+from angle import Angle
 import sys, argparse
 from math import sqrt
 from reqdb.utils.duration import calculate_duration
@@ -54,13 +54,11 @@ def distribute(interval, target, minoverlap=-1440, maxoverlap=1440, onepersite=T
                         ha_limit_neg=site['ha_limit_neg'],
                         ha_limit_pos=site['ha_limit_pos'],
                         )
-                    site_intervals = observability.get_observable_intervals(target)
+                    site_intervals = observability.get_observable_intervals(target, moon_distance=Angle(degrees=0))
                     for start,stop in site_intervals:
                         intervals.append((start,stop))
                         titles.append(target['name'] + ' (' + site['name'] + ')')
 
-#                print site_intervals
-#    print intervals
     return intervals, titles
 
 # Read a file of code into a list (for telescopes.dat)
@@ -90,7 +88,7 @@ def get_nexp(window, molecule):
     diff = window['end'] - window['start']
     window_duration = old_div(diff.microseconds,1e6) + diff.seconds + diff.days*86400.0
     molecule['exposure_count'] = int(old_div(window_duration,molecule['exposure_time']))
-    
+
     while True:
         molecule_duration = calculate_duration([molecule])
         if molecule_duration.seconds <= window_duration:
@@ -203,8 +201,7 @@ def get_transit_intervals(target, ephemeris, site, start_date, end_date, verbose
             ha_limit_neg=site['ha_limit_neg'],
             ha_limit_pos=site['ha_limit_pos'],
             )
-        observable_intervals = observability.get_observable_intervals(target)
-#        print observable_intervals
+        observable_intervals = observability.get_observable_intervals(target, moon_distance=Angle(degrees=0))
 
         for visible in observable_intervals:
     
@@ -253,7 +250,6 @@ def get_transit_intervals(target, ephemeris, site, start_date, end_date, verbose
                         'bin_y'           : 2,
                         }
 #                    get_nexp(window, molecule)
-#                    print site['name'], epoch, obs_start, obs_end, contact1, contact4, transitfrac, ootfrac, molecule['exposure_count'], uttn*1440.0
                     print(site['name'], epoch, obs_start, obs_end, contact1, contact4, transitfrac, ootfrac, uttn*1440.0)
             else:
                 if vverbose:
@@ -348,6 +344,7 @@ def schedule_intervals(intervals, target, band, vmag, propid, email, titles, ver
         if verbose:
             print(molecule['exposure_time'], molecule['exposure_count'], molecule['defocus'], vmag, band, titles[i])
 
+
         # You're done! Send the complete User Request to the DB for scheduling
         client        = SchedulerClient('http://scheduler-dev.lco.gtn/requestdb/')
         response_data = client.submit(ur, keep_record=True, debug=True)
@@ -425,6 +422,7 @@ if __name__ == '__main__':
 
     # The name is specified, use values from exoplanets.org
     if opt.name != None:
+
         planets = readexo()
                     
         found = False
@@ -467,6 +465,7 @@ if __name__ == '__main__':
                 break
         if not found:
             print(opt.name + ' not found in exoplanets.org; using command line arguments')
+
 
 
 
@@ -541,6 +540,7 @@ if __name__ == '__main__':
 
     if opt.vverbose:
         print(per, uper, tt, utt, t14, ut14, ra.degrees, dec.degrees)
+
     
     # define the target
     target = {
