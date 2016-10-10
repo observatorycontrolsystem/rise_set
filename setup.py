@@ -12,13 +12,16 @@ from setuptools import setup, find_packages
 
 setup(
     name = 'rise_set',
-    version = '0.4.0',
+    version = '0.4.1',
     description = 'Routines for accurate rise/set/transit calculations',
     author = 'Eric Saunders',
     author_email = 'esaunders@lcogt.net',
     packages = ['rise_set'],
     dependency_links = [
         "http://github.com/LCOGT/pyslalib/tarball/master#egg=pyslalib",
+    ],
+    setup_requires = [
+        "numpy"
     ],
     install_requires = [
         "pySLALIB",
