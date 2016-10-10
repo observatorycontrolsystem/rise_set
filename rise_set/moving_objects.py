@@ -11,9 +11,13 @@ December 2013
 '''
 
 from __future__ import division
+from __future__ import print_function
+from builtins import str
+from builtins import range
+from builtins import object
 
 from rise_set.astrometry import (gregorian_to_ut_mjd, elem_to_topocentric_apparent,
-                                 calc_local_hour_angle, calculate_altitude)
+                                 calc_local_hour_angle, calculate_altitude, date_to_tdb)
 from rise_set.angle      import Angle
 from rise_set.utils      import coalesce_adjacent_intervals, MovingViolation
 
@@ -55,10 +59,10 @@ def read_neocp_orbit(orbfile):
     '''Read an NEOCP orbit file, storing the contents as a dict.
     Comet format is from
     http://www.minorplanetcenter.net/iau/info/CometOrbitFormat.html (Ephemerides
-    and Orbital Elements Format), asteroid format is from battle-weary 
-    inference but is also documented at 
+    and Orbital Elements Format), asteroid format is from battle-weary
+    inference but is also documented at
     http://www.minorplanetcenter.net/iau/info/MPOrbitFormat.html'''
-    
+
     comet_regex = r'^\d{4}P'
     comet_pat = re.compile(comet_regex)
 
@@ -111,7 +115,7 @@ def read_neocp_orbit(orbfile):
             elements['eccentricity']   = float(chunks[8])
             elements['MDM']            = Angle(degrees=float(chunks[9]))
             elements['semi_axis']      = float(chunks[10])
-            
+
             # The next bit is...complicated... depending on whether it's a 
             # multi-opposition orbit or not
             # From http://www.minorplanetcenter.net/iau/info/MPOrbitFormat.html
@@ -131,7 +135,6 @@ def read_neocp_orbit(orbfile):
             #
             # 138 - 141  f4.2   r.m.s residual (")
             #
-            
             # Extract a string section and turn this into an uncertainty
             # and a reference.
             uncertainty = line[105:106]
@@ -143,7 +146,6 @@ def read_neocp_orbit(orbfile):
                 reference = ''
             elements['reference'] = reference
 
-            # Extract a string section and decide whether it's single or  
             # multiple opposition
             opp_data = line[117:141]
             single_opp = False
@@ -157,11 +159,11 @@ def read_neocp_orbit(orbfile):
                 elements['residual'] = 9.99
             # If it's a single opposition orbit, return arc length
             if single_opp == True:
-	    	if 'min' in opp_data:
-		    num_nights_or_years = float(opp_data[10:14]) / 1440.0
-	    	elif 'hrs' in opp_data:
-		    num_nights_or_years = float(opp_data[10:14]) / 24.0
-		else:
+                if 'min' in opp_data:
+                    num_nights_or_years = float(opp_data[10:14]) / 1440.0
+                elif 'hrs' in opp_data:
+                    num_nights_or_years = float(opp_data[10:14]) / 24.0
+                else:
                     num_nights_or_years = int(opp_data[10:14])
 
             # ...or it's a multi-opposition orbit...
@@ -237,7 +239,7 @@ class Sites(object):
 
 
     def __iter__(self):
-        for site_dict in self.sites.values():
+        for site_dict in list(self.sites.values()):
             yield site_dict
 
 
@@ -338,7 +340,7 @@ def find_moving_object_up_intervals(window, elements, site, chunksize=timedelta(
 
     up_intervals = []
     up_altitudes = []
-    for i in xrange(len(intervals)-1):
+    for i in range(len(intervals)-1):
         # Keep the interval only if both it and the next are up
         # (in other words, throw away partial intervals)
         # This works because we have an extra pseudo-interval with size 0
@@ -384,5 +386,3 @@ def calc_ephemerides(window, elements, site, chunksize=timedelta(minutes=15), JF
     coords.append(ephem)
 
     return coords
-
-

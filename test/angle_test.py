@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from __future__ import division
-
+from builtins import object
 from nose.tools import assert_equal, assert_almost_equal, raises
 
 from math import pi
@@ -185,7 +185,7 @@ class TestAngle(object):
     # Test returning degrees in sexegesimal
     def test_in_sexegesimal_degrees_str_arc(self):
         self.angle = Angle(degrees = '12 30 30')
-        assert_equal(self.angle.in_sexegesimal(), '12 30 30.0')
+        assert_equal(self.angle.in_sexegesimal(), '12 30 30')
 
     def test_in_sexegesimal_degrees_num_arc(self):
         self.angle = Angle(degrees = 45)
@@ -197,43 +197,40 @@ class TestAngle(object):
 
     def test_in_sexegesimal_degrees_negative_str_arc(self):
         self.angle = Angle(degrees = '-12 00 00')
-        assert_equal(self.angle.in_sexegesimal(), '-12 0 0.0')
+        assert_equal(self.angle.in_sexegesimal(), '-12 0 0')
 
     def test_in_sexegesimal_degrees_str_time(self):
         self.angle = Angle(degrees = '12 30 30', units = 'time')
-        assert_equal(self.angle.in_sexegesimal(), '12 30 30.0')
+        assert_equal(self.angle.in_sexegesimal(), '12 30 30')
 
     def test_in_sexegesimal_degrees_num_time(self):
         self.angle = Angle(degrees = 12.5, units = 'time')
-        assert_equal(self.angle.in_sexegesimal(), '12 30 0.0')
+        assert_equal(self.angle.in_sexegesimal(), '12 30 0')
 
     def test_in_sexegesimal_degrees_negative_num_time(self):
         self.angle = Angle(degrees = -12.5, units = 'time')
-        assert_equal(self.angle.in_sexegesimal(), '-12 30 0.0')
+        assert_equal(self.angle.in_sexegesimal(), '-12 30 0')
 
     def test_in_sexegesimal_degrees_negative_str_time(self):
         self.angle = Angle(degrees = '-12 00 00', units = 'time')
-        assert_equal(self.angle.in_sexegesimal(), '-12 0 0.0')
-
-
+        assert_equal(self.angle.in_sexegesimal(), '-12 0 0')
 
     # Test returning radians in sexegesimal
     def test_in_sexegesimal_radians_str_arc(self):
         self.angle = Angle(radians = '12 30 30')
-        assert_equal(self.angle.in_sexegesimal(radians = True), '12 30 30.0')
+        assert_equal(self.angle.in_sexegesimal(radians = True), '12 30 30')
 
     def test_in_sexegesimal_radians_negative_str_arc(self):
         self.angle = Angle(radians = '-2 00 00')
-        assert_equal(self.angle.in_sexegesimal(radians = True), '-2 0 0.0')
+        assert_equal(self.angle.in_sexegesimal(radians = True), '-2 0 0')
 
     def test_in_sexegesimal_radians_str_time(self):
         self.angle = Angle(radians = '12 30 30', units = 'time')
-        assert_equal(self.angle.in_sexegesimal(radians = True), '12 30 30.0')
+        assert_equal(self.angle.in_sexegesimal(radians = True), '12 30 30')
 
     def test_in_sexegesimal_radians_negative_str_time(self):
         self.angle = Angle(radians = '-3 00 00', units = 'time')
-        assert_equal(self.angle.in_sexegesimal(radians = True), '-3 0 0.0')
-
+        assert_equal(self.angle.in_sexegesimal(radians = True), '-3 0 0')
 
 
     # Test converting degrees to radians sexegesimal
@@ -255,17 +252,17 @@ class TestAngle(object):
 
     def test_in_sexegesimal_radians_to_degrees_arc(self):
         self.angle = Angle(radians = pi)
-        assert_equal(self.angle.in_sexegesimal(), '180 0 0.0')
+        assert_equal(self.angle.in_sexegesimal(), '180 0 0')
 
     def test_in_sexegesimal_negative_radians_to_degrees_arc(self):
         self.angle = Angle(radians = -2*pi)
-        assert_equal(self.angle.in_sexegesimal(), '-360 0 0.0')
+        assert_equal(self.angle.in_sexegesimal(), '-360 0 0')
 
     def test_in_sexegesimal_radians_to_degrees_time(self):
         self.angle = Angle(radians = pi, units = 'time')
-        assert_equal(self.angle.in_sexegesimal(), '180 0 0.0')
+        assert_equal(self.angle.in_sexegesimal(), '180 0 0')
 
     def test_in_sexegesimal_negative_radians_to_degrees_time(self):
         self.angle = Angle(radians = -2*pi, units = 'time')
-        assert_equal(self.angle.in_sexegesimal(), '-360 0 0.0')
+        assert_equal(self.angle.in_sexegesimal(), '-360 0 0')
 

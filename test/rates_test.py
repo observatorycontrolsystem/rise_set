@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from __future__ import division
+from builtins import object
 
 from nose.tools import assert_equal, assert_almost_equal, raises
 from math import pi

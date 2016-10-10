@@ -16,6 +16,8 @@ May 2010
 
 # Required for true (non-integer) division
 from __future__ import division
+from builtins import str
+from builtins import object
 
 # Standard library imports
 # Trigonometry functions
@@ -23,7 +25,7 @@ from math import sin, cos, asin, acos, radians, modf
 from datetime import timedelta
 
 # Third party imports
-import slalib as sla
+from pyslalib import slalib as sla
 
 # Internal imports
 from rise_set.angle import Angle
@@ -121,7 +123,6 @@ class Star(object):
 
 def gregorian_to_ut_mjd(date):
     '''Convert Gregorian calendar date to UTC MJD.'''
-
     # Do the date part
     caldj_error = {
                      0 : 'OK',
@@ -150,7 +151,6 @@ def gregorian_to_ut_mjd(date):
 
     if dtf2d_status != 0:
         raise InvalidDateTimeError('Error:' + dtf2d_error[dtf2d_status])
-
 
     mjd += days
 
@@ -303,8 +303,6 @@ def mean_to_apparent(target, tdb):
                                 rad_vel=target.get('rad_vel'),
                                 epoch=target.get('epoch'))
 
-
-
     (ra_app_rads, dec_app_rads) = sla.sla_map(
                                   target['ra'].in_radians(),
                                   target['dec'].in_radians(),
@@ -383,7 +381,7 @@ def elem_to_topocentric_apparent(dt, elements, site, JFORM=2):
         elem_string = 'Bad Elements:\n'
         for key in elements.keys():
             elem_string += key + ' = ' + str(elements[key]) + '\n'
-        print elem_string
+        print(elem_string)
         raise MovingViolation('Error: ' + str(status) + ' (' + error[status] + ')')
 
     return Angle(radians=ra_app_rads), Angle(radians=dec_app_rads)
@@ -598,7 +596,6 @@ def calc_rise_set(target, site, date, horizon=None):
     return (transits, rises, sets)
 
 
-
 def calc_planet_rise_set(site, date, twilight_altitude, planet):
     '''Return a tuple (transit, rise, set) of timedelta objects, describing the
        time offset for each event from the start of the provided date.
@@ -656,7 +653,6 @@ def calc_planet_rise_set(site, date, twilight_altitude, planet):
         (m_0, m_1, m_2) = refine_day_fraction(app_sidereal_time, m_0, m_1, m_2, tdb,
                                           {'planet': planet}, site, h_0)
 
-
     transits = timedelta(days=m_0)
     rises    = timedelta(days=m_1)
     sets     = timedelta(days=m_2)
@@ -701,6 +697,7 @@ def apparent_planet_pos(planet_name, tdb, site):
                    pluto   = 9,
                    sun     = 0
                   )
+
 
 
     (app_ra_rads, app_dec_rads, diameter_rads) = sla.sla_rdplan(tdb,

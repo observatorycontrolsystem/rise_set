@@ -8,6 +8,7 @@ description
 Author: Eric Saunders
 December 2013
 '''
+from builtins import object
 
 from rise_set.utils import (coalesce_adjacent_intervals, intersect_intervals,
                             intersect_many_intervals)

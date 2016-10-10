@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
 from __future__ import division
+from builtins import range
+from builtins import object
 
 from nose.tools import assert_equal, assert_almost_equals, assert_less, raises
 from nose import SkipTest
@@ -17,7 +19,6 @@ from rise_set.rates import ProperMotion
 from rise_set.moving_objects import initialise_sites
 from rise_set.utils          import intersect_many_intervals
 from mock import patch
-
 
 def intervals_almost_equal(received, expected, tolerance=1e-5):
     """
@@ -396,8 +397,9 @@ class TestIntervals(object):
     def test_ha_wrong_day(self):
         # for some windows/limits, the HA block did not start at the beginning of the window.
         # This test fails prior to 2013-02-20
-        expected = [(datetime(2011, 11, 01, 06, 00, 00, 000000),datetime(2011, 11, 01, 07, 52, 00, 564199)),
-                    (datetime(2011, 11, 02, 02, 01, 50, 423880),datetime(2011, 11, 02, 06, 00, 00, 000000))]
+
+        expected = [(datetime(2011, 11, 1, 6, 0, 0, 0),datetime(2011, 11, 1, 7, 52, 0, 564199)),
+                    (datetime(2011, 11, 2, 2, 1, 50, 423880),datetime(2011, 11, 2, 6, 0, 0, 0))]
 
         target = {
             'ra' : RightAscension(degrees=310.35795833333333),
@@ -457,6 +459,7 @@ class TestIntervals(object):
                        ha_limit_neg=-4.6, ha_limit_pos=4.6)
 
         received = v.get_ha_intervals(target)
+
         intervals_almost_equal(received, expected, tolerance=1e-5)
 
 
@@ -624,10 +627,10 @@ class TestIntervals(object):
 
         for site in sites:
             v = Visibility(site, start_date, end_date, ha_limit_neg=-4.9, ha_limit_pos=4.9)
+
             intervals = v.get_observable_intervals(target, moon_distance=Angle(degrees=0))
 
             intervals_almost_equal(intervals, expected[site['name']], tolerance=1e-5)
-
 
 
 class TestAirmassCalculation(object):
@@ -766,5 +769,4 @@ class TestMoonDistanceCalculation(object):
         # check that this doesn't crash, and that intervals match night intervals
         night_intervals = v.get_dark_intervals()
         assert_equal(night_intervals, observable_intervals)
-
 

@@ -11,6 +11,8 @@ February 2011
 
 # Required for true (non-integer) division
 from __future__ import division
+from builtins import range
+from builtins import object
 
 # Standard libary imports
 import datetime
@@ -61,7 +63,6 @@ def set_airmass_limit(airmass, horizon):
         effective_horizon = 90 - math.degrees(math.acos(1 / airmass))
 
     return effective_horizon
-
 
 
 class Visibility(object):

@@ -1,5 +1,13 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import division
+from builtins import next
+from builtins import zip
+from builtins import str
+from builtins import range
+from past.utils import old_div
 import ast
 from datetime import datetime,timedelta
 from visibility import Visibility
@@ -35,7 +43,7 @@ def distribute(interval, target, minoverlap=-1440, maxoverlap=1440, onepersite=T
 
             if not site['name'] in sitenames or not onepersite:
                 sitenames.append(site['name'])
-                print site['name']
+                print(site['name'])
                 for obs_start,obs_end in interval:
                     observability = Visibility(
                         site=site,
@@ -51,8 +59,6 @@ def distribute(interval, target, minoverlap=-1440, maxoverlap=1440, onepersite=T
                         intervals.append((start,stop))
                         titles.append(target['name'] + ' (' + site['name'] + ')')
 
-#                print site_intervals
-#    print intervals
     return intervals, titles
 
 # Read a file of code into a list (for telescopes.dat)
@@ -66,7 +72,7 @@ def readexo():
     import csv
     f = open('exoplanets.csv','rb')
     reader = csv.reader(f)
-    headers = reader.next()
+    headers = next(reader)
     planets = {}
     for h in headers:
         planets[h] = []
@@ -80,9 +86,9 @@ def readexo():
 def get_nexp(window, molecule):
 
     diff = window['end'] - window['start']
-    window_duration = diff.microseconds/1e6 + diff.seconds + diff.days*86400.0
-    molecule['exposure_count'] = int(window_duration/molecule['exposure_time'])
-    
+    window_duration = old_div(diff.microseconds,1e6) + diff.seconds + diff.days*86400.0
+    molecule['exposure_count'] = int(old_div(window_duration,molecule['exposure_time']))
+
     while True:
         molecule_duration = calculate_duration([molecule])
         if molecule_duration.seconds <= window_duration:
@@ -163,9 +169,9 @@ def get_transit_intervals(target, ephemeris, site, start_date, end_date, verbose
     
     # calculate the epoch numbers that correspond to the observing window    
     startdiff = start_date-ephemeris['tt']
-    startepoch = int((startdiff.microseconds/864e10 + startdiff.seconds/86400 + startdiff.days)/ephemeris['period'])
+    startepoch = int(old_div((old_div(startdiff.microseconds,864e10) + old_div(startdiff.seconds,86400) + startdiff.days),ephemeris['period']))
     enddiff = end_date-ephemeris['tt']
-    stopepoch = int((enddiff.microseconds/864e10 + enddiff.seconds/86400 + enddiff.days)/ephemeris['period'])+1
+    stopepoch = int(old_div((old_div(enddiff.microseconds,864e10) + old_div(enddiff.seconds,86400) + enddiff.days),ephemeris['period']))+1
 
     sitestr = site['name']
     visible_transits = []
@@ -196,7 +202,6 @@ def get_transit_intervals(target, ephemeris, site, start_date, end_date, verbose
             ha_limit_pos=site['ha_limit_pos'],
             )
         observable_intervals = observability.get_observable_intervals(target, moon_distance=Angle(degrees=0))
-#        print observable_intervals
 
         for visible in observable_intervals:
     
@@ -206,15 +211,15 @@ def get_transit_intervals(target, ephemeris, site, start_date, end_date, verbose
             
             # how much of the transit is visible?
             transitvis = min(contact4,visible[1])-max(contact1,visible[0])
-            transitfrac = max(round((transitvis.microseconds/864e10 + transitvis.seconds/86400.0 + transitvis.days)/ephemeris['t14'],3),0)
+            transitfrac = max(round(old_div((old_div(transitvis.microseconds,864e10) + old_div(transitvis.seconds,86400.0) + transitvis.days),ephemeris['t14']),3),0)
 
             # how much prior to ingress is visible?
             previs = min(contact1,visible[1]) - max(event_start,visible[0])
-            prefrac = round(max((previs.microseconds/864e10 + previs.seconds/86400.0 + previs.days)/ephemeris['t14'],0),3)
+            prefrac = round(max(old_div((old_div(previs.microseconds,864e10) + old_div(previs.seconds,86400.0) + previs.days),ephemeris['t14']),0),3)
 
             # how much after egress is visible?
             postvis = min(event_stop,visible[1])-max(contact4,visible[0])
-            postfrac = round(max((postvis.microseconds/864e10 + postvis.seconds/86400.0 + postvis.days)/ephemeris['t14'],0),3)
+            postfrac = round(max(old_div((old_div(postvis.microseconds,864e10) + old_div(postvis.seconds,86400.0) + postvis.days),ephemeris['t14']),0),3)
 
             # how much out of transit total is visible?
             ootfrac = prefrac + postfrac
@@ -245,11 +250,10 @@ def get_transit_intervals(target, ephemeris, site, start_date, end_date, verbose
                         'bin_y'           : 2,
                         }
 #                    get_nexp(window, molecule)
-#                    print site['name'], epoch, obs_start, obs_end, contact1, contact4, transitfrac, ootfrac, molecule['exposure_count'], uttn*1440.0
-                    print site['name'], epoch, obs_start, obs_end, contact1, contact4, transitfrac, ootfrac, uttn*1440.0
+                    print(site['name'], epoch, obs_start, obs_end, contact1, contact4, transitfrac, ootfrac, uttn*1440.0)
             else:
                 if vverbose:
-                    print site['name'], epoch, obs_start, obs_end, contact1, contact4, transitfrac, ootfrac, molecule['exposure_count'], uttn*1440.0, "*"
+                    print(site['name'], epoch, obs_start, obs_end, contact1, contact4, transitfrac, ootfrac, molecule['exposure_count'], uttn*1440.0, "*")
 
                 
     return visible_transits,titles
@@ -257,7 +261,7 @@ def get_transit_intervals(target, ephemeris, site, start_date, end_date, verbose
 def get_exptime(vmag):
     defocus = 0.0
     m0 = 12.0
-    exptime = 25*10.0**((vmag-m0)/2.5)
+    exptime = 25*10.0**(old_div((vmag-m0),2.5))
     exptime = min(round(exptime,0),300)
     while exptime < 30:
         exptime += 10.0
@@ -338,7 +342,8 @@ def schedule_intervals(intervals, target, band, vmag, propid, email, titles, ver
         ur.set_proposal(proposal)
 
         if verbose:
-            print molecule['exposure_time'], molecule['exposure_count'], molecule['defocus'], vmag, band, titles[i]
+            print(molecule['exposure_time'], molecule['exposure_count'], molecule['defocus'], vmag, band, titles[i])
+
 
         # You're done! Send the complete User Request to the DB for scheduling
         client        = SchedulerClient('http://scheduler-dev.lco.gtn/requestdb/')
@@ -416,7 +421,8 @@ if __name__ == '__main__':
     # we should check for that...
 
     # The name is specified, use values from exoplanets.org
-    if opt.name <> None:
+    if opt.name != None:
+
         planets = readexo()
                     
         found = False
@@ -454,42 +460,43 @@ if __name__ == '__main__':
                 ra = RightAscension(degrees=float(planets['RA'][i])*15.0)
                 dec = Declination(degrees=float(planets['DEC'][i]))
                 vmag = float(planets['V'][i])
-                print vmag
+                print(vmag)
                 found = True
                 break
         if not found:
-            print opt.name + ' not found in exoplanets.org; using command line arguments'
+            print(opt.name + ' not found in exoplanets.org; using command line arguments')
+
 
 
 
     # Override exoplanets.org values with input values, if specified
-    if opt.per <> None:
+    if opt.per != None:
         per = opt.per
-    if opt.uper <> None:
+    if opt.uper != None:
         uper = opt.uper
     elif uper == None:
         uper = 0.0
 
-    if opt.vmag <> None:
+    if opt.vmag != None:
         vmag = opt.vmag
         
-    if opt.tt <> None:
+    if opt.tt != None:
         tt = opt.tt    
-    if opt.utt <> None:
+    if opt.utt != None:
         utt = opt.utt
     elif utt == None:
         utt = 0.0
 
-    if opt.t14 <> None:
+    if opt.t14 != None:
         t14 = opt.t14
-    if opt.ut14 <> None:
+    if opt.ut14 != None:
         ut14 = opt.ut14
     else:
         ut14 = 0.0
 
-    if opt.ra <> None:
+    if opt.ra != None:
         ra = RightAscension(degrees=opt.ra)
-    if opt.dec <> None:
+    if opt.dec != None:
         dec = Declination(degrees=opt.dec)
 
 #    if per==None or tt==None or t14==None or not ra<>None or not dec<>None:
@@ -499,29 +506,29 @@ if __name__ == '__main__':
     # Error checking
     if opt.schedule:
         if opt.band == None:
-            print "Must specify --band if --schedule is set"
+            print("Must specify --band if --schedule is set")
             sys.exit(0)
         if vmag == None:
-            print "Must specify --vmag if --schedule is set"
+            print("Must specify --vmag if --schedule is set")
             sys.exit(0)    
         if opt.propid == None:
-            print "Must specify --propid if --schedule is set"
+            print("Must specify --propid if --schedule is set")
             sys.exit(0)
         if opt.email == None:
-            print "Must specify --email if --schedule is set"
+            print("Must specify --email if --schedule is set")
             sys.exit(0)
 
-    print vmag - 3
+    print(vmag - 3)
             
 
     if per == None:
-        print "Period not found; must specify --period"
+        print("Period not found; must specify --period")
         sys.exit(0)
     if tt == None:
-        print "Transit time not found; must specify --tt"
+        print("Transit time not found; must specify --tt")
         sys.exit(0)
     if t14 == None:
-        print "Duration not found, must specify --t14"
+        print("Duration not found, must specify --t14")
         sys.exit(0)
 
 #    if ra == None:
@@ -532,7 +539,8 @@ if __name__ == '__main__':
 #        sys.exit(0)
 
     if opt.vverbose:
-        print per, uper, tt, utt, t14, ut14, ra.degrees, dec.degrees
+        print(per, uper, tt, utt, t14, ut14, ra.degrees, dec.degrees)
+
     
     # define the target
     target = {
@@ -562,7 +570,7 @@ if __name__ == '__main__':
         'maxpost'           : opt.maxpost,
         }
 
-    print ephemeris, target, ra.degrees
+    print(ephemeris, target, ra.degrees)
 
     # get the transit intervals for each site
     intervals,titles = get_all_transit_intervals(target, ephemeris, start_date, end_date, onepersite=opt.onepersite, verbose=opt.verbose or not opt.schedule, vverbose=opt.vverbose, exptime=opt.exptime)

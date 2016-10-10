@@ -12,16 +12,18 @@ from setuptools import setup, find_packages
 
 setup(
     name = 'rise_set',
-    version = '0.3.16',
+    version = '0.4.0',
     description = 'Routines for accurate rise/set/transit calculations',
     author = 'Eric Saunders',
     author_email = 'esaunders@lcogt.net',
     packages = ['rise_set'],
-#    dependency_links = [
-#	"http://buildsba/python/pyslalib"
- #   ],
+    dependency_links = [
+        "http://github.com/LCOGT/pyslalib/tarball/master#egg=pyslalib",
+    ],
     install_requires = [
-        "pyslalib"
+        "pySLALIB",
+        "numpy",
+        "future",
     ],
     package_data = {
         '': ['*.conf'],
@@ -31,7 +33,12 @@ setup(
         "mock",
         "pylint",
         "nose",
-	"nosexcover"
+        "nosexcover"
     ],
     test_suite = 'nose.collector',
+    classifiers=[
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3.3',
+    ]
+
 )
