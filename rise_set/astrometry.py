@@ -525,13 +525,13 @@ def apply_refraction_to_horizon(horizon):
 def date_to_tdb(date):
     '''Converts a given UTC datetime (<date>; e.g. datetime(2015, 4, 8, 0, 0))
     to a *TT* Modified Julian Date (MJD; e.g. 57120.000777592591).
-    TT is ahead of UTC by a fixed +32.184 seconds from TAI and a 
-    variable (currently (2015-04-14) 35 seconds) offset, which includes 
+    TT is ahead of UTC by a fixed +32.184 seconds from TAI and a
+    variable (currently (2015-04-14) 35 seconds) offset, which includes
     leapseconds, from UTC to TAI.
-    Notes: 
+    Notes:
     1) This code relies on SLALIB's sla_dat routine to be updated and recompiled
     when new leapseconds are announced,
-    2) Despite the (terrible) name, this routine *does not* perform the 
+    2) Despite the (terrible) name, this routine *does not* perform the
     relativstic clock corrections (e.g. sla_rcc) to produce TDB - max error
     is ~2ms'''
     ut_mjd = gregorian_to_ut_mjd(date)
@@ -1050,7 +1050,7 @@ def calculate_airmass_at_times(times, target, obs_latitude, obs_longitude, obs_h
     for time in times:
         mjd_utc = gregorian_to_ut_mjd(time)
 
-        if aop_params == None:
+        if aop_params is None:
             aop_params = sla.sla_aoppa(mjd_utc, dut, obs_longitude.in_radians(), obs_latitude.in_radians(), obs_height, xp, yp,
                                        temp_k, pres_mb, rel_humid, wavelen, tlr)
         else:
