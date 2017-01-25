@@ -35,7 +35,7 @@ v.0.3.2  - Bug fix for large hour angles, added hour angle validation
 v.0.3.3  - Added hour angle limit support to moving objects
 v.0.3.4  - Added calc_local_sidereal_time
 v.0.3.5  - Bug fix for hour angles when user window has a time component (thanks Jason Eastman)
-v.0.3.6  - Fix for incorrect exception handler in elem_to_topocentric_apparent. 
+v.0.3.6  - Fix for incorrect exception handler in elem_to_topocentric_apparent.
          - Fix incorrect case in initial element dictionary which resulted in 'Name' and 'name' being created
          - Fix handling of multi-opposition/year orbits in read_neocp_orbit.
          - Dump the elements out if we raise a MovingViolation exception (all above by Tim Lister)
@@ -53,6 +53,7 @@ v.0.3.14 - Adds a satellite target type and modifies Visibility to check for tha
            dark intervals for it (do no rise_set calculations).
 v.0.3.16 - Added moon rise/set functionality and a moon_distance constraint for target visibility intervals.
 v.0.4.0  - Made python 3 compatible
+v.0.4.4  - Fixed warnings about elementwise comparison with None
 
 Eric Saunders
 October 2012
