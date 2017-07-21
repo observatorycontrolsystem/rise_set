@@ -1050,7 +1050,7 @@ def calculate_airmass_at_times(times, target, obs_latitude, obs_longitude, obs_h
     for time in times:
         mjd_utc = gregorian_to_ut_mjd(time)
 
-        if not aop_params:
+        if aop_params is None:
             aop_params = sla.sla_aoppa(mjd_utc, dut, obs_longitude.in_radians(), obs_latitude.in_radians(), obs_height, xp, yp,
                                        temp_k, pres_mb, rel_humid, wavelen, tlr)
         else:
