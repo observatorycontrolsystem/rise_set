@@ -55,6 +55,7 @@ v.0.3.16 - Added moon rise/set functionality and a moon_distance constraint for 
 v.0.4.0  - Made python 3 compatible
 v.0.4.4  - Fixed warnings about elementwise comparison with None
 v.0.4.5  - Fix bug in None comparison
+v.0.4.6  - Added moon_distance calculation for non-sidereal objects
 
 Eric Saunders
 October 2012
