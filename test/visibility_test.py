@@ -722,6 +722,16 @@ class TestMoonDistanceCalculation(object):
                                                             eccentricity=0.07610292126891821,
                                                             mean_anomaly=340.389084821267)
 
+        # Details from JPL Horizons for Comet 27P
+        self.comet_target = make_comet_target('MPC_COMET',
+                                              epoch=56364,
+                                              epochofperih=55776.8910902,
+                                              inclination=28.96687278723059,
+                                              long_node=250.6264098390235,
+                                              arg_perihelion=196.0253968913816,
+                                              perihdist=0.748287467144728,
+                                              eccentricity=0.9189810923126022)
+
     def test_moon_distance_no_angle(self):
         start = datetime(2012, 1, 2)
         end = datetime(2012, 1, 3)
@@ -858,22 +868,40 @@ class TestMoonDistanceCalculation(object):
         # Verify that moon distance intervals only appear from 6:00 to 6:45 and from 23:30 to 24:00
         assert_equal(len(moon_distance_intervals), 0)
 
-    def test_moon_distance_minor_planet_year_boundary(self):
-        start = datetime(2011, 12, 31)
-        end = datetime(2012, 1, 1)
+    def test_moon_distance_comet_non_removed(self):
+        start = datetime(2012, 7, 22)
+        end = datetime(2012, 7, 23)
         v = Visibility(self.site, start, end, self.horizon)
 
-        target = self.minor_planet_target.copy()
-        # According to JPL horizons, this target has a moon distance >10 all the time
-        moon_distance_constraint = Angle(degrees=10)
+        target = self.comet_target.copy()
+        # According to JPL horizons, this target has a moon distance >45 all the time
+        moon_distance_constraint = Angle(degrees=45)
 
-        # The target intervals start at 00:00 and go until 6:45 and then start again at 23:45 until 24:00
+        # The target intervals start at 00:15 to 07:15
         target_intervals = v.get_target_intervals(target=target)
         moon_distance_intervals = v.get_moon_distance_intervals(target, target_intervals, moon_distance_constraint)
 
-        # Verify that moon distance intervals only appear from 0:00 to 6:45 and from 23:45 to 24:00
-        assert_equal(len(moon_distance_intervals), 2)
-        assert_equal(moon_distance_intervals[0][0], datetime(2011, 12, 31, 0, 0))
-        assert_equal(moon_distance_intervals[0][1], datetime(2011, 12, 31, 6, 45))
-        assert_equal(moon_distance_intervals[1][0], datetime(2011, 12, 31, 23, 45))
-        assert_equal(moon_distance_intervals[1][1], datetime(2012, 1, 1, 0, 0))
+        print(target_intervals)
+        print(moon_distance_intervals)
+
+        # Verify that moon distance intervals is the entire target interval
+        assert_equal(len(moon_distance_intervals), 1)
+        assert_equal(moon_distance_intervals[0][0], target_intervals[0][0])
+        assert_equal(moon_distance_intervals[0][1], target_intervals[-1][1])
+
+    def test_moon_distance_comet_all_removed(self):
+        start = datetime(2012, 7, 22)
+        end = datetime(2012, 7, 23)
+        v = Visibility(self.site, start, end, self.horizon)
+
+        target = self.comet_target.copy()
+        # According to JPL horizons, this target has a moon distance <65 all the time
+        moon_distance_constraint = Angle(degrees=65)
+
+        # The target intervals start at 00:15 to 07:15
+        target_intervals = v.get_target_intervals(target=target)
+        moon_distance_intervals = v.get_moon_distance_intervals(target, target_intervals, moon_distance_constraint)
+
+        # Verify that there are no moon distance intervals
+        assert_equal(len(moon_distance_intervals), 0)
+
