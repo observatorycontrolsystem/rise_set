@@ -27,6 +27,18 @@ import ast
 from datetime import datetime,timedelta
 
 
+def target_to_jform(target):
+    target_type = target['type'].lower()
+    if target_type == 'mpc_minor_planet':
+        jform = 2
+    elif target_type == 'mpc_comet':
+        jform = 3
+    else:
+        raise MovingViolation("Unsupported target type: '{}'".format(target_type))
+
+    return jform
+
+
 def initialelemdict():
     '''Create an inital empty orbital elements dictionary for use by read_neocp_orbit.'''
     keys  = "name H G epoch mean_anomaly long_node arg_perihelion inclination "
@@ -312,13 +324,7 @@ def find_moving_object_up_intervals(window, elements, site, chunksize=timedelta(
     '''
 
     # Map the type of moving object to SLALIB numeric convention
-    target_type = elements['type'].lower()
-    if target_type == 'mpc_minor_planet':
-        jform = 2
-    elif target_type == 'mpc_comet':
-        jform = 3
-    else:
-        raise MovingViolation("Unsupported target type: '%s'" % str(target_type))
+    jform = target_to_jform(elements)
 
     coords = calc_ephemerides(window, elements, site, chunksize, jform)
 

@@ -22,11 +22,11 @@ import copy
 # Internal imports
 from rise_set.astrometry     import (calc_sunrise_set, calc_planet_rise_set, calc_rise_set, RiseSetError,
                                      Star, gregorian_to_ut_mjd, ut_mjd_to_gmst, date_to_tdb, apparent_planet_pos,
-                                     mean_to_apparent, angular_distance_between)
+                                     mean_to_apparent, angular_distance_between, elem_to_topocentric_apparent)
 from rise_set.angle          import Angle
-from rise_set.moving_objects import find_moving_object_up_intervals
-from rise_set.utils          import (coalesce_adjacent_intervals, intersect_intervals,
-                                     intersect_many_intervals, is_moving_object)
+from rise_set.moving_objects import find_moving_object_up_intervals, target_to_jform
+from rise_set.utils          import (coalesce_adjacent_intervals, intersect_intervals, is_sidereal_target,
+                                     intersect_many_intervals, is_moving_object, is_satellite_target)
 
 # Import logging modules
 import logging
@@ -137,7 +137,12 @@ class Visibility(object):
                 # get the tdb date of the start time of the interval
                 tdb = date_to_tdb(chunkstart)
                 # get the apparent ra/dec for the target, and for the moon at this timestamp
-                target_app_ra, target_app_dec = mean_to_apparent(target, tdb)
+                if is_sidereal_target(target):
+                    target_app_ra, target_app_dec = mean_to_apparent(target, tdb)
+                else:
+                    target_app_ra, target_app_dec = elem_to_topocentric_apparent(chunkstart, target, self.site,
+                                                                                 target_to_jform(target))
+
                 moon_app_ra, moon_app_dec, diameter = apparent_planet_pos('moon', tdb, self.site)
 
                 # call slalib to get the angular moon distance
@@ -163,7 +168,7 @@ class Visibility(object):
 
         # Handle Satellite objects by just returning the dark intervals because we don't support explicit ephemeris
         # calculations for these objects
-        if 'type' in target and target['type'] == 'Satellite':
+        if is_satellite_target(target):
             intervals = self.get_dark_intervals()
         # Handle moving objects differently from stars
         elif is_moving_object(target):
@@ -265,11 +270,11 @@ class Visibility(object):
         # get the intervals of each separately
         dark               = self.get_dark_intervals()
         above_horizon      = self.get_target_intervals(target, airmass=airmass)
-        if moon_distance.in_degrees() <= 0.5 or 'ra' not in target:
+        if moon_distance.in_degrees() <= 0.5 or is_satellite_target(target):
             moon_avoidance = above_horizon
         else:
             moon_avoidance = self.get_moon_distance_intervals(target, above_horizon, moon_distance)
-        if 'ra' in target:
+        if is_sidereal_target(target):
             within_hour_angle = self.get_ha_intervals(target)
         else:
             # if the target type is such that there is no 'ra'/'dec' values, then we cannot calculate the ha intervals,

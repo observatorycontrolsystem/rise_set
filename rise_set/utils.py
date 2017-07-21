@@ -65,10 +65,19 @@ def intersect_many_intervals(*args):
 
 def is_moving_object(target):
     # If a type is not specified, default to sidereal objects
-    if 'type' not in target:
-        return False
+    if 'type' in target and target['type'].lower() in ('mpc_minor_planet', 'mpc_comet'):
+        return True
 
-    if target['type'].lower() in ('mpc_minor_planet', 'mpc_comet'):
+    return False
+
+def is_satellite_target(target):
+    if 'type' in target and target['type'].lower() == 'satellite':
+        return True
+
+    return False
+
+def is_sidereal_target(target):
+    if 'type' not in target and 'ra' in target:
         return True
 
     return False

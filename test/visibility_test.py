@@ -14,7 +14,7 @@ from rise_set.visibility import Visibility, set_airmass_limit, InvalidHourAngleL
 # Additional support modules
 from rise_set.angle import Angle
 from rise_set.sky_coordinates import RightAscension, Declination
-from rise_set.astrometry import make_satellite_target
+from rise_set.astrometry import make_satellite_target, make_minor_planet_target, make_comet_target
 from rise_set.rates import ProperMotion
 from rise_set.moving_objects import initialise_sites
 from rise_set.utils          import intersect_many_intervals
@@ -694,19 +694,33 @@ class TestAirmassCalculation(object):
 
 
 class TestMoonDistanceCalculation(object):
-
+    ''' All time intervals to test against are obtained from JPL Horizons
+    '''
     def setup(self):
         self.site = {
-           'latitude'  : Angle(degrees = 20.0),
-           'longitude' : Angle(degrees = -150.0)
+            'latitude'  : Angle(degrees = 20.0),
+            'longitude' : Angle(degrees = -150.0),
+            'ha_limit_neg': Angle(degrees=-4.6*12.0),
+            'ha_limit_pos': Angle(degrees=4.6*12.0),
+            'horizon': Angle(degrees=15.0)
         }
 
         self.horizon = 15.0
-        self.target = {
-           'ra'                : RightAscension('20 41 25.91'),
-           'dec'               : Declination('+20 00 00.00'),
-           'epoch'             : 2000,
+        self.sidereal_target = {
+            'ra'                : RightAscension('20 41 25.91'),
+            'dec'               : Declination('+20 00 00.00'),
+            'epoch'             : 2000,
         }
+
+        # Details from JPL Horizons for Ceres
+        self.minor_planet_target = make_minor_planet_target('MPC_MINOR_PLANET',
+                                                            epoch=49731,
+                                                            inclination=10.60069567603618,
+                                                            long_node=80.65851514365535,
+                                                            arg_perihelion=71.44921526124109,
+                                                            semi_axis=2.767218108003098,
+                                                            eccentricity=0.07610292126891821,
+                                                            mean_anomaly=340.389084821267)
 
     def test_moon_distance_no_angle(self):
         start = datetime(2012, 1, 2)
@@ -714,8 +728,8 @@ class TestMoonDistanceCalculation(object):
         moon_distance_constraint = Angle(degrees=0)
 
         v = Visibility(self.site, start, end, self.horizon)
-        target_intervals   = v.get_target_intervals(target=self.target)
-        moon_distance_intervals = v.get_moon_distance_intervals(self.target, target_intervals, moon_distance_constraint)
+        target_intervals   = v.get_target_intervals(target=self.sidereal_target)
+        moon_distance_intervals = v.get_moon_distance_intervals(self.sidereal_target, target_intervals, moon_distance_constraint)
 
         assert_equal(moon_distance_intervals, target_intervals)
 
@@ -726,8 +740,8 @@ class TestMoonDistanceCalculation(object):
         moon_distance_constraint = Angle(degrees=30)
 
         v = Visibility(self.site, start, end, self.horizon)
-        target_intervals   = v.get_target_intervals(target=self.target)
-        moon_distance_intervals = v.get_moon_distance_intervals(self.target, target_intervals, moon_distance_constraint)
+        target_intervals   = v.get_target_intervals(target=self.sidereal_target)
+        moon_distance_intervals = v.get_moon_distance_intervals(self.sidereal_target, target_intervals, moon_distance_constraint)
 
         assert_equal(moon_distance_intervals, target_intervals)
 
@@ -739,8 +753,8 @@ class TestMoonDistanceCalculation(object):
         moon_distance_constraint = Angle(degrees=70)
 
         v = Visibility(self.site, start, end, self.horizon)
-        target_intervals   = v.get_target_intervals(target=self.target)
-        moon_distance_intervals = v.get_moon_distance_intervals(self.target, target_intervals, moon_distance_constraint)
+        target_intervals   = v.get_target_intervals(target=self.sidereal_target)
+        moon_distance_intervals = v.get_moon_distance_intervals(self.sidereal_target, target_intervals, moon_distance_constraint)
 
         # test that just the evening interval is returned by the moon_distance_intervals
         assert_equal(moon_distance_intervals, [target_intervals[1]])
@@ -752,8 +766,8 @@ class TestMoonDistanceCalculation(object):
         moon_distance_constraint = Angle(degrees=75)
 
         v = Visibility(self.site, start, end, self.horizon)
-        target_intervals   = v.get_target_intervals(target=self.target)
-        moon_distance_intervals = v.get_moon_distance_intervals(self.target, target_intervals, moon_distance_constraint)
+        target_intervals   = v.get_target_intervals(target=self.sidereal_target)
+        moon_distance_intervals = v.get_moon_distance_intervals(self.sidereal_target, target_intervals, moon_distance_constraint)
 
         # test that no moon distance intervals are returned due to the constraint of > 75 degrees distance
         assert_equal(moon_distance_intervals, [])
@@ -770,3 +784,96 @@ class TestMoonDistanceCalculation(object):
         night_intervals = v.get_dark_intervals()
         assert_equal(night_intervals, observable_intervals)
 
+    def test_moon_distance_minor_planet_half_removed(self):
+        start = datetime(2012, 8, 2)
+        end = datetime(2012, 8, 3)
+        v = Visibility(self.site, start, end, self.horizon)
+
+        target = self.minor_planet_target.copy()
+        # According to JPL horizons, this target has a moon distance > 115 only until 21:00
+        moon_distance_constraint = Angle(degrees=115)
+
+        # The target intervals start at 14:30 and go until 21:45
+        target_intervals = v.get_target_intervals(target=target)
+        moon_distance_intervals = v.get_moon_distance_intervals(target, target_intervals, moon_distance_constraint)
+
+        # Verify that moon distance intervals only goes until 21:00
+        assert_equal(moon_distance_intervals[0][0], target_intervals[0][0])
+        assert_equal(moon_distance_intervals[0][1], datetime(2012, 8, 2, 21, 0))
+        assert_equal(len(moon_distance_intervals), 1)
+
+    def test_moon_distance_minor_planet_half_removed_2(self):
+        start = datetime(2012, 1, 2)
+        end = datetime(2012, 1, 3)
+        v = Visibility(self.site, start, end, self.horizon)
+
+        target = self.minor_planet_target.copy()
+        # According to JPL horizons, this target has a moon distance > 30 after ~6:15
+        moon_distance_constraint = Angle(degrees=30)
+
+        # The target intervals start at 00:00 and go until 6:45 and then start again at 23:30 until 24:00
+        target_intervals = v.get_target_intervals(target=target)
+        moon_distance_intervals = v.get_moon_distance_intervals(target, target_intervals, moon_distance_constraint)
+
+        # Verify that moon distance intervals only appear from 6:00 to 6:45 and from 23:30 to 24:00
+        assert_equal(len(moon_distance_intervals), 2)
+        assert_equal(moon_distance_intervals[0][0], datetime(2012, 1, 2, 6, 15))
+        assert_equal(moon_distance_intervals[0][1], datetime(2012, 1, 2, 6, 45))
+        assert_equal(moon_distance_intervals[1][0], datetime(2012, 1, 2, 23, 30))
+        assert_equal(moon_distance_intervals[1][1], datetime(2012, 1, 3, 0, 0))
+
+    def test_moon_distance_minor_planet_none_removed(self):
+        start = datetime(2012, 2, 2)
+        end = datetime(2012, 2, 3)
+        v = Visibility(self.site, start, end, self.horizon)
+
+        target = self.minor_planet_target.copy()
+        # According to JPL horizons, this target has a moon distance > 50 during the whole day
+        moon_distance_constraint = Angle(degrees=50)
+
+        # The target intervals start at 00:00 and go until 5:15 and then start again at 22:00 until 24:00
+        target_intervals = v.get_target_intervals(target=target)
+        moon_distance_intervals = v.get_moon_distance_intervals(target, target_intervals, moon_distance_constraint)
+
+        # Verify that moon distance intervals only appear during the full target interval
+        assert_equal(len(moon_distance_intervals), 2)
+        assert_equal(moon_distance_intervals[0][0], datetime(2012, 2, 2, 0, 0))
+        assert_equal(moon_distance_intervals[0][1], datetime(2012, 2, 2, 5, 15))
+        assert_equal(moon_distance_intervals[1][0], datetime(2012, 2, 2, 22, 00))
+        assert_equal(moon_distance_intervals[1][1], datetime(2012, 2, 3, 0, 0))
+
+    def test_moon_distance_minor_planet_all_removed(self):
+        start = datetime(2012, 1, 2)
+        end = datetime(2012, 1, 3)
+        v = Visibility(self.site, start, end, self.horizon)
+
+        target = self.minor_planet_target.copy()
+        # According to JPL horizons, this target has a moon distance <40 all the time
+        moon_distance_constraint = Angle(degrees=40)
+
+        # The target intervals start at 00:00 and go until 6:45 and then start again at 23:30 until 24:00
+        target_intervals = v.get_target_intervals(target=target)
+        moon_distance_intervals = v.get_moon_distance_intervals(target, target_intervals, moon_distance_constraint)
+
+        # Verify that moon distance intervals only appear from 6:00 to 6:45 and from 23:30 to 24:00
+        assert_equal(len(moon_distance_intervals), 0)
+
+    def test_moon_distance_minor_planet_year_boundary(self):
+        start = datetime(2011, 12, 31)
+        end = datetime(2012, 1, 1)
+        v = Visibility(self.site, start, end, self.horizon)
+
+        target = self.minor_planet_target.copy()
+        # According to JPL horizons, this target has a moon distance >10 all the time
+        moon_distance_constraint = Angle(degrees=10)
+
+        # The target intervals start at 00:00 and go until 6:45 and then start again at 23:45 until 24:00
+        target_intervals = v.get_target_intervals(target=target)
+        moon_distance_intervals = v.get_moon_distance_intervals(target, target_intervals, moon_distance_constraint)
+
+        # Verify that moon distance intervals only appear from 0:00 to 6:45 and from 23:45 to 24:00
+        assert_equal(len(moon_distance_intervals), 2)
+        assert_equal(moon_distance_intervals[0][0], datetime(2011, 12, 31, 0, 0))
+        assert_equal(moon_distance_intervals[0][1], datetime(2011, 12, 31, 6, 45))
+        assert_equal(moon_distance_intervals[1][0], datetime(2011, 12, 31, 23, 45))
+        assert_equal(moon_distance_intervals[1][1], datetime(2012, 1, 1, 0, 0))
