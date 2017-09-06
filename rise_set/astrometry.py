@@ -220,7 +220,7 @@ def calc_local_hour_angle(ra_app, longitude, date):
 
 def make_ra_dec_target(ra, dec, ra_proper_motion=None, dec_proper_motion=None, parallax=None,
                        rad_vel=None, epoch=None):
-
+    ''' This is for simple ra/dec targets with optional proper motion'''
     target = {
                 'ra'                : ra,
                 'dec'               : dec,
@@ -234,9 +234,27 @@ def make_ra_dec_target(ra, dec, ra_proper_motion=None, dec_proper_motion=None, p
     return target
 
 
+def make_major_planet_target(target_type, epochofel, orbinc, longascnode, longofperih,
+                             meandist, eccentricity, meanlong, dailymot):
+    ''' This is for JPL_MAJOR_PLANET type targets'''
+    target = {
+               'type'           : target_type,
+               'epochofel'      : epochofel,
+               'orbinc'         : Angle(degrees=orbinc),
+               'longascnode'    : Angle(degrees=longascnode),
+               'longofperih'    : Angle(degrees=longofperih),
+               'meandist'       : meandist,
+               'eccentricity'   : eccentricity,
+               'meanlong'       : Angle(degrees=meanlong),
+               'dailymot'       : dailymot
+             }
+
+    return target
+
+
 def make_minor_planet_target(target_type, epoch, inclination, long_node, arg_perihelion,
                               semi_axis, eccentricity, mean_anomaly):
-
+    ''' This is for MPC_MINOR_PLANET type targets'''
     target = {
                'type'           : target_type,
                'epoch'          : epoch,
@@ -253,7 +271,7 @@ def make_minor_planet_target(target_type, epoch, inclination, long_node, arg_per
 
 def make_comet_target(target_type, epoch, epochofperih, inclination, long_node, arg_perihelion,
                               perihdist, eccentricity):
-
+    ''' This is for MPC_COMET type targets'''
     target = {
                'type'           : target_type,
                'epoch'          : epoch,
@@ -329,6 +347,7 @@ def elem_to_topocentric_apparent(dt, elements, site, JFORM=2):
 
     MINOR_PLANET_JFORM = 2
     COMET_JFORM = 3
+    MAJOR_PLANET_JFORM = 1
     MDM_PLACEHOLDER    = 0.0  # Only used for major planets
     MEANANOM_PLACEHOLDER    = 0.0  # Not applicable for comets
 
@@ -364,6 +383,22 @@ def elem_to_topocentric_apparent(dt, elements, site, JFORM=2):
                                                     elements['eccentricity'],
                                                     MEANANOM_PLACEHOLDER,
                                                     MDM_PLACEHOLDER,
+                                                  )
+    elif JFORM == MAJOR_PLANET_JFORM:
+        # JPL Major Planets
+        ra_app_rads, dec_app_rads, earth_obj_dist, status = sla.sla_plante(
+                                                    tdb,
+                                                    site['longitude'].in_radians(),
+                                                    site['latitude'].in_radians(),
+                                                    JFORM,
+                                                    elements['epochofel'],
+                                                    elements['orbinc'].in_radians(),
+                                                    elements['longascnode'].in_radians(),
+                                                    elements['longofperih'].in_radians(),
+                                                    elements['meandist'],
+                                                    elements['eccentricity'],
+                                                    elements['meanlong'].in_radians(),
+                                                    elements['dailymot'],
                                                   )
     else:
         status = -1

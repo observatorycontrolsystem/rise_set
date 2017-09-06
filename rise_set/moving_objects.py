@@ -33,6 +33,8 @@ def target_to_jform(target):
         jform = 2
     elif target_type == 'mpc_comet':
         jform = 3
+    elif target_type == 'jpl_major_planet':
+        jform = 1
     else:
         raise MovingViolation("Unsupported target type: '{}'".format(target_type))
 
