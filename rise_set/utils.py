@@ -70,17 +70,33 @@ def is_moving_object(target):
 
     return False
 
+
 def is_satellite_target(target):
     if 'type' in target and target['type'].lower() == 'satellite':
         return True
 
     return False
 
+
 def is_sidereal_target(target):
     if 'type' not in target and 'ra' in target:
         return True
 
     return False
+
+
+def target_to_jform(target):
+    target_type = target['type'].lower()
+    if target_type == 'mpc_minor_planet':
+        jform = 2
+    elif target_type == 'mpc_comet':
+        jform = 3
+    elif target_type == 'jpl_major_planet':
+        jform = 1
+    else:
+        raise MovingViolation("Unsupported target type: '{}'".format(target_type))
+
+    return jform
 
 
 class MovingViolation(Exception):
