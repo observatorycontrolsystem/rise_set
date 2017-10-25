@@ -234,18 +234,18 @@ def make_ra_dec_target(ra, dec, ra_proper_motion=None, dec_proper_motion=None, p
     return target
 
 
-def make_major_planet_target(target_type, epochofel, inclination, long_node, long_perih,
-                             semi_axis, eccentricity, mean_long, dailymot):
+def make_major_planet_target(target_type, epochofel, inclination, long_node, arg_perihelion,
+                             semi_axis, eccentricity, mean_anomaly, dailymot):
     ''' This is for JPL_MAJOR_PLANET type targets'''
     target = {
                'type'           : target_type,
                'epochofel'      : epochofel,
                'inclination'         : Angle(degrees=inclination),
                'long_node'    : Angle(degrees=long_node),
-               'long_perih'    : Angle(degrees=long_perih),
+               'arg_perihelion'    : Angle(degrees=arg_perihelion),
                'semi_axis'       : semi_axis,
                'eccentricity'   : eccentricity,
-               'mean_long'       : Angle(degrees=mean_long),
+               'mean_anomaly'       : Angle(degrees=mean_anomaly),
                'dailymot'       : Angle(degrees=dailymot)
              }
 
@@ -386,6 +386,9 @@ def elem_to_topocentric_apparent(dt, elements, site, JFORM=2):
                                                   )
     elif JFORM == MAJOR_PLANET_JFORM:
         # JPL Major Planets
+        long_perihelion = Angle(degrees=elements['long_node'].in_degrees() + elements['arg_perihelion'].in_degrees())
+        mean_long = Angle(degrees=elements['long_node'].in_degrees() + elements['arg_perihelion'].in_degrees() +
+                                  elements['mean_anomaly'].in_degrees())
         ra_app_rads, dec_app_rads, earth_obj_dist, status = sla.sla_plante(
                                                     tdb,
                                                     site['longitude'].in_radians(),
@@ -394,10 +397,10 @@ def elem_to_topocentric_apparent(dt, elements, site, JFORM=2):
                                                     elements['epochofel'],
                                                     elements['inclination'].in_radians(),
                                                     elements['long_node'].in_radians(),
-                                                    elements['long_perih'].in_radians(),
+                                                    long_perihelion.in_radians(),
                                                     elements['semi_axis'],
                                                     elements['eccentricity'],
-                                                    elements['mean_long'].in_radians(),
+                                                    mean_long.in_radians(),
                                                     elements['dailymot'].in_radians(),
                                                   )
     else:
