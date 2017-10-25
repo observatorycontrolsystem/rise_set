@@ -97,10 +97,10 @@ class TestIntervals(object):
                                                             epochofel=55959.0,
                                                             inclination=1.303884172546506,
                                                             long_node=100.5093329813755,
-                                                            long_perih=100.5093329813755 + 274.0516181838379,
+                                                            arg_perihelion=274.0516181838379,
                                                             semi_axis=5.204023536751508,
                                                             eccentricity=0.04910768996084790,
-                                                            mean_long=100.5093329813755 + 274.0516181838379 + 26.60707699766562,
+                                                            mean_anomaly=26.60707699766562,
                                                             dailymot=0.08306200006467207)
 
         self.visibility = Visibility(self.bpl, self.start_date, self.end_date,
@@ -796,10 +796,10 @@ class TestMoonDistanceCalculation(object):
                                                             epochofel=55959.0,
                                                             inclination=1.303884172546506,
                                                             long_node=100.5093329813755,
-                                                            long_perih=100.5093329813755 + 274.0516181838379,
+                                                            arg_perihelion=274.0516181838379,
                                                             semi_axis=5.204023536751508,
                                                             eccentricity=0.04910768996084790,
-                                                            mean_long=100.5093329813755 + 274.0516181838379 + 26.60707699766562,
+                                                            mean_anomaly=26.60707699766562,
                                                             dailymot=0.08306200006467207)
 
 
@@ -976,7 +976,7 @@ class TestMoonDistanceCalculation(object):
         # Verify that there are no moon distance intervals
         assert_equal(len(moon_distance_intervals), 0)
 
-    def test_moon_distance_major_planet_non_removed(self):
+    def test_moon_distance_major_planet_none_removed(self):
         start = datetime(2012, 2, 1)
         end = datetime(2012, 2, 2)
         v = Visibility(self.site, start, end, self.horizon)
@@ -991,4 +991,37 @@ class TestMoonDistanceCalculation(object):
         assert_equal(len(moon_distance_intervals), len(target_intervals))
         assert_equal(moon_distance_intervals[0][0], target_intervals[0][0])
         assert_equal(moon_distance_intervals[0][1], target_intervals[0][1])
+
+    def test_moon_distance_major_planet_all_removed(self):
+        start = datetime(2012, 2, 1)
+        end = datetime(2012, 2, 2)
+        v = Visibility(self.site, start, end, self.horizon)
+
+        target = self.major_planet_target.copy()
+        # According to JPL horizons, this target has a moon distance angle < 30.5 all the time
+        target_intervals = v.get_target_intervals(target=target)
+        moon_distance_intervals = v.get_moon_distance_intervals(target, target_intervals, Angle(degrees=31))
+
+        # Verify that there are no moon distance intervals
+        assert_equal(len(moon_distance_intervals), 0)
+
+    def test_moon_distance_major_planet_some_removed(self):
+        start = datetime(2012, 2, 1)
+        end = datetime(2012, 2, 2)
+        v = Visibility(self.site, start, end, self.horizon)
+
+        target = self.major_planet_target.copy()
+        # According to JPL horizons, this target has a moon distance angle > 20.0 from 03:45 on
+        target_intervals = v.get_target_intervals(target=target)
+        moon_distance_intervals = v.get_moon_distance_intervals(target, target_intervals, Angle(degrees=20))
+        target_intervals = coalesce_adjacent_intervals(target_intervals)
+
+        # Verify that the first moon distance interval truncated to start at 3:45 but otherwise matches the target int
+        assert_equal(len(moon_distance_intervals), 2)
+        assert_equal(moon_distance_intervals[0][0], datetime(2012, 2, 1, 3, 45))
+        assert_equal(moon_distance_intervals[0][1], target_intervals[0][1])
+        assert_equal(moon_distance_intervals[1][0], target_intervals[1][0])
+        assert_equal(moon_distance_intervals[1][1], target_intervals[1][1])
+
+
 
