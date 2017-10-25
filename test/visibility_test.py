@@ -14,10 +14,11 @@ from rise_set.visibility import Visibility, set_airmass_limit, InvalidHourAngleL
 # Additional support modules
 from rise_set.angle import Angle
 from rise_set.sky_coordinates import RightAscension, Declination
-from rise_set.astrometry import make_satellite_target, make_minor_planet_target, make_comet_target
+from rise_set.astrometry import (make_satellite_target, make_minor_planet_target, make_comet_target,
+                                 make_major_planet_target)
 from rise_set.rates import ProperMotion
 from rise_set.moving_objects import initialise_sites
-from rise_set.utils          import intersect_many_intervals
+from rise_set.utils          import intersect_many_intervals, coalesce_adjacent_intervals
 from mock import patch
 
 def intervals_almost_equal(received, expected, tolerance=1e-5):
@@ -732,6 +733,18 @@ class TestMoonDistanceCalculation(object):
                                               perihdist=0.748287467144728,
                                               eccentricity=0.9189810923126022)
 
+        # Details from JPL Horizons for Jupiter
+        self.major_planet_target = make_major_planet_target('JPL_MAJOR_PLANET',
+                                                            epochofel=55959.0,
+                                                            inclination=1.303884172546506,
+                                                            long_node=100.5093329813755,
+                                                            long_perih=100.5093329813755 + 274.0516181838379,
+                                                            semi_axis=5.204023536751508,
+                                                            eccentricity=0.04910768996084790,
+                                                            mean_long=100.5093329813755 + 274.0516181838379 + 26.60707699766562,
+                                                            dailymot=0.08306200006467207)
+
+
     def test_moon_distance_no_angle(self):
         start = datetime(2012, 1, 2)
         end = datetime(2012, 1, 3)
@@ -904,4 +917,20 @@ class TestMoonDistanceCalculation(object):
 
         # Verify that there are no moon distance intervals
         assert_equal(len(moon_distance_intervals), 0)
+
+    def test_moon_distance_major_planet_non_removed(self):
+        start = datetime(2012, 2, 1)
+        end = datetime(2012, 2, 2)
+        v = Visibility(self.site, start, end, self.horizon)
+
+        target = self.major_planet_target.copy()
+        # According to JPL horizons, this target has a moon distance angle < 30.5 and > 18.5 all the time
+        target_intervals = v.get_target_intervals(target=target)
+        moon_distance_intervals = v.get_moon_distance_intervals(target, target_intervals, Angle(degrees=18))
+        target_intervals = coalesce_adjacent_intervals(target_intervals)
+
+        # Verify that moon distance intervals is the entire target interval
+        assert_equal(len(moon_distance_intervals), len(target_intervals))
+        assert_equal(moon_distance_intervals[0][0], target_intervals[0][0])
+        assert_equal(moon_distance_intervals[0][1], target_intervals[0][1])
 
