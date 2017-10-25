@@ -63,6 +63,14 @@ class TestIntervals(object):
         self.horizon    = 0
         self.twilight   = 'sunrise'
 
+        self.site       = {
+            'latitude': Angle(degrees=34.4332222222),
+            'longitude': Angle(degrees=-119.863045833),
+            'ha_limit_neg': Angle(degrees=-4.6 * 15.0),
+            'ha_limit_pos': Angle(degrees=4.6 * 15.0),
+            'horizon': Angle(degrees=15.0)
+        }
+
 
         self.capella    = {
                      'ra'                : RightAscension('05 16 41.36'),
@@ -84,7 +92,16 @@ class TestIntervals(object):
             'epoch'             : 2000,
             }
 
-
+        # Details from JPL Horizons for Jupiter
+        self.major_planet_target = make_major_planet_target('JPL_MAJOR_PLANET',
+                                                            epochofel=55959.0,
+                                                            inclination=1.303884172546506,
+                                                            long_node=100.5093329813755,
+                                                            long_perih=100.5093329813755 + 274.0516181838379,
+                                                            semi_axis=5.204023536751508,
+                                                            eccentricity=0.04910768996084790,
+                                                            mean_long=100.5093329813755 + 274.0516181838379 + 26.60707699766562,
+                                                            dailymot=0.08306200006467207)
 
         self.visibility = Visibility(self.bpl, self.start_date, self.end_date,
                                      self.horizon, self.twilight)
@@ -632,6 +649,47 @@ class TestIntervals(object):
             intervals = v.get_observable_intervals(target, moon_distance=Angle(degrees=0))
 
             intervals_almost_equal(intervals, expected[site['name']], tolerance=1e-5)
+
+    def test_target_up_intervals_jpl_major_planet(self):
+        v = Visibility(self.site, datetime(2012, 2, 1), datetime(2012, 2, 2), ha_limit_neg=-4.6, ha_limit_pos=4.6)
+        observable_intervals = v.get_observable_intervals(self.major_planet_target, moon_distance=Angle(degrees=0))
+
+        # Jupiter is above the horizon and within ha_limits from rise time 1:27 until 5:55
+        observable_intervals = coalesce_adjacent_intervals(observable_intervals)
+        rise_time = datetime(2012, 2, 1, 1, 27, 51, 357328)
+        assert_equal(observable_intervals[0][0], rise_time)
+        assert_equal(observable_intervals[0][1], datetime(2012, 2, 1, 5, 45))
+
+    def test_target_up_intervals_jpl_major_planet_high_ha(self):
+        site = self.site.copy()
+        site['ha_limit_neg'] = Angle(degrees=-360.0)
+        site['ha_limit_pos'] = Angle(degrees=360.0)
+        site['horizon'] = Angle(degrees=0.0)
+        v = Visibility(site, datetime(2012, 2, 1), datetime(2012, 2, 2), ha_limit_neg=-12, ha_limit_pos=12,
+                       horizon=0)
+        observable_intervals = v.get_observable_intervals(self.major_planet_target, moon_distance=Angle(degrees=0))
+
+        # Jupiter is above the horizon of 0 degrees from rise time 1:27 until 7:45
+        observable_intervals = coalesce_adjacent_intervals(observable_intervals)
+        rise_time = datetime(2012, 2, 1, 1, 27, 51, 357328)
+
+        assert_equal(observable_intervals[0][0], rise_time)
+        assert_equal(observable_intervals[0][1], datetime(2012, 2, 1, 7, 45))
+
+    def test_target_up_intervals_jpl_major_planet_high_ha_and_no_horizon(self):
+        site = self.site.copy()
+        site['ha_limit_neg'] = Angle(degrees=-360.0)
+        site['ha_limit_pos'] = Angle(degrees=360.0)
+        site['horizon'] = Angle(degrees=-360.0)
+        v = Visibility(site, datetime(2012, 2, 1), datetime(2012, 2, 2), ha_limit_neg=-12, ha_limit_pos=12,
+                       horizon=-360)
+        observable_intervals = v.get_observable_intervals(self.major_planet_target, moon_distance=Angle(degrees=0))
+        dark_intervals = v.get_dark_intervals()
+        # with maxed horizon and ha_limits, the observable intervals basically become the dark intervals
+        observable_intervals = coalesce_adjacent_intervals(observable_intervals)
+
+        assert_equal(observable_intervals[0][0], dark_intervals[0][0])
+        assert_equal(observable_intervals[0][1], dark_intervals[0][1])
 
 
 class TestAirmassCalculation(object):
