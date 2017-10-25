@@ -234,19 +234,19 @@ def make_ra_dec_target(ra, dec, ra_proper_motion=None, dec_proper_motion=None, p
     return target
 
 
-def make_major_planet_target(target_type, epochofel, orbinc, longascnode, longofperih,
-                             meandist, eccentricity, meanlong, dailymot):
+def make_major_planet_target(target_type, epochofel, inclination, long_node, long_perih,
+                             semi_axis, eccentricity, mean_long, dailymot):
     ''' This is for JPL_MAJOR_PLANET type targets'''
     target = {
                'type'           : target_type,
                'epochofel'      : epochofel,
-               'orbinc'         : Angle(degrees=orbinc),
-               'longascnode'    : Angle(degrees=longascnode),
-               'longofperih'    : Angle(degrees=longofperih),
-               'meandist'       : meandist,
+               'inclination'         : Angle(degrees=inclination),
+               'long_node'    : Angle(degrees=long_node),
+               'long_perih'    : Angle(degrees=long_perih),
+               'semi_axis'       : semi_axis,
                'eccentricity'   : eccentricity,
-               'meanlong'       : Angle(degrees=meanlong),
-               'dailymot'       : dailymot
+               'mean_long'       : Angle(degrees=mean_long),
+               'dailymot'       : Angle(degrees=dailymot)
              }
 
     return target
@@ -392,13 +392,13 @@ def elem_to_topocentric_apparent(dt, elements, site, JFORM=2):
                                                     site['latitude'].in_radians(),
                                                     JFORM,
                                                     elements['epochofel'],
-                                                    elements['orbinc'].in_radians(),
-                                                    elements['longascnode'].in_radians(),
-                                                    elements['longofperih'].in_radians(),
-                                                    elements['meandist'],
+                                                    elements['inclination'].in_radians(),
+                                                    elements['long_node'].in_radians(),
+                                                    elements['long_perih'].in_radians(),
+                                                    elements['semi_axis'],
                                                     elements['eccentricity'],
-                                                    elements['meanlong'].in_radians(),
-                                                    elements['dailymot'],
+                                                    elements['mean_long'].in_radians(),
+                                                    elements['dailymot'].in_radians(),
                                                   )
     else:
         status = -1
