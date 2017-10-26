@@ -19,24 +19,12 @@ from builtins import object
 from rise_set.astrometry import (gregorian_to_ut_mjd, elem_to_topocentric_apparent,
                                  calc_local_hour_angle, calculate_altitude, date_to_tdb)
 from rise_set.angle      import Angle
-from rise_set.utils      import coalesce_adjacent_intervals, MovingViolation
+from rise_set.utils      import coalesce_adjacent_intervals, MovingViolation, target_to_jform
 
 import re
 
 import ast
 from datetime import datetime,timedelta
-
-
-def target_to_jform(target):
-    target_type = target['type'].lower()
-    if target_type == 'mpc_minor_planet':
-        jform = 2
-    elif target_type == 'mpc_comet':
-        jform = 3
-    else:
-        raise MovingViolation("Unsupported target type: '{}'".format(target_type))
-
-    return jform
 
 
 def initialelemdict():

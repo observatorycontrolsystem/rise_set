@@ -31,7 +31,7 @@ from pyslalib import slalib as sla
 from rise_set.angle import Angle
 from rise_set.sky_coordinates import RightAscension, Declination
 from rise_set.rates import ProperMotion
-from rise_set.utils import is_moving_object, MovingViolation
+from rise_set.utils import is_moving_object, MovingViolation, target_to_jform
 
 # Import logging modules
 import logging
@@ -220,7 +220,7 @@ def calc_local_hour_angle(ra_app, longitude, date):
 
 def make_ra_dec_target(ra, dec, ra_proper_motion=None, dec_proper_motion=None, parallax=None,
                        rad_vel=None, epoch=None):
-
+    ''' This is for simple ra/dec targets with optional proper motion'''
     target = {
                 'ra'                : ra,
                 'dec'               : dec,
@@ -234,9 +234,27 @@ def make_ra_dec_target(ra, dec, ra_proper_motion=None, dec_proper_motion=None, p
     return target
 
 
+def make_major_planet_target(target_type, epochofel, inclination, long_node, arg_perihelion,
+                             semi_axis, eccentricity, mean_anomaly, dailymot):
+    ''' This is for JPL_MAJOR_PLANET type targets'''
+    target = {
+               'type'           : target_type,
+               'epochofel'      : epochofel,
+               'inclination'         : Angle(degrees=inclination),
+               'long_node'    : Angle(degrees=long_node),
+               'arg_perihelion'    : Angle(degrees=arg_perihelion),
+               'semi_axis'       : semi_axis,
+               'eccentricity'   : eccentricity,
+               'mean_anomaly'       : Angle(degrees=mean_anomaly),
+               'dailymot'       : Angle(degrees=dailymot)
+             }
+
+    return target
+
+
 def make_minor_planet_target(target_type, epoch, inclination, long_node, arg_perihelion,
                               semi_axis, eccentricity, mean_anomaly):
-
+    ''' This is for MPC_MINOR_PLANET type targets'''
     target = {
                'type'           : target_type,
                'epoch'          : epoch,
@@ -253,7 +271,7 @@ def make_minor_planet_target(target_type, epoch, inclination, long_node, arg_per
 
 def make_comet_target(target_type, epoch, epochofperih, inclination, long_node, arg_perihelion,
                               perihdist, eccentricity):
-
+    ''' This is for MPC_COMET type targets'''
     target = {
                'type'           : target_type,
                'epoch'          : epoch,
@@ -329,6 +347,7 @@ def elem_to_topocentric_apparent(dt, elements, site, JFORM=2):
 
     MINOR_PLANET_JFORM = 2
     COMET_JFORM = 3
+    MAJOR_PLANET_JFORM = 1
     MDM_PLACEHOLDER    = 0.0  # Only used for major planets
     MEANANOM_PLACEHOLDER    = 0.0  # Not applicable for comets
 
@@ -364,6 +383,25 @@ def elem_to_topocentric_apparent(dt, elements, site, JFORM=2):
                                                     elements['eccentricity'],
                                                     MEANANOM_PLACEHOLDER,
                                                     MDM_PLACEHOLDER,
+                                                  )
+    elif JFORM == MAJOR_PLANET_JFORM:
+        # JPL Major Planets
+        long_perihelion = Angle(degrees=elements['long_node'].in_degrees() + elements['arg_perihelion'].in_degrees())
+        mean_long = Angle(degrees=elements['long_node'].in_degrees() + elements['arg_perihelion'].in_degrees() +
+                                  elements['mean_anomaly'].in_degrees())
+        ra_app_rads, dec_app_rads, earth_obj_dist, status = sla.sla_plante(
+                                                    tdb,
+                                                    site['longitude'].in_radians(),
+                                                    site['latitude'].in_radians(),
+                                                    JFORM,
+                                                    elements['epochofel'],
+                                                    elements['inclination'].in_radians(),
+                                                    elements['long_node'].in_radians(),
+                                                    long_perihelion.in_radians(),
+                                                    elements['semi_axis'],
+                                                    elements['eccentricity'],
+                                                    mean_long.in_radians(),
+                                                    elements['dailymot'].in_radians(),
                                                   )
     else:
         status = -1
@@ -1060,7 +1098,7 @@ def calculate_airmass_at_times(times, target, obs_latitude, obs_longitude, obs_h
         tdb = ut_mjd_to_tdb(mjd_utc)  #not TDB but good enough
         # Convert catalog mean RA, Dec at J2000 to apparent of date
         if is_moving_object(target):
-            ra_apparent, dec_apparent = elem_to_topocentric_apparent(time, target, site, 2 if target['type'].lower() == 'mpc_minor_planet' else 3)
+            ra_apparent, dec_apparent = elem_to_topocentric_apparent(time, target, site, target_to_jform(target['type'].lower()))
         else:
             ra_apparent, dec_apparent = mean_to_apparent(target, tdb)
         airmass = apparent_to_airmass(ra_apparent, dec_apparent, aop_params)
