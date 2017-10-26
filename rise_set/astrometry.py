@@ -1098,7 +1098,7 @@ def calculate_airmass_at_times(times, target, obs_latitude, obs_longitude, obs_h
         tdb = ut_mjd_to_tdb(mjd_utc)  #not TDB but good enough
         # Convert catalog mean RA, Dec at J2000 to apparent of date
         if is_moving_object(target):
-            ra_apparent, dec_apparent = elem_to_topocentric_apparent(time, target, site, target_to_jform(target['type'].lower()))
+            ra_apparent, dec_apparent = elem_to_topocentric_apparent(time, target, site, target_to_jform(target))
         else:
             ra_apparent, dec_apparent = mean_to_apparent(target, tdb)
         airmass = apparent_to_airmass(ra_apparent, dec_apparent, aop_params)
