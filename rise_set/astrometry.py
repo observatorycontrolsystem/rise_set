@@ -381,7 +381,7 @@ def elem_to_topocentric_apparent(dt, elements, site, JFORM=2):
         elem_string = 'Bad Elements:\n'
         for key in elements.keys():
             elem_string += key + ' = ' + str(elements[key]) + '\n'
-        print(elem_string)
+        log.info(elem_string)
         raise MovingViolation('Error: ' + str(status) + ' (' + error[status] + ')')
 
     return Angle(radians=ra_app_rads), Angle(radians=dec_app_rads)
