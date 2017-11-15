@@ -58,6 +58,7 @@ v.0.4.5  - Fix bug in None comparison
 v.0.4.6  - Added moon_distance calculation for non-sidereal objects
 v.0.4.7  - Added support for JPL Major Planets
 v.0.4.8  - Fixed bug in airmasses with nonsidereal targets
+v.0.4.9  - Remove print statement
 
 Eric Saunders
 October 2012
