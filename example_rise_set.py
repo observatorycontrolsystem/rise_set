@@ -43,7 +43,7 @@ def rise_set_of_deneb_from_maui():
 
 
     # Date
-    date = datetime.date(year=2010, month=10, day=25)
+    date = datetime.datetime(year=2010, month=10, day=25)
 
 
     # Do the calculation
@@ -56,7 +56,7 @@ def rise_set_of_deneb_from_maui():
 def sunrise_sunset_from_st_andrews():
 
     # Date
-    date = datetime.date(year=2010, month=4, day=27)
+    date = datetime.datetime(year=2010, month=4, day=27)
 
     # Site (East +ve longitude)
     # Very rough St. Andrews coords, for easy almanac comparison
