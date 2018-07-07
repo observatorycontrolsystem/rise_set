@@ -230,16 +230,19 @@ class Visibility(object):
 
         earliest_date = self.start_date - SIDEREAL_SOLAR_DAY
 
+        tdb    = date_to_tdb(earliest_date)
         mjd    = gregorian_to_ut_mjd(earliest_date)
         gmst   = ut_mjd_to_gmst(mjd)
 
+        apparent_ra, apparent_dec = mean_to_apparent(target, tdb)
+
         # the rise time
-        hour_rise = self.ha_limit_neg + target['ra'].in_hours() - \
+        hour_rise = self.ha_limit_neg + apparent_ra.in_hours() - \
             self.site['longitude'].in_hours() - gmst.in_hours()
         hour_rise /= SIDEREAL_SOLAR_DAY_RATIO
 
         # the set time
-        hour_set  = self.ha_limit_pos + target['ra'].in_hours() - \
+        hour_set  = self.ha_limit_pos + apparent_ra.in_hours() - \
             self.site['longitude'].in_hours() - gmst.in_hours()
         hour_set /= SIDEREAL_SOLAR_DAY_RATIO
 
