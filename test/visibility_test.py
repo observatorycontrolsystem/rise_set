@@ -413,6 +413,33 @@ class TestIntervals(object):
 
         intervals_almost_equal(received, expected, 1e-5)
 
+
+    def test_hour_angle_near_pole(self):
+        expected = [(datetime(2018, 7, 4, 8, 29, 18, 786762),
+                     datetime(2018, 7, 4, 17, 27, 50, 319634))]
+        target = {
+            'ra': RightAscension(degrees=260.1633416667),
+            'dec': Declination(degrees=-89.0275836111),
+            'epoch': 2000,
+        }
+
+        site = {
+            'latitude': Angle(degrees=-31.272932),
+            'longitude': Angle(degrees=149.070648),
+        }
+
+        start_date = datetime(year=2018, month=7, day=4)
+        end_date = datetime(year=2018, month=7, day=5)
+
+        v = Visibility(site, start_date, end_date,
+                       ha_limit_neg=-4.533333, ha_limit_pos=4.4666667)
+
+        received = v.get_ha_intervals(target)
+        print(received)
+
+        intervals_almost_equal(received, expected, 1e-5)
+
+
     def test_ha_wrong_day(self):
         # for some windows/limits, the HA block did not start at the beginning of the window.
         # This test fails prior to 2013-02-20
