@@ -409,14 +409,13 @@ class TestIntervals(object):
                        ha_limit_neg=-5.0, ha_limit_pos=5.0)
 
         received = v.get_ha_intervals(target)
-        print(received)
 
         intervals_almost_equal(received, expected, 1e-5)
 
 
     def test_hour_angle_near_pole(self):
-        expected = [(datetime(2018, 7, 4, 8, 29, 18, 786762),
-                     datetime(2018, 7, 4, 17, 27, 50, 319634))]
+        expected = [(datetime(2018, 7, 4, 8, 33, 18, 130142),
+                     datetime(2018, 7, 4, 17, 31, 49, 663014))]
         target = {
             'ra': RightAscension(degrees=260.1633416667),
             'dec': Declination(degrees=-89.0275836111),
@@ -435,7 +434,6 @@ class TestIntervals(object):
                        ha_limit_neg=-4.533333, ha_limit_pos=4.4666667)
 
         received = v.get_ha_intervals(target)
-        print(received)
 
         intervals_almost_equal(received, expected, 1e-5)
 
