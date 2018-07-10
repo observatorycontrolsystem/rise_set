@@ -230,16 +230,27 @@ class Visibility(object):
 
         earliest_date = self.start_date - SIDEREAL_SOLAR_DAY
 
+        tdb    = date_to_tdb(earliest_date)
         mjd    = gregorian_to_ut_mjd(earliest_date)
         gmst   = ut_mjd_to_gmst(mjd)
 
+        # Need the apparent ra/dec for getting correct ha limits on high dec targets
+        apparent_ra, apparent_dec = mean_to_apparent(target, tdb)
+
+        # Flip the neg/pos ha limits if site is in the southern hemisphere
+        ha_neg = self.ha_limit_neg
+        ha_pos = self.ha_limit_pos
+        if self.site['latitude'].in_degrees() < 0:
+            ha_neg = -self.ha_limit_pos
+            ha_pos = -self.ha_limit_neg
+
         # the rise time
-        hour_rise = self.ha_limit_neg + target['ra'].in_hours() - \
+        hour_rise = ha_neg + apparent_ra.in_hours() - \
             self.site['longitude'].in_hours() - gmst.in_hours()
         hour_rise /= SIDEREAL_SOLAR_DAY_RATIO
 
         # the set time
-        hour_set  = self.ha_limit_pos + target['ra'].in_hours() - \
+        hour_set  = ha_pos + apparent_ra.in_hours() - \
             self.site['longitude'].in_hours() - gmst.in_hours()
         hour_set /= SIDEREAL_SOLAR_DAY_RATIO
 
