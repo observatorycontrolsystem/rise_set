@@ -71,14 +71,15 @@ def is_moving_object(target):
     return False
 
 
-def is_satellite_target(target):
+def is_static_target(target):
+    # Static type targets are treated differently in that their exact intervals are not
+    # calculated. They are assumed to be observable when it is nighttime.
+
+    # We don't support explicit ephemeris calculations for satellite targets.
     if 'type' in target and target['type'].lower() == 'satellite':
         return True
 
-    return False
-
-
-def is_hour_angle_target(target):
+    # Hour angle target types are already tied to a particular location and time.
     if 'type' not in target and 'hour_angle' in target:
         return True
 

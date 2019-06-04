@@ -26,8 +26,7 @@ from rise_set.astrometry     import (calc_sunrise_set, calc_planet_rise_set, cal
 from rise_set.angle          import Angle
 from rise_set.moving_objects import find_moving_object_up_intervals
 from rise_set.utils          import (coalesce_adjacent_intervals, intersect_intervals, is_sidereal_target,
-                                     intersect_many_intervals, is_moving_object, is_satellite_target, target_to_jform,
-                                     is_hour_angle_target)
+                                     intersect_many_intervals, is_moving_object, is_static_target, target_to_jform)
 
 # Import logging modules
 import logging
@@ -167,10 +166,8 @@ class Visibility(object):
         '''
         effective_horizon = set_airmass_limit(airmass, self.horizon.in_degrees())
 
-        # Handle Satellite objects by just returning the dark intervals because we don't support explicit ephemeris
-        # calculations for these objects. Do the same for hour_angle target types since the hour angle submitted is
-        # already tied to a particular location and time.
-        if is_satellite_target(target) or is_hour_angle_target(target):
+        # Return dark intervals for static targets
+        if is_static_target(target):
             intervals = self.get_dark_intervals()
         # Handle moving objects differently from stars
         elif is_moving_object(target):
@@ -284,7 +281,7 @@ class Visibility(object):
         dark               = self.get_dark_intervals()
         above_horizon      = self.get_target_intervals(target, airmass=airmass)
 
-        if moon_distance.in_degrees() <= 0.5 or is_satellite_target(target) or is_hour_angle_target(target):
+        if moon_distance.in_degrees() <= 0.5 or is_static_target(target):
             moon_avoidance = above_horizon
         else:
             moon_avoidance = self.get_moon_distance_intervals(target, above_horizon, moon_distance)
@@ -293,7 +290,7 @@ class Visibility(object):
         else:
             # if the target type is such that there is no 'ra'/'dec' values, then we cannot calculate the ha intervals,
             # so we just use the target intervals instead (since they are all intersected together next). This is true
-            # for moving objects and satellite objects.
+            # for moving objects and static objects.
             within_hour_angle = above_horizon
 
         # find the overlapping intervals between them
