@@ -78,6 +78,13 @@ def is_satellite_target(target):
     return False
 
 
+def is_hour_angle_target(target):
+    if 'type' not in target and 'hour_angle' in target:
+        return True
+
+    return False
+
+
 def is_sidereal_target(target):
     if 'type' not in target and 'ra' in target:
         return True
