@@ -15,7 +15,7 @@ from rise_set.visibility import Visibility, set_airmass_limit, InvalidHourAngleL
 from rise_set.angle import Angle
 from rise_set.sky_coordinates import RightAscension, Declination
 from rise_set.astrometry import (make_satellite_target, make_minor_planet_target, make_comet_target,
-                                 make_major_planet_target)
+                                 make_major_planet_target, make_hour_angle_target)
 from rise_set.rates import ProperMotion
 from rise_set.moving_objects import initialise_sites
 from rise_set.utils          import intersect_many_intervals, coalesce_adjacent_intervals
@@ -259,6 +259,13 @@ class TestIntervals(object):
 
         assert_equal(target_intervals, dark_intervals)
 
+    def test_get_target_intervals_hour_angle_target(self):
+        target = make_hour_angle_target(0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+
+        target_intervals = self.visibility.get_target_intervals(target)
+        dark_intervals = self.visibility.get_dark_intervals()
+
+        assert_equal(target_intervals, dark_intervals)
 
     @patch('rise_set.visibility.Visibility.get_ra_target_intervals')
     @patch('rise_set.visibility.Visibility.get_moving_object_target_intervals')
@@ -887,6 +894,18 @@ class TestMoonDistanceCalculation(object):
         v = Visibility(self.site, start, end, self.horizon)
 
         target = make_satellite_target(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+
+        observable_intervals = v.get_observable_intervals(target)
+        # check that this doesn't crash, and that intervals match night intervals
+        night_intervals = v.get_dark_intervals()
+        assert_equal(night_intervals, observable_intervals)
+
+    def test_moon_distance_ignored_for_hour_angle_target(self):
+        start = datetime(2012, 1, 2)
+        end = datetime(2012, 1, 3)
+        v = Visibility(self.site, start, end, self.horizon)
+
+        target = make_hour_angle_target(0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
 
         observable_intervals = v.get_observable_intervals(target)
         # check that this doesn't crash, and that intervals match night intervals

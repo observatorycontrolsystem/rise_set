@@ -234,6 +234,21 @@ def make_ra_dec_target(ra, dec, ra_proper_motion=None, dec_proper_motion=None, p
     return target
 
 
+def make_hour_angle_target(hour_angle, dec, ra_proper_motion=None, dec_proper_motion=None, parallax=None,
+                           epoch=None):
+    ''' This is for simple hour_angle/dec targets with optional proper motion'''
+    target = {
+                'hour_angle'        : hour_angle,
+                'dec'               : dec,
+                'ra_proper_motion'  : ra_proper_motion or ProperMotion(RightAscension(0), time='year'),
+                'dec_proper_motion' : dec_proper_motion or ProperMotion(Declination(0), time='year'),
+                'parallax'          : parallax or 0.0,
+                'epoch'             : epoch or 2000,
+             }
+
+    return target
+
+
 def make_major_planet_target(target_type, epochofel, inclination, long_node, arg_perihelion,
                              semi_axis, eccentricity, mean_anomaly, dailymot):
     ''' This is for JPL_MAJOR_PLANET type targets'''
