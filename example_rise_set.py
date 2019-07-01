@@ -71,28 +71,19 @@ def sunrise_sunset_from_st_andrews():
     return (transit, rise, setting)
 
 
-
 if __name__ == '__main__':
 
     # Configure logging
     logging.basicConfig(
-        format = "%(levelname)s %(lineno)-6d %(message)s",
-        level  = logging.INFO
+        format="%(levelname)s %(lineno)-6d %(message)s",
+        level=logging.INFO
     )
 
-
-
     (deneb_transit, deneb_rise, deneb_set) = rise_set_of_deneb_from_maui()
-    (sun_transit, sun_rise, sun_set)       = sunrise_sunset_from_st_andrews()
+    (sun_transit, sun_rise, sun_set) = sunrise_sunset_from_st_andrews()
 
-    print '''Deneb from Maui:
-           Rise:     %s
-           Transit : %s
-           Set :     %s
-          ''' % (deneb_rise, deneb_transit, deneb_set)
+    print("Deneb from Maui:\nRise:     {rise}\nTransit : {transit}\nSet :     {set}"
+          .format(rise=deneb_rise, transit=deneb_transit, set=deneb_set))
 
-    print '''Sun from St Andrews:
-           Rise:     %s
-           Transit : %s
-           Set :     %s
-          ''' % (sun_rise, sun_transit, sun_set)
+    print("Sun from St Andrews:\nRise:     {rise}\nTransit : {transit}\nSet :     {set}"
+          .format(rise=sun_rise, transit=sun_transit, set=sun_set))
