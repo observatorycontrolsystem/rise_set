@@ -1071,4 +1071,114 @@ class TestMoonDistanceCalculation(object):
         assert_equal(moon_distance_intervals[1][1], target_intervals[1][1])
 
 
+class TestZenithDistanceCalculation(object):
+    """ All time intervals to test against are obtained from JPL Horizons
+    """
+    def setup(self):
+        self.site = {
+            'latitude': Angle(degrees=20.0),
+            'longitude': Angle(degrees=-150.0),
+            'ha_limit_neg': Angle(degrees=-4.6*12.0),
+            'ha_limit_pos': Angle(degrees=4.6*12.0),
+            'horizon': Angle(degrees=15.0)
+        }
+
+        self.horizon = 15.0
+        self.sidereal_target = {
+            'ra': RightAscension('20 41 25.91'),
+            'dec': Declination('+20 00 00.00'),
+            'epoch': 2000,
+        }
+
+        # Details from JPL Horizons for Ceres
+        self.minor_planet_target = make_minor_planet_target('MPC_MINOR_PLANET',
+                                                            epoch=49731,
+                                                            inclination=10.60069567603618,
+                                                            long_node=80.65851514365535,
+                                                            arg_perihelion=71.44921526124109,
+                                                            semi_axis=2.767218108003098,
+                                                            eccentricity=0.07610292126891821,
+                                                            mean_anomaly=340.389084821267)
+
+        # Details from JPL Horizons for Comet 27P
+        self.comet_target = make_comet_target('MPC_COMET',
+                                              epoch=56364,
+                                              epochofperih=55776.8910902,
+                                              inclination=28.96687278723059,
+                                              long_node=250.6264098390235,
+                                              arg_perihelion=196.0253968913816,
+                                              perihdist=0.748287467144728,
+                                              eccentricity=0.9189810923126022)
+
+        # Details from JPL Horizons for Jupiter
+        self.major_planet_target = make_major_planet_target('JPL_MAJOR_PLANET',
+                                                            epochofel=55959.0,
+                                                            inclination=1.303884172546506,
+                                                            long_node=100.5093329813755,
+                                                            arg_perihelion=274.0516181838379,
+                                                            semi_axis=5.204023536751508,
+                                                            eccentricity=0.04910768996084790,
+                                                            mean_anomaly=26.60707699766562,
+                                                            dailymot=0.08306200006467207)
+
+    def test_zenith_distance_no_angle(self):
+        """
+        test that that when the zenith distance is zero, no intervals are removed from the
+        original target intervals
+        """
+        start = datetime(2012, 1, 2)
+        end = datetime(2012, 1, 3)
+        zenith_distance_constraint = Angle(degrees=0)
+
+        v = Visibility(self.site, start, end, self.horizon)
+        target_intervals = v.get_target_intervals(target=self.sidereal_target)
+        zenith_distance_intervals = v.get_zenith_distance_intervals(self.sidereal_target, target_intervals,
+                                                                    zenith_distance_constraint)
+
+        assert_equal(zenith_distance_intervals, target_intervals)
+
+    def test_zenith_distance_all_removed_180(self):
+        """
+        test that with a zenith distance of 180 degrees, all intervals are removed
+        """
+        start = datetime(2012, 1, 2)
+        end = datetime(2012, 1, 3)
+        # giant angle given, no target could further away so all interval should be disallowed
+        zenith_distance_constraint = Angle(degrees=180)
+
+        v = Visibility(self.site, start, end, self.horizon)
+        target_intervals = v.get_target_intervals(target=self.sidereal_target)
+        zenith_distance_intervals = v.get_zenith_distance_intervals(self.sidereal_target, target_intervals,
+                                                                    zenith_distance_constraint)
+
+        assert_equal(len(zenith_distance_intervals), 0)
+
+    # TODO: finish implementation
+    def test_zenith_distance_none_removed(self):
+        start = datetime(2012, 1, 2)
+        end = datetime(2012, 1, 3)
+        # low angle given, the distance is always greater for this target so it should allow all intervals
+        zenith_distance_constraint = Angle(degrees=1.23)
+
+        v = Visibility(self.site, start, end, self.horizon)
+        target_intervals = v.get_target_intervals(target=self.sidereal_target)
+        zenith_distance_intervals = v.get_zenith_distance_intervals(self.sidereal_target, target_intervals,
+                                                                    zenith_distance_constraint)
+
+        assert_equal(zenith_distance_intervals, target_intervals)
+
+    # TODO: finish implementation
+    def test_zenith_distance_below_horizon(self):
+        start = datetime(2012, 1, 2)
+        end = datetime(2012, 1, 3)
+        # low angle given, the distance is always greater for this target so it should allow all intervals
+        zenith_distance_constraint = Angle(degrees=self.horizon)
+
+        v = Visibility(self.site, start, end, self.horizon)
+        target_intervals = v.get_target_intervals(target=self.sidereal_target)
+        zenith_distance_intervals = v.get_zenith_distance_intervals(self.sidereal_target, target_intervals,
+                                                                    zenith_distance_constraint)
+
+        assert_equal(len(zenith_distance_intervals), 0)
+
 
