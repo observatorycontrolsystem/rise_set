@@ -159,6 +159,40 @@ class Visibility(object):
         intervals = coalesce_adjacent_intervals(intervals)
         return intervals
 
+    def get_zenith_distance_intervals(self, target, target_intervals, zenith_distance=Angle(degrees=0),
+                                      chunksize=datetime.timedelta(minutes=30)):
+        """Returns a set of datetime 2-tuples, each of which represents an interval
+           of time that the target is greater than zenith_distance away from zenith.
+        """
+        intervals = []
+
+        for start, end in target_intervals:
+            chunkstart = start
+            chunkend = min(chunkstart + chunksize, end)
+            while chunkstart != chunkend and chunkend <= end:
+                # get the tdb date of the start time of the interval
+                tdb = date_to_tdb(chunkstart)
+                # get the apparent ra/dec for the target, and for the moon at this timestamp
+                if is_sidereal_target(target):
+                    target_app_ra, target_app_dec = mean_to_apparent(target, tdb)
+                else:
+                    target_app_ra, target_app_dec = elem_to_topocentric_apparent(chunkstart, target, self.site,
+                                                                                 target_to_jform(target))
+
+                ha = calc_local_hour_angle(target_app_dec, self.site['longitude'], chunkstart)
+                target_zenith_dist = calculate_zenith_distance(ha.in_radians(),
+                                                               target_app_dec.in_radians(),
+                                                               self.site['latitude'].in_radians())
+
+                # if that zenith distance is > the constraint, add this interval to final intervals
+                if target_zenith_dist.in_degrees() >= zenith_distance.in_degrees():
+                    intervals.append((chunkstart, chunkend))
+                # increment the chunkstart/end up
+                chunkstart = chunkend
+                chunkend = min(chunkstart + chunksize, end)
+
+        intervals = coalesce_adjacent_intervals(intervals)
+        return intervals
 
     def get_target_intervals(self, target, up=True, airmass=None):
         '''Returns a set of datetime 2-tuples, each of which represents an interval
