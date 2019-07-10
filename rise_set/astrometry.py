@@ -1068,6 +1068,19 @@ def calculate_altitude(latitude, dec, local_hour_angle):
     return Angle(radians=altitude)
 
 
+def calculate_zenith_distance(ha, dec, latitude):
+    """
+    Calls SLA_ZD
+
+    :param ha: hour angle in radians
+    :param dec: declination in radians
+    :param latitude: latitude in radians
+    :return: zenith_distance (radians, [0,pi])
+    """
+    zd = sla.sla_zd(ha=ha, dec=dec, phi=latitude)
+    return Angle(radians=zd)
+
+
 def calculate_airmass_at_times(times, target, obs_latitude, obs_longitude, obs_height):
     '''
         Calculate a list of airmasses given a list of times and a target and object lat/lon/height.
