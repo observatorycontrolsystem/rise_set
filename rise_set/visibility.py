@@ -20,13 +20,15 @@ import math
 import copy
 
 # Internal imports
-from rise_set.astrometry     import (calc_sunrise_set, calc_planet_rise_set, calc_rise_set, RiseSetError,
-                                     Star, gregorian_to_ut_mjd, ut_mjd_to_gmst, date_to_tdb, apparent_planet_pos,
-                                     mean_to_apparent, angular_distance_between, elem_to_topocentric_apparent)
-from rise_set.angle          import Angle
+from rise_set.astrometry import (
+    calc_local_hour_angle, calc_sunrise_set, calc_planet_rise_set, calc_rise_set, RiseSetError,
+    Star, gregorian_to_ut_mjd, ut_mjd_to_gmst, date_to_tdb, apparent_planet_pos,
+    calculate_zenith_distance, mean_to_apparent, angular_distance_between, elem_to_topocentric_apparent)
+from rise_set.angle import Angle
 from rise_set.moving_objects import find_moving_object_up_intervals
-from rise_set.utils          import (coalesce_adjacent_intervals, intersect_intervals, is_sidereal_target,
-                                     intersect_many_intervals, is_moving_object, is_static_target, target_to_jform)
+from rise_set.utils import (
+    coalesce_adjacent_intervals, intersect_intervals, is_sidereal_target,
+    intersect_many_intervals, is_moving_object, is_static_target, target_to_jform)
 
 # Import logging modules
 import logging
