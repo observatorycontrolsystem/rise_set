@@ -171,6 +171,7 @@ class Visibility(object):
             chunkend = min(chunkstart + chunksize, end)
             while chunkstart != chunkend and chunkend <= end:
                 # get the tdb date of the start time of the interval
+                # barycentric dynamical time
                 tdb = date_to_tdb(chunkstart)
                 # get the apparent ra/dec for the target, and for the moon at this timestamp
                 if is_sidereal_target(target):
@@ -180,9 +181,10 @@ class Visibility(object):
                                                                                  target_to_jform(target))
 
                 ha = calc_local_hour_angle(target_app_dec, self.site['longitude'], chunkstart)
-                target_zenith_dist = calculate_zenith_distance(ha.in_radians(),
+
+                target_zenith_dist = calculate_zenith_distance(self.site['latitude'].in_radians(),
                                                                target_app_dec.in_radians(),
-                                                               self.site['latitude'].in_radians())
+                                                               ha.in_radians())
 
                 # if that zenith distance is > the constraint, add this interval to final intervals
                 if target_zenith_dist.in_degrees() >= zenith_distance.in_degrees():
