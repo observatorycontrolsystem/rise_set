@@ -1068,16 +1068,17 @@ def calculate_altitude(latitude, dec, local_hour_angle):
     return Angle(radians=altitude)
 
 
-def calculate_zenith_distance(ha, dec, latitude):
+def calculate_zenith_distance(latitude, dec, local_hour_angle):  #(ha, dec, latitude):
     """
     Calls SLA_ZD
 
-    :param ha: hour angle in radians
-    :param dec: declination in radians
     :param latitude: latitude in radians
+    :param dec: declination in radians
+    :param local_hour_angle: hour angle in radians
+
     :return: zenith_distance (radians, [0,pi])
     """
-    zd = sla.sla_zd(ha=ha, dec=dec, phi=latitude)
+    zd = sla.sla_zd(ha=local_hour_angle, dec=dec, phi=latitude)
     return Angle(radians=zd)
 
 
