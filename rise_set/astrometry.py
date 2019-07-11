@@ -204,6 +204,10 @@ def calc_local_hour_angle(ra_app, longitude, date):
             theta_0 = GAST (Greenwich apparent sidereal time)
             L       = Site longitude (east +ve)
             alpha   = Apparent Right Ascension
+
+        :param ra_app: Angle
+        :param longitude: east positive Angle
+        :param date: UTC datetime.datetime
      '''
     app_sidereal_time = calc_apparent_sidereal_time(date)
 
