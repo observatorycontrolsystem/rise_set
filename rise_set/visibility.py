@@ -181,7 +181,7 @@ class Visibility(object):
                     target_app_ra, target_app_dec = elem_to_topocentric_apparent(chunkstart, target, self.site,
                                                                                  target_to_jform(target))
 
-                ha = calc_local_hour_angle(target_app_dec, self.site['longitude'], chunkstart)
+                ha = calc_local_hour_angle(target_app_ra, self.site['longitude'], chunkstart)
 
                 target_zenith_dist = calculate_zenith_distance(self.site['latitude'].in_radians(),
                                                                target_app_dec.in_radians(),

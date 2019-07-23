@@ -1362,7 +1362,7 @@ class TestZDvsAltitude(TestZenithDistanceCalculation):
         target_app_ra, target_app_dec = mean_to_apparent(target, tdb)  # for sidereal targets
         # get the local_hour_angle from
         latitude = self.site['latitude']
-        local_hour_angle = calc_local_hour_angle(target_app_dec, self.site['longitude'], start_time)
+        local_hour_angle = calc_local_hour_angle(target_app_ra, self.site['longitude'], start_time)
         zd = calculate_zenith_distance(self.site['latitude'].in_radians(),
                                        target_app_dec.in_radians(),
                                        local_hour_angle.in_radians())
@@ -1384,7 +1384,7 @@ class TestZDvsAltitude(TestZenithDistanceCalculation):
                                                                      target_to_jform(target))
 
         latitude = self.site['latitude']
-        local_hour_angle = calc_local_hour_angle(target_app_dec, self.site['longitude'], start_time)
+        local_hour_angle = calc_local_hour_angle(target_app_ra, self.site['longitude'], start_time)
         zd = calculate_zenith_distance(self.site['latitude'].in_radians(),
                                        target_app_dec.in_radians(),
                                        local_hour_angle.in_radians())
@@ -1406,7 +1406,7 @@ class TestZDvsAltitude(TestZenithDistanceCalculation):
                                                                      target_to_jform(target))
 
         latitude = self.site['latitude']
-        local_hour_angle = calc_local_hour_angle(target_app_dec, self.site['longitude'], start_time)
+        local_hour_angle = calc_local_hour_angle(target_app_ra, self.site['longitude'], start_time)
         zd = calculate_zenith_distance(self.site['latitude'].in_radians(),
                                        target_app_dec.in_radians(),
                                        local_hour_angle.in_radians())
@@ -1428,7 +1428,7 @@ class TestZDvsAltitude(TestZenithDistanceCalculation):
                                                                      target_to_jform(target))
 
         latitude = self.site['latitude']
-        local_hour_angle = calc_local_hour_angle(target_app_dec, self.site['longitude'], start_time)
+        local_hour_angle = calc_local_hour_angle(target_app_ra, self.site['longitude'], start_time)
         zd = calculate_zenith_distance(self.site['latitude'].in_radians(),
                                        target_app_dec.in_radians(),
                                        local_hour_angle.in_radians())
