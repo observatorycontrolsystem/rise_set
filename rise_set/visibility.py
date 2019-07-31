@@ -183,9 +183,7 @@ class Visibility(object):
 
                 ha = calc_local_hour_angle(target_app_ra, self.site['longitude'], chunkstart)
 
-                target_zenith_dist = calculate_zenith_distance(self.site['latitude'].in_radians(),
-                                                               target_app_dec.in_radians(),
-                                                               ha.in_radians())
+                target_zenith_dist = calculate_zenith_distance(self.site['latitude'], target_app_dec, ha)
                 _log.debug("{start} - {end}: {zd}".format(start=chunkstart,
                                                           end=chunkend,
                                                           zd=target_zenith_dist))

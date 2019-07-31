@@ -1374,11 +1374,13 @@ class TestZDvsAltitude(TestZenithDistanceCalculation):
         degenerate case: test that zd + alt = 90-degrees
         """
         # print("lat=dec=ha=0.0")
-        latitude = 0.0
-        dec = 0.0
-        local_hour_angle = 0.0
+        latitude = Angle(0.0)
+        dec = Angle(0.0)
+        local_hour_angle = Angle(0.0)
         zd = calculate_zenith_distance(latitude, dec, local_hour_angle)
-        alt = calculate_altitude(latitude, dec, local_hour_angle)
+        alt = calculate_altitude(latitude.in_degrees(),
+                                 dec.in_degrees(),
+                                 local_hour_angle.in_degrees())
         # print("zd: {zd}".format(zd=zd))
         # print("alt: {alt}".format(alt=alt))
         assert_almost_equals((90.0 - zd.in_degrees()), alt.in_degrees())
@@ -1395,10 +1397,12 @@ class TestZDvsAltitude(TestZenithDistanceCalculation):
         target_app_ra, target_app_dec = mean_to_apparent(target, tdb)  # for sidereal targets
         # get the local_hour_angle from
         latitude = self.site['latitude']
-        local_hour_angle = calc_local_hour_angle(target_app_ra, self.site['longitude'], start_time)
-        zd = calculate_zenith_distance(self.site['latitude'].in_radians(),
-                                       target_app_dec.in_radians(),
-                                       local_hour_angle.in_radians())
+
+        local_hour_angle = calc_local_hour_angle(target_app_ra,
+                                                 self.site['longitude'], start_time)
+
+        zd = calculate_zenith_distance(latitude, target_app_dec, local_hour_angle)
+
         alt = calculate_altitude(latitude.in_degrees(),
                                  target_app_dec.in_degrees(),
                                  local_hour_angle.in_degrees())
@@ -1418,9 +1422,7 @@ class TestZDvsAltitude(TestZenithDistanceCalculation):
 
         latitude = self.site['latitude']
         local_hour_angle = calc_local_hour_angle(target_app_ra, self.site['longitude'], start_time)
-        zd = calculate_zenith_distance(self.site['latitude'].in_radians(),
-                                       target_app_dec.in_radians(),
-                                       local_hour_angle.in_radians())
+        zd = calculate_zenith_distance(latitude, target_app_dec, local_hour_angle)
         alt = calculate_altitude(latitude.in_degrees(),
                                  target_app_dec.in_degrees(),
                                  local_hour_angle.in_degrees())
@@ -1440,9 +1442,7 @@ class TestZDvsAltitude(TestZenithDistanceCalculation):
 
         latitude = self.site['latitude']
         local_hour_angle = calc_local_hour_angle(target_app_ra, self.site['longitude'], start_time)
-        zd = calculate_zenith_distance(self.site['latitude'].in_radians(),
-                                       target_app_dec.in_radians(),
-                                       local_hour_angle.in_radians())
+        zd = calculate_zenith_distance(latitude, target_app_dec, local_hour_angle)
         alt = calculate_altitude(latitude.in_degrees(),
                                  target_app_dec.in_degrees(),
                                  local_hour_angle.in_degrees())
@@ -1462,9 +1462,7 @@ class TestZDvsAltitude(TestZenithDistanceCalculation):
 
         latitude = self.site['latitude']
         local_hour_angle = calc_local_hour_angle(target_app_ra, self.site['longitude'], start_time)
-        zd = calculate_zenith_distance(self.site['latitude'].in_radians(),
-                                       target_app_dec.in_radians(),
-                                       local_hour_angle.in_radians())
+        zd = calculate_zenith_distance(latitude, target_app_dec, local_hour_angle)
         alt = calculate_altitude(latitude.in_degrees(),
                                  target_app_dec.in_degrees(),
                                  local_hour_angle.in_degrees())
