@@ -126,10 +126,23 @@ class Visibility(object):
 
         return self.moon_dark_intervals
 
+    def _add_moon_interval(self, time, target_app_ra, target_app_dec, constraint=Angle(degrees=30)):
+        moon_app_ra, moon_app_dec, diameter = apparent_planet_pos('moon', time['tdb'], self.site)
+        # call slalib to get the angular moon distance
+        target_moon_dist = angular_distance_between(target_app_ra, target_app_dec, moon_app_ra, moon_app_dec)
+        # if that moon distance is > the constraint, add this interval to final intervals
+        return target_moon_dist.in_degrees() >= constraint.in_degrees()
 
-    def get_moon_distance_intervals(self, target, target_intervals, moon_distance=Angle(degrees=30), chunksize=datetime.timedelta(minutes=30)):
+    def _add_zenith_interval(self, time, target_app_ra, target_app_dec, constraint=Angle(degrees=0)):
+        ha = calc_local_hour_angle(target_app_ra, self.site['longitude'], time['time'])
+        target_zenith_dist = calculate_zenith_distance(self.site['latitude'], target_app_dec, ha)
+        # if that zenith distance is > the constraint, add this interval to final intervals
+        return target_zenith_dist.in_degrees() >= constraint.in_degrees()
+
+    def _get_chunked_intervals(self, target, target_intervals, compare_func, constraint, chunksize=datetime.timedelta(minutes=30)):
         '''Returns a set of datetime 2-tuples, each of which represents an interval
-           of time that the target is greater than moon_distance away from the moon.
+           of time that the target is greater than the constraint away from the thing-to-be-avoided.
+           The supplied compare_func calculates the distance to it's specific obstacle (moon, zenith).
         '''
         intervals = []
 
@@ -146,57 +159,27 @@ class Visibility(object):
                     target_app_ra, target_app_dec = elem_to_topocentric_apparent(chunkstart, target, self.site,
                                                                                  target_to_jform(target))
 
-                moon_app_ra, moon_app_dec, diameter = apparent_planet_pos('moon', tdb, self.site)
-
-                # call slalib to get the angular moon distance
-                target_moon_dist = angular_distance_between(target_app_ra, target_app_dec, moon_app_ra, moon_app_dec)
-                # if that moon distance is > the constraint, add this interval to final intervals
-                if target_moon_dist.in_degrees() >= moon_distance.in_degrees():
+                if compare_func({'time': chunkstart, 'tdb': tdb}, target_app_ra, target_app_dec, constraint):
                     intervals.append((chunkstart, chunkend))
+
                 # increment the chunkstart/end up
                 chunkstart = chunkend
                 chunkend = min(chunkstart + chunksize, end)
 
         intervals = coalesce_adjacent_intervals(intervals)
         return intervals
+
+    def get_moon_distance_intervals(self, target, target_intervals, moon_distance=Angle(degrees=30), chunksize=datetime.timedelta(minutes=30)):
+        '''Returns a set of datetime 2-tuples, each of which represents an interval
+           of time that the target is greater than moon_distance away from the moon.
+        '''
+        return self._get_chunked_intervals(target, target_intervals, self._add_moon_interval, moon_distance, chunksize)
 
     def get_zenith_distance_intervals(self, target, target_intervals, chunksize=datetime.timedelta(minutes=30)):
         """Returns a set of datetime 2-tuples, each of which represents an interval
            of time that the target is greater than zenith_distance away from zenith.
         """
-        intervals = []
-
-        for start, end in target_intervals:
-            chunkstart = start
-            chunkend = min(chunkstart + chunksize, end)
-            while chunkstart != chunkend and chunkend <= end:
-                # get the tdb date of the start time of the interval
-                # barycentric dynamical time
-                tdb = date_to_tdb(chunkstart)
-                # get the apparent ra/dec for the target, and for the moon at this timestamp
-                if is_sidereal_target(target):
-                    target_app_ra, target_app_dec = mean_to_apparent(target, tdb)
-                else:
-                    target_app_ra, target_app_dec = elem_to_topocentric_apparent(chunkstart, target, self.site,
-                                                                                 target_to_jform(target))
-
-                ha = calc_local_hour_angle(target_app_ra, self.site['longitude'], chunkstart)
-
-                target_zenith_dist = calculate_zenith_distance(self.site['latitude'], target_app_dec, ha)
-                _log.debug("{start} - {end}: {zd}".format(start=chunkstart,
-                                                          end=chunkend,
-                                                          zd=target_zenith_dist))
-
-                # if that zenith distance is > the constraint, add this interval to final intervals
-                if target_zenith_dist.in_degrees() >= self.zenith_blind_spot.in_degrees():
-                    intervals.append((chunkstart, chunkend))
-
-                # increment the chunkstart/end up
-                chunkstart = chunkend
-                chunkend = min(chunkstart + chunksize, end)
-
-        intervals = coalesce_adjacent_intervals(intervals)
-        return intervals
+        return self._get_chunked_intervals(target, target_intervals, self._add_zenith_interval, self.zenith_blind_spot, chunksize)
 
     def get_target_intervals(self, target, up=True, airmass=None):
         '''Returns a set of datetime 2-tuples, each of which represents an interval
