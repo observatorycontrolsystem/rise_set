@@ -333,8 +333,14 @@ class Visibility(object):
             # for moving objects and static objects.
             within_hour_angle = above_horizon
 
+        if self.zenith_blind_spot.in_degrees() <= 0.0 or is_static_target(target):
+            zenith_hole_avoidance = above_horizon
+        else:
+            zenith_hole_avoidance = self.get_zenith_distance_intervals(target, above_horizon)
+
         # find the overlapping intervals between them
-        intervals = intersect_many_intervals(dark, above_horizon, within_hour_angle, moon_avoidance)
+        intervals = intersect_many_intervals(dark, above_horizon, within_hour_angle,
+                                             moon_avoidance, zenith_hole_avoidance)
 
         return intervals
 
