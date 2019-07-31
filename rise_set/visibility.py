@@ -164,7 +164,6 @@ class Visibility(object):
         """Returns a set of datetime 2-tuples, each of which represents an interval
            of time that the target is greater than zenith_distance away from zenith.
         """
-        _log.setLevel(logging.DEBUG)
         intervals = []
 
         for start, end in target_intervals:
@@ -191,10 +190,7 @@ class Visibility(object):
                 # if that zenith distance is > the constraint, add this interval to final intervals
                 if target_zenith_dist.in_degrees() >= zenith_distance.in_degrees():
                     intervals.append((chunkstart, chunkend))
-                else:
-                    _log.debug("**** excluding chunk {chunk}: {tzd} < {zd}".format(chunk=(chunkstart, chunkend),
-                                                                                   tzd=target_zenith_dist,
-                                                                                   zd=zenith_distance))
+
                 # increment the chunkstart/end up
                 chunkstart = chunkend
                 chunkend = min(chunkstart + chunksize, end)
