@@ -1142,14 +1142,13 @@ class TestZDIntervalsZeroZenithDistance(TestZenithDistanceCalculation):
         super(TestZDIntervalsZeroZenithDistance, self).setup()
         start = datetime(2012, 2, 1)
         end = datetime(2012, 2, 2)
-        self.v = Visibility(self.site, start, end, self.horizon)
-        self.max_zd = Angle(degrees=0)
+        self.v = Visibility(self.site, start, end, self.horizon) # zenith_blind_spot defaults to 0
 
     def test_zd_intervals_zero_zd_sidereal_target(self):
         target = self.sidereal_target
 
         target_intervals = self.v.get_target_intervals(target=target)
-        zenith_distance_intervals = self.v.get_zenith_distance_intervals(target, target_intervals, self.max_zd)
+        zenith_distance_intervals = self.v.get_zenith_distance_intervals(target, target_intervals)
 
         coalesced_target_intervals = coalesce_adjacent_intervals(target_intervals)
         try:
@@ -1165,7 +1164,7 @@ class TestZDIntervalsZeroZenithDistance(TestZenithDistanceCalculation):
         target = self.major_planet_target
 
         target_intervals = self.v.get_target_intervals(target=target)
-        zenith_distance_intervals = self.v.get_zenith_distance_intervals(target, target_intervals, self.max_zd)
+        zenith_distance_intervals = self.v.get_zenith_distance_intervals(target, target_intervals)
 
         coalesced_target_intervals = coalesce_adjacent_intervals(target_intervals)
         try:
@@ -1181,7 +1180,7 @@ class TestZDIntervalsZeroZenithDistance(TestZenithDistanceCalculation):
         target = self.minor_planet_target
 
         target_intervals = self.v.get_target_intervals(target=target)
-        zenith_distance_intervals = self.v.get_zenith_distance_intervals(target, target_intervals, self.max_zd)
+        zenith_distance_intervals = self.v.get_zenith_distance_intervals(target, target_intervals)
 
         coalesced_target_intervals = coalesce_adjacent_intervals(target_intervals)
         try:
@@ -1197,7 +1196,7 @@ class TestZDIntervalsZeroZenithDistance(TestZenithDistanceCalculation):
         target = self.comet_target
 
         target_intervals = self.v.get_target_intervals(target=target)
-        zenith_distance_intervals = self.v.get_zenith_distance_intervals(target, target_intervals, self.max_zd)
+        zenith_distance_intervals = self.v.get_zenith_distance_intervals(target, target_intervals)
 
         coalesced_target_intervals = coalesce_adjacent_intervals(target_intervals)
         try:
@@ -1218,21 +1217,20 @@ class TestZDIntervals180ZenithDistance(TestZenithDistanceCalculation):
         super(TestZDIntervals180ZenithDistance, self).setup()
         start = datetime(2012, 2, 1)
         end = datetime(2012, 2, 2)
-        self.v = Visibility(self.site, start, end, self.horizon)
-        self.max_zd = Angle(degrees=180)  # 150 works, but not 140 (?!)
+        self.v = Visibility(self.site, start, end, self.horizon, zenith_blind_spot=180.0)
 
     def test_zd_intervals_180_zd_sidereal_target(self):
         target = self.sidereal_target
 
         target_intervals = self.v.get_target_intervals(target=target)
-        zenith_distance_intervals = self.v.get_zenith_distance_intervals(target, target_intervals, self.max_zd)
+        zenith_distance_intervals = self.v.get_zenith_distance_intervals(target, target_intervals)
         assert_equal(len(zenith_distance_intervals), 0)
 
     def test_zd_intervals_180_zd_non_sidereal_major_planet_target(self):
         target = self.major_planet_target
 
         target_intervals = self.v.get_target_intervals(target=target)
-        zenith_distance_intervals = self.v.get_zenith_distance_intervals(target, target_intervals, self.max_zd)
+        zenith_distance_intervals = self.v.get_zenith_distance_intervals(target, target_intervals)
 
         assert_equal(len(zenith_distance_intervals), 0)
 
@@ -1240,7 +1238,7 @@ class TestZDIntervals180ZenithDistance(TestZenithDistanceCalculation):
         target = self.minor_planet_target
 
         target_intervals = self.v.get_target_intervals(target=target)
-        zenith_distance_intervals = self.v.get_zenith_distance_intervals(target, target_intervals, self.max_zd)
+        zenith_distance_intervals = self.v.get_zenith_distance_intervals(target, target_intervals)
 
         assert_equal(len(zenith_distance_intervals), 0)
 
@@ -1248,7 +1246,7 @@ class TestZDIntervals180ZenithDistance(TestZenithDistanceCalculation):
         target = self.comet_target
 
         target_intervals = self.v.get_target_intervals(target=target)
-        zenith_distance_intervals = self.v.get_zenith_distance_intervals(target, target_intervals, self.max_zd)
+        zenith_distance_intervals = self.v.get_zenith_distance_intervals(target, target_intervals)
 
         assert_equal(len(zenith_distance_intervals), 0)
 
@@ -1259,7 +1257,10 @@ class TestZenithDistanceIntervals(TestZenithDistanceCalculation):
         super(TestZenithDistanceIntervals, self).setup()
         start = datetime(2012, 2, 1)
         end = datetime(2012, 2, 2)
-        self.v = Visibility(self.site, start, end, self.horizon, ha_limit_neg=-12.0, ha_limit_pos=12.0)
+        zenith_hole_radius = 9.0  # degrees; altitude > 81 should be excluded
+        self.v = Visibility(self.site, start, end, self.horizon,
+                            ha_limit_neg=-12.0, ha_limit_pos=12.0,
+                            zenith_blind_spot=zenith_hole_radius)
 
     def test_jupiter(self):
         """Test interval removal for Jupiter > 81-degrees
@@ -1287,22 +1288,10 @@ class TestZenithDistanceIntervals(TestZenithDistanceCalculation):
         |-------------------+----------|
         """
         target = self.major_planet_target  # Jupiter
-        zenith_hole_radius = Angle(degrees=9.0)  # altitude > 81 should be excluded
 
         target_intervals = self.v.get_target_intervals(target=target)
         zenith_intervals = self.v.get_zenith_distance_intervals(target, target_intervals,
-                                                                zenith_distance=zenith_hole_radius,
                                                                 chunksize=timedelta(minutes=1))
-
-        coalesced_target_intervals = coalesce_adjacent_intervals(target_intervals)
-
-        # TODO: finish implementation
-        #print("target intervals:")
-        #[print(interval) for interval in target_intervals]
-        print("zenith_distance_intervals")
-        [print(interval) for interval in zenith_intervals]
-        print("coalesced target intervals:")
-        [print(interval) for interval in coalesced_target_intervals]
 
         # these intervals are tailored to the specific JPL Horizons output for this target
         expected_intervals = [
@@ -1314,13 +1303,11 @@ class TestZenithDistanceIntervals(TestZenithDistanceCalculation):
 
     def xxx_test_sidereal_target(self):
         target = self.sidereal_target
-        zenith_hole_radius = Angle(degrees=9.0)  # altitude > 81 should be excluded
 
         target_intervals = self.v.get_target_intervals(target=target)
         print("target intervals:")
         [print(interval) for interval in target_intervals]
         zenith_intervals = self.v.get_zenith_distance_intervals(target, target_intervals,
-                                                                zenith_distance=zenith_hole_radius,
                                                                 chunksize=timedelta(minutes=1))
 
         coalesced_target_intervals = coalesce_adjacent_intervals(target_intervals)

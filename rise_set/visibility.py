@@ -70,12 +70,13 @@ def set_airmass_limit(airmass, horizon):
 class Visibility(object):
 
     def __init__(self, site, start_date, end_date, horizon=0, twilight='sunrise',
-                 ha_limit_neg=-4.9, ha_limit_pos=4.9):
+                 ha_limit_neg=-4.9, ha_limit_pos=4.9, zenith_blind_spot=0):
         self.site         = site
         self.start_date   = start_date
         self.end_date     = end_date
         self.horizon      = Angle(degrees=horizon)
         self.twilight     = twilight
+        self.zenith_blind_spot = Angle(degrees=zenith_blind_spot)
 
         if ha_limit_pos > 12.0 or ha_limit_pos < 0.0:
             msg = "Positive hour angle limit must fall between 0 and 12 hours"
@@ -159,8 +160,7 @@ class Visibility(object):
         intervals = coalesce_adjacent_intervals(intervals)
         return intervals
 
-    def get_zenith_distance_intervals(self, target, target_intervals, zenith_distance=Angle(degrees=0),
-                                      chunksize=datetime.timedelta(minutes=30)):
+    def get_zenith_distance_intervals(self, target, target_intervals, chunksize=datetime.timedelta(minutes=30)):
         """Returns a set of datetime 2-tuples, each of which represents an interval
            of time that the target is greater than zenith_distance away from zenith.
         """
@@ -188,7 +188,7 @@ class Visibility(object):
                                                           zd=target_zenith_dist))
 
                 # if that zenith distance is > the constraint, add this interval to final intervals
-                if target_zenith_dist.in_degrees() >= zenith_distance.in_degrees():
+                if target_zenith_dist.in_degrees() >= self.zenith_blind_spot.in_degrees():
                     intervals.append((chunkstart, chunkend))
 
                 # increment the chunkstart/end up
