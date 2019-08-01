@@ -1105,6 +1105,7 @@ class TestZenithDistanceCalculation(object):
                                                             eccentricity=0.07610292126891821,
                                                             mean_anomaly=340.389084821267)
 
+        # for datetime(2012, 07, 22) to datetime(2012, 07, 23)
         # Details from JPL Horizons for Comet 27P
         self.comet_target = make_comet_target('MPC_COMET',
                                               epoch=56364,
@@ -1134,6 +1135,41 @@ class TestZenithDistanceCalculation(object):
                                                             dailymot=0.08306200006467207)      # N
 
 
+class TestObservableIntervalsZDIgnoredForTargets(TestZenithDistanceCalculation):
+    """
+    The zenith distance calculation should be ignored for satellite and hour angle targets.
+    """
+    def setup(self):
+        super(TestObservableIntervalsZDIgnoredForTargets, self).setup()
+        start = datetime(2012, 2, 1)
+        end = datetime(2012, 2, 2)
+
+        # giant zenith_blind_spot would normally limit intervals
+        self.v = Visibility(self.site, start, end, self.horizon, zenith_blind_spot=180)
+
+    def test_moon_distance_ignored_for_satellite_target(self):
+        start = datetime(2012, 1, 2)
+        end = datetime(2012, 1, 3)
+
+        target = make_satellite_target(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+
+        observable_intervals = self.v.get_observable_intervals(target)
+        # check that this doesn't crash, and that intervals match night intervals
+        night_intervals = self.v.get_dark_intervals()
+        assert_equal(night_intervals, observable_intervals)
+
+    def test_moon_distance_ignored_for_hour_angle_target(self):
+        start = datetime(2012, 1, 2)
+        end = datetime(2012, 1, 3)
+
+        target = make_hour_angle_target(0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+
+        observable_intervals = self.v.get_observable_intervals(target)
+        # check that this doesn't crash, and that intervals match night intervals
+        night_intervals = self.v.get_dark_intervals()
+        assert_equal(night_intervals, observable_intervals)
+
+
 class TestZDIntervalsZeroZenithDistance(TestZenithDistanceCalculation):
     """Test that a zero zenith distance leaves the target intervals untouched.
     """
@@ -1142,7 +1178,7 @@ class TestZDIntervalsZeroZenithDistance(TestZenithDistanceCalculation):
         super(TestZDIntervalsZeroZenithDistance, self).setup()
         start = datetime(2012, 2, 1)
         end = datetime(2012, 2, 2)
-        self.v = Visibility(self.site, start, end, self.horizon) # zenith_blind_spot defaults to 0
+        self.v = Visibility(self.site, start, end, self.horizon)  # zenith_blind_spot defaults to 0
 
     def test_zd_intervals_zero_zd_sidereal_target(self):
         target = self.sidereal_target
@@ -1250,11 +1286,10 @@ class TestZDIntervals180ZenithDistance(TestZenithDistanceCalculation):
 
         assert_equal(len(zenith_distance_intervals), 0)
 
-
-class TestZenithDistanceIntervals(TestZenithDistanceCalculation):
+class TestMajorPlanetZenithDistanceIntervals(TestZenithDistanceCalculation):
 
     def setup(self):
-        super(TestZenithDistanceIntervals, self).setup()
+        super(TestMajorPlanetZenithDistanceIntervals, self).setup()
         start = datetime(2012, 2, 1)
         end = datetime(2012, 2, 2)
         zenith_hole_radius = 9.0  # degrees; altitude > 81 should be excluded
@@ -1301,55 +1336,52 @@ class TestZenithDistanceIntervals(TestZenithDistanceCalculation):
         ]
         assert_equal(expected_intervals, zenith_intervals)
 
-    def xxx_test_sidereal_target(self):
-        target = self.sidereal_target
+
+class TestCometZenithDistanceIntervals(TestZenithDistanceCalculation):
+    """
+    Excerptx from JPL Horizons
+    |-------------------+----------+-------------------|
+    | time              | altitude | event             |
+    |-------------------+----------+-------------------|
+    | 2012-Jul-22 03:08 |  43.9532 |                   |
+    | 2012-Jul-22 03:09 |  44.0039 | enter zenith hole |
+    | 2012-Jul-22 03:10 |  44.0533 |                   |
+    | 2012-Jul-22 04:25 |  44.0802 |                   |
+    | 2012-Jul-22 04:26 |  44.0314 |                   |
+    | 2012-Jul-22 04:27 |  43.9814 | exit zenith hole  |
+    | 2012-Jul-22 04:28 |  43.9302 |                   |
+    | 2012-Jul-22 04:29 |  43.8777 |                   |
+    | 2012-Jul-22 07:54 |  15.0088 | comet set         |
+    | 2012-Jul-22 07:55 |  14.8141 |                   |
+    | 2012-Jul-22 23:37 |  14.8374 |                   |
+    | 2012-Jul-22 23:38 |  15.0322 | comet rise        |
+    |-------------------+----------+-------------------|
+    """
+    def setup(self):
+        super(TestCometZenithDistanceIntervals, self).setup()
+        start = datetime(2012, 7, 22)
+        end = datetime(2012, 7, 23)
+        zenith_hole_radius = 46.0  # degrees; altitude > 44 should be excluded
+        self.v = Visibility(self.site, start, end, self.horizon,
+                                ha_limit_neg=-12.0, ha_limit_pos=12.0,
+                                zenith_blind_spot=zenith_hole_radius)
+
+    def test_sidereal_target(self):
+        target = self.comet_target
 
         target_intervals = self.v.get_target_intervals(target=target)
-        print("target intervals:")
-        [print(interval) for interval in target_intervals]
         zenith_intervals = self.v.get_zenith_distance_intervals(target, target_intervals,
                                                                 chunksize=timedelta(minutes=1))
-
-        coalesced_target_intervals = coalesce_adjacent_intervals(target_intervals)
-
-        # TODO: finish implementation
-        print("coalesced target intervals:")
-        [print(interval) for interval in coalesced_target_intervals]
-        print("zenith_distance_intervals")
-        [print(interval) for interval in zenith_intervals]
-
-    def xxx_test_zenith_distance_interval_removed_according_to_altitude(self):
-        """
-        If the zenith distance is greater than 90-degrees minus the altitude for a given interval,
-        Then that interval should be removed.
-
-        Test for this by calculating the target altitude over the intervals, setting the zenith distance
-        appropriately large and ensuring that the interval is removed.
-
-
-        """
-        start = datetime(2012, 2, 1)
-        end = datetime(2012, 2, 2)
-
-        v = Visibility(self.site, start, end, self.horizon)
-        for target in [self.sidereal_target, self.minor_planet_target, self.comet_target, self. major_planet_target]:
-            print(target)
-            target_intervals = v.get_target_intervals(target=target)
-
-            # determine the altitude of the target during the target_interval
-            altitude_in_interval = {}
-            for interval in target_intervals:
-                print(interval)
-                # TODO: finish this WIP
-                #local_ha_for_interval =
-                #alt_start = calculate_altitude(lat, dec, local_hour_angle)
-                alt_end = 0
-                #alt_interval = max(alt_start, alt_end)
-                #altitude_in_interval[interval] = alt_interval
-
-            # for the range of altitudes calculated, compute the zenith distance and zenith distance intervals
-
-            # assert that the appropriate intervals are present and absent from the computed zenith_distance_intervals
+        # first interval ends when the target enters the zenith hole (chunksize = 1 min)
+        # second interval begins when the target exits the zenith hole
+        # second interval ends when the target goes below the horizon (15) (chuncksize=15 min default)
+        # third interval begins when the target rises above the horizon (15) (chuncksize=15 min default)
+        expected_intervals = [
+            (self.v.start_date, datetime(2012, 7, 22, 3, 9)),
+            (datetime(2012, 7, 22, 4, 27), datetime(2012, 7, 22, 7, 45)),
+            (datetime(2012, 7, 22, 23, 45), self.v.end_date)
+        ]
+        assert_equal(expected_intervals, zenith_intervals)
 
 
 class TestZDvsAltitude(TestZenithDistanceCalculation):
