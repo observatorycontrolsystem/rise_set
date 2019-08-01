@@ -1187,14 +1187,7 @@ class TestZDIntervalsZeroZenithDistance(TestZenithDistanceCalculation):
         zenith_distance_intervals = self.v.get_zenith_distance_intervals(target, target_intervals)
 
         coalesced_target_intervals = coalesce_adjacent_intervals(target_intervals)
-        try:
-            assert_equal(zenith_distance_intervals, coalesced_target_intervals)
-        except AssertionError as err:
-            print("target intervals:")
-            [print(interval) for interval in target_intervals]
-            print("zenith_distance_intervals")
-            [print(interval) for interval in zenith_distance_intervals]
-            raise err  # re-raise
+        assert_equal(zenith_distance_intervals, coalesced_target_intervals)
 
     def test_zd_intervals_zero_zd_non_sidereal_major_planet_target(self):
         target = self.major_planet_target
@@ -1203,14 +1196,7 @@ class TestZDIntervalsZeroZenithDistance(TestZenithDistanceCalculation):
         zenith_distance_intervals = self.v.get_zenith_distance_intervals(target, target_intervals)
 
         coalesced_target_intervals = coalesce_adjacent_intervals(target_intervals)
-        try:
-            assert_equal(zenith_distance_intervals, coalesced_target_intervals)
-        except AssertionError as err:
-            print("target intervals:")
-            [print(interval) for interval in target_intervals]
-            print("zenith_distance_intervals")
-            [print(interval) for interval in zenith_distance_intervals]
-            raise err  # re-raise
+        assert_equal(zenith_distance_intervals, coalesced_target_intervals)
 
     def test_zd_intervals_zero_zd_non_sidereal_minor_planet_target(self):
         target = self.minor_planet_target
@@ -1219,14 +1205,7 @@ class TestZDIntervalsZeroZenithDistance(TestZenithDistanceCalculation):
         zenith_distance_intervals = self.v.get_zenith_distance_intervals(target, target_intervals)
 
         coalesced_target_intervals = coalesce_adjacent_intervals(target_intervals)
-        try:
-            assert_equal(zenith_distance_intervals, coalesced_target_intervals)
-        except AssertionError as err:
-            print("target intervals:")
-            [print(interval) for interval in target_intervals]
-            print("zenith_distance_intervals")
-            [print(interval) for interval in zenith_distance_intervals]
-            raise err  # re-raise
+        assert_equal(zenith_distance_intervals, coalesced_target_intervals)
 
     def test_zd_intervals_zero_zd_non_sidereal_comet_target(self):
         target = self.comet_target
@@ -1235,14 +1214,7 @@ class TestZDIntervalsZeroZenithDistance(TestZenithDistanceCalculation):
         zenith_distance_intervals = self.v.get_zenith_distance_intervals(target, target_intervals)
 
         coalesced_target_intervals = coalesce_adjacent_intervals(target_intervals)
-        try:
-            assert_equal(zenith_distance_intervals, coalesced_target_intervals)
-        except AssertionError as err:
-            print("target intervals:")
-            [print(interval) for interval in target_intervals]
-            print("zenith_distance_intervals")
-            [print(interval) for interval in zenith_distance_intervals]
-            raise err  # re-raise
+        assert_equal(zenith_distance_intervals, coalesced_target_intervals)
 
 
 class TestZDIntervals180ZenithDistance(TestZenithDistanceCalculation):
