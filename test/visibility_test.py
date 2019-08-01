@@ -1135,12 +1135,12 @@ class TestZenithDistanceCalculation(object):
                                                             dailymot=0.08306200006467207)      # N
 
 
-class TestObservableIntervalsZDIgnoredForTargets(TestZenithDistanceCalculation):
+class TestObservableIntervalsZDIgnoredForStaticTargets(TestZenithDistanceCalculation):
     """
     The zenith distance calculation should be ignored for satellite and hour angle targets.
     """
     def setup(self):
-        super(TestObservableIntervalsZDIgnoredForTargets, self).setup()
+        super(TestObservableIntervalsZDIgnoredForStaticTargets, self).setup()
         start = datetime(2012, 2, 1)
         end = datetime(2012, 2, 2)
 
