@@ -175,7 +175,7 @@ class Visibility(object):
         '''
         return self._get_chunked_intervals(target, target_intervals, self._add_moon_interval, moon_distance, chunksize)
 
-    def get_zenith_distance_intervals(self, target, target_intervals, chunksize=datetime.timedelta(minutes=30)):
+    def get_zenith_distance_intervals(self, target, target_intervals, chunksize=datetime.timedelta(minutes=1)):
         """Returns a set of datetime 2-tuples, each of which represents an interval
            of time that the target is greater than zenith_distance away from zenith.
         """
