@@ -20,13 +20,15 @@ import math
 import copy
 
 # Internal imports
-from rise_set.astrometry     import (calc_sunrise_set, calc_planet_rise_set, calc_rise_set, RiseSetError,
-                                     Star, gregorian_to_ut_mjd, ut_mjd_to_gmst, date_to_tdb, apparent_planet_pos,
-                                     mean_to_apparent, angular_distance_between, elem_to_topocentric_apparent)
-from rise_set.angle          import Angle
+from rise_set.astrometry import (
+    calc_local_hour_angle, calc_sunrise_set, calc_planet_rise_set, calc_rise_set, RiseSetError,
+    Star, gregorian_to_ut_mjd, ut_mjd_to_gmst, date_to_tdb, apparent_planet_pos,
+    calculate_zenith_distance, mean_to_apparent, angular_distance_between, elem_to_topocentric_apparent)
+from rise_set.angle import Angle
 from rise_set.moving_objects import find_moving_object_up_intervals
-from rise_set.utils          import (coalesce_adjacent_intervals, intersect_intervals, is_sidereal_target,
-                                     intersect_many_intervals, is_moving_object, is_static_target, target_to_jform)
+from rise_set.utils import (
+    coalesce_adjacent_intervals, intersect_intervals, is_sidereal_target,
+    intersect_many_intervals, is_moving_object, is_static_target, target_to_jform)
 
 # Import logging modules
 import logging
@@ -68,12 +70,13 @@ def set_airmass_limit(airmass, horizon):
 class Visibility(object):
 
     def __init__(self, site, start_date, end_date, horizon=0, twilight='sunrise',
-                 ha_limit_neg=-4.9, ha_limit_pos=4.9):
+                 ha_limit_neg=-4.9, ha_limit_pos=4.9, zenith_blind_spot=0):
         self.site         = site
         self.start_date   = start_date
         self.end_date     = end_date
         self.horizon      = Angle(degrees=horizon)
         self.twilight     = twilight
+        self.zenith_blind_spot = Angle(degrees=zenith_blind_spot)
 
         if ha_limit_pos > 12.0 or ha_limit_pos < 0.0:
             msg = "Positive hour angle limit must fall between 0 and 12 hours"
@@ -123,10 +126,23 @@ class Visibility(object):
 
         return self.moon_dark_intervals
 
+    def _add_moon_interval(self, time, target_app_ra, target_app_dec, constraint=Angle(degrees=30)):
+        moon_app_ra, moon_app_dec, diameter = apparent_planet_pos('moon', time['tdb'], self.site)
+        # call slalib to get the angular moon distance
+        target_moon_dist = angular_distance_between(target_app_ra, target_app_dec, moon_app_ra, moon_app_dec)
+        # if that moon distance is > the constraint, add this interval to final intervals
+        return target_moon_dist.in_degrees() >= constraint.in_degrees()
 
-    def get_moon_distance_intervals(self, target, target_intervals, moon_distance=Angle(degrees=30), chunksize=datetime.timedelta(minutes=30)):
+    def _add_zenith_interval(self, time, target_app_ra, target_app_dec, constraint=Angle(degrees=0)):
+        ha = calc_local_hour_angle(target_app_ra, self.site['longitude'], time['time'])
+        target_zenith_dist = calculate_zenith_distance(self.site['latitude'], target_app_dec, ha)
+        # if that zenith distance is > the constraint, add this interval to final intervals
+        return target_zenith_dist.in_degrees() >= constraint.in_degrees()
+
+    def _get_chunked_intervals(self, target, target_intervals, compare_func, constraint, chunksize=datetime.timedelta(minutes=30)):
         '''Returns a set of datetime 2-tuples, each of which represents an interval
-           of time that the target is greater than moon_distance away from the moon.
+           of time that the target is greater than the constraint away from the thing-to-be-avoided.
+           The supplied compare_func calculates the distance to it's specific obstacle (moon, zenith).
         '''
         intervals = []
 
@@ -143,13 +159,9 @@ class Visibility(object):
                     target_app_ra, target_app_dec = elem_to_topocentric_apparent(chunkstart, target, self.site,
                                                                                  target_to_jform(target))
 
-                moon_app_ra, moon_app_dec, diameter = apparent_planet_pos('moon', tdb, self.site)
-
-                # call slalib to get the angular moon distance
-                target_moon_dist = angular_distance_between(target_app_ra, target_app_dec, moon_app_ra, moon_app_dec)
-                # if that moon distance is > the constraint, add this interval to final intervals
-                if target_moon_dist.in_degrees() >= moon_distance.in_degrees():
+                if compare_func({'time': chunkstart, 'tdb': tdb}, target_app_ra, target_app_dec, constraint):
                     intervals.append((chunkstart, chunkend))
+
                 # increment the chunkstart/end up
                 chunkstart = chunkend
                 chunkend = min(chunkstart + chunksize, end)
@@ -157,6 +169,17 @@ class Visibility(object):
         intervals = coalesce_adjacent_intervals(intervals)
         return intervals
 
+    def get_moon_distance_intervals(self, target, target_intervals, moon_distance=Angle(degrees=30), chunksize=datetime.timedelta(minutes=30)):
+        '''Returns a set of datetime 2-tuples, each of which represents an interval
+           of time that the target is greater than moon_distance away from the moon.
+        '''
+        return self._get_chunked_intervals(target, target_intervals, self._add_moon_interval, moon_distance, chunksize)
+
+    def get_zenith_distance_intervals(self, target, target_intervals, chunksize=datetime.timedelta(minutes=1)):
+        """Returns a set of datetime 2-tuples, each of which represents an interval
+           of time that the target is greater than zenith_distance away from zenith.
+        """
+        return self._get_chunked_intervals(target, target_intervals, self._add_zenith_interval, self.zenith_blind_spot, chunksize)
 
     def get_target_intervals(self, target, up=True, airmass=None):
         '''Returns a set of datetime 2-tuples, each of which represents an interval
@@ -293,8 +316,14 @@ class Visibility(object):
             # for moving objects and static objects.
             within_hour_angle = above_horizon
 
+        if self.zenith_blind_spot.in_degrees() <= 0.0 or is_static_target(target):
+            zenith_hole_avoidance = above_horizon
+        else:
+            zenith_hole_avoidance = self.get_zenith_distance_intervals(target, above_horizon)
+
         # find the overlapping intervals between them
-        intervals = intersect_many_intervals(dark, above_horizon, within_hour_angle, moon_avoidance)
+        intervals = intersect_many_intervals(dark, above_horizon, within_hour_angle,
+                                             moon_avoidance, zenith_hole_avoidance)
 
         return intervals
 

@@ -15,7 +15,9 @@ from rise_set.visibility import Visibility, set_airmass_limit, InvalidHourAngleL
 from rise_set.angle import Angle
 from rise_set.sky_coordinates import RightAscension, Declination
 from rise_set.astrometry import (make_satellite_target, make_minor_planet_target, make_comet_target,
-                                 make_major_planet_target, make_hour_angle_target)
+                                 make_major_planet_target, make_hour_angle_target, calculate_altitude,
+                                 calculate_zenith_distance, mean_to_apparent, date_to_tdb,
+                                 calc_local_hour_angle, elem_to_topocentric_apparent, target_to_jform)
 from rise_set.rates import ProperMotion
 from rise_set.moving_objects import initialise_sites
 from rise_set.utils          import intersect_many_intervals, coalesce_adjacent_intervals
@@ -1071,4 +1073,378 @@ class TestMoonDistanceCalculation(object):
         assert_equal(moon_distance_intervals[1][1], target_intervals[1][1])
 
 
+class TestZenithDistanceCalculation(object):
+    """ All time intervals to test against are obtained from JPL Horizons
+    """
+    def setup(self):
+        self.site = {
+            'latitude': Angle(degrees=20.0),
+            'longitude': Angle(degrees=-150.0),
+            # TODO: sort out if there's a problem with ha_limits in Visibility.get_target_intervals
+            #'ha_limit_neg': Angle(degrees=-4.6*12.0),
+            #'ha_limit_pos': Angle(degrees=4.6*12.0),
+            'ha_limit_neg': Angle(degrees=-36*12.0),
+            'ha_limit_pos': Angle(degrees=36*12.0),
+            'horizon': Angle(degrees=15.0)
+        }
 
+        self.horizon = 15.0
+        self.sidereal_target = {
+            'ra': RightAscension('20 41 25.91'),
+            'dec': Declination('+20 00 00.00'),
+            'epoch': 2000,
+        }
+
+        # Details from JPL Horizons for Ceres
+        self.minor_planet_target = make_minor_planet_target('MPC_MINOR_PLANET',
+                                                            epoch=49731,
+                                                            inclination=10.60069567603618,
+                                                            long_node=80.65851514365535,
+                                                            arg_perihelion=71.44921526124109,
+                                                            semi_axis=2.767218108003098,
+                                                            eccentricity=0.07610292126891821,
+                                                            mean_anomaly=340.389084821267)
+
+        # for datetime(2012, 07, 22) to datetime(2012, 07, 23)
+        # Details from JPL Horizons for Comet 27P
+        self.comet_target = make_comet_target('MPC_COMET',
+                                              epoch=56364,
+                                              epochofperih=55776.8910902,
+                                              inclination=28.96687278723059,
+                                              long_node=250.6264098390235,
+                                              arg_perihelion=196.0253968913816,
+                                              perihdist=0.748287467144728,
+                                              eccentricity=0.9189810923126022)
+
+        # 1. this Epoch of Elements (epochofel) is for a modified Julian date (MJD) corresponding
+        #    to datetime(2012, 2, 2)
+        # 2. datetime(2012, 2, 1) is the start time used in tests using self.major_planet_target
+        # 3. datetime(2012, 2, 2) is the end time used in tests using self.major_planet_target
+        # 4. JD = MDJ + 2400000.5
+        # 5. see https://aa.usno.navy.mil/jdconverter?ID=AA&jd=2455959.5
+        #
+        # Orbital Elements from JPL Horizons for Jupiter
+        self.major_planet_target = make_major_planet_target('JPL_MAJOR_PLANET',
+                                                            epochofel=55959.0,                 # date at top
+                                                            inclination=1.303884172546506,     # IN
+                                                            long_node=100.5093329813755,       # OM
+                                                            arg_perihelion=274.0516181838379,  # W
+                                                            semi_axis=5.204023536751508,       # A
+                                                            eccentricity=0.04910768996084790,  # EC
+                                                            mean_anomaly=26.60707699766562,    # MA
+                                                            dailymot=0.08306200006467207)      # N
+
+
+class TestObservableIntervalsZDIgnoredForStaticTargets(TestZenithDistanceCalculation):
+    """
+    The zenith distance calculation should be ignored for satellite and hour angle targets.
+    """
+    def setup(self):
+        super(TestObservableIntervalsZDIgnoredForStaticTargets, self).setup()
+        start = datetime(2012, 2, 1)
+        end = datetime(2012, 2, 2)
+
+        # giant zenith_blind_spot would normally limit intervals
+        self.v = Visibility(self.site, start, end, self.horizon, zenith_blind_spot=180)
+
+    def test_moon_distance_ignored_for_satellite_target(self):
+        start = datetime(2012, 1, 2)
+        end = datetime(2012, 1, 3)
+
+        target = make_satellite_target(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+
+        observable_intervals = self.v.get_observable_intervals(target)
+        # check that this doesn't crash, and that intervals match night intervals
+        night_intervals = self.v.get_dark_intervals()
+        assert_equal(night_intervals, observable_intervals)
+
+    def test_moon_distance_ignored_for_hour_angle_target(self):
+        start = datetime(2012, 1, 2)
+        end = datetime(2012, 1, 3)
+
+        target = make_hour_angle_target(0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+
+        observable_intervals = self.v.get_observable_intervals(target)
+        # check that this doesn't crash, and that intervals match night intervals
+        night_intervals = self.v.get_dark_intervals()
+        assert_equal(night_intervals, observable_intervals)
+
+
+class TestZDIntervalsZeroZenithDistance(TestZenithDistanceCalculation):
+    """Test that a zero zenith distance leaves the target intervals untouched.
+    """
+
+    def setup(self):
+        super(TestZDIntervalsZeroZenithDistance, self).setup()
+        start = datetime(2012, 2, 1)
+        end = datetime(2012, 2, 2)
+        self.v = Visibility(self.site, start, end, self.horizon)  # zenith_blind_spot defaults to 0
+
+    def test_zd_intervals_zero_zd_sidereal_target(self):
+        target = self.sidereal_target
+
+        target_intervals = self.v.get_target_intervals(target=target)
+        zenith_distance_intervals = self.v.get_zenith_distance_intervals(target, target_intervals)
+
+        coalesced_target_intervals = coalesce_adjacent_intervals(target_intervals)
+        assert_equal(zenith_distance_intervals, coalesced_target_intervals)
+
+    def test_zd_intervals_zero_zd_non_sidereal_major_planet_target(self):
+        target = self.major_planet_target
+
+        target_intervals = self.v.get_target_intervals(target=target)
+        zenith_distance_intervals = self.v.get_zenith_distance_intervals(target, target_intervals)
+
+        coalesced_target_intervals = coalesce_adjacent_intervals(target_intervals)
+        assert_equal(zenith_distance_intervals, coalesced_target_intervals)
+
+    def test_zd_intervals_zero_zd_non_sidereal_minor_planet_target(self):
+        target = self.minor_planet_target
+
+        target_intervals = self.v.get_target_intervals(target=target)
+        zenith_distance_intervals = self.v.get_zenith_distance_intervals(target, target_intervals)
+
+        coalesced_target_intervals = coalesce_adjacent_intervals(target_intervals)
+        assert_equal(zenith_distance_intervals, coalesced_target_intervals)
+
+    def test_zd_intervals_zero_zd_non_sidereal_comet_target(self):
+        target = self.comet_target
+
+        target_intervals = self.v.get_target_intervals(target=target)
+        zenith_distance_intervals = self.v.get_zenith_distance_intervals(target, target_intervals)
+
+        coalesced_target_intervals = coalesce_adjacent_intervals(target_intervals)
+        assert_equal(zenith_distance_intervals, coalesced_target_intervals)
+
+
+class TestZDIntervals180ZenithDistance(TestZenithDistanceCalculation):
+    """Test that a giant zenith distance like 180 removes all intervals from a variety of targets.
+    """
+
+    def setup(self):
+        super(TestZDIntervals180ZenithDistance, self).setup()
+        start = datetime(2012, 2, 1)
+        end = datetime(2012, 2, 2)
+        self.v = Visibility(self.site, start, end, self.horizon, zenith_blind_spot=180.0)
+
+    def test_zd_intervals_180_zd_sidereal_target(self):
+        target = self.sidereal_target
+
+        target_intervals = self.v.get_target_intervals(target=target)
+        zenith_distance_intervals = self.v.get_zenith_distance_intervals(target, target_intervals)
+        assert_equal(len(zenith_distance_intervals), 0)
+
+    def test_zd_intervals_180_zd_non_sidereal_major_planet_target(self):
+        target = self.major_planet_target
+
+        target_intervals = self.v.get_target_intervals(target=target)
+        zenith_distance_intervals = self.v.get_zenith_distance_intervals(target, target_intervals)
+
+        assert_equal(len(zenith_distance_intervals), 0)
+
+    def test_zd_intervals_180_zd_non_sidereal_minor_planet_target(self):
+        target = self.minor_planet_target
+
+        target_intervals = self.v.get_target_intervals(target=target)
+        zenith_distance_intervals = self.v.get_zenith_distance_intervals(target, target_intervals)
+
+        assert_equal(len(zenith_distance_intervals), 0)
+
+    def test_zd_intervals_180_zd_non_sidereal_comet_target(self):
+        target = self.comet_target
+
+        target_intervals = self.v.get_target_intervals(target=target)
+        zenith_distance_intervals = self.v.get_zenith_distance_intervals(target, target_intervals)
+
+        assert_equal(len(zenith_distance_intervals), 0)
+
+
+class TestMajorPlanetZenithDistanceIntervals(TestZenithDistanceCalculation):
+
+    def setup(self):
+        super(TestMajorPlanetZenithDistanceIntervals, self).setup()
+        start = datetime(2012, 2, 1)
+        end = datetime(2012, 2, 2)
+        zenith_hole_radius = 9.0  # degrees; altitude > 81 should be excluded
+        self.v = Visibility(self.site, start, end, self.horizon,
+                            ha_limit_neg=-12.0, ha_limit_pos=12.0,
+                            zenith_blind_spot=zenith_hole_radius)
+
+    def test_jupiter(self):
+        """Test interval removal for Jupiter > 81-degrees
+        Excerpts from JPL Horizons, between the start and end datetimes given, Jupiter is over 81-degrees
+
+        |-------------------+----------|
+        | time              | altitude |
+        |-------------------+----------|
+        | 2012-Feb-01 03:09 |  80.9600 |
+        | 2012-Feb-01 03:10 |  81.0298 |
+        | 2012-Feb-01 03:11 |  81.0936 | enter zenith hole
+        | 2012-Feb-01 03:12 |  81.1514 |
+        | <snip>            |          |
+        | 2012-Feb-01 03:30 |  81.0719 |
+        | 2012-Feb-01 03:31 |  81.0060 |
+        | 2012-Feb-01 03:32 |  80.9341 | exit zenith hole
+        | 2012-Feb-01 03:33 |  80.8564 |
+        |-------------------+----------|
+        """
+        target = self.major_planet_target  # Jupiter
+
+        target_intervals = self.v.get_target_intervals(target=target)
+        zenith_intervals = self.v.get_zenith_distance_intervals(target, target_intervals,
+                                                                chunksize=timedelta(minutes=1))
+
+        # these intervals are tailored to the specific JPL Horizons output for this target
+        expected_intervals = [
+            (self.v.start_date, datetime(2012, 2, 1, 3, 10)),
+            (datetime(2012, 2, 1, 3, 32), datetime(2012, 2, 1, 8, 30)),
+            (datetime(2012, 2, 1, 22, 15), self.v.end_date)
+        ]
+        assert_equal(expected_intervals, zenith_intervals)
+
+
+class TestCometZenithDistanceIntervals(TestZenithDistanceCalculation):
+    """
+    Excerpts from JPL Horizons
+    |-------------------+----------+-------------------|
+    | time              | altitude | event             |
+    |-------------------+----------+-------------------|
+    | 2012-Jul-22 03:08 |  43.9532 |                   |
+    | 2012-Jul-22 03:09 |  44.0039 | enter zenith hole |
+    | 2012-Jul-22 03:10 |  44.0533 |                   |
+    | 2012-Jul-22 04:25 |  44.0802 |                   |
+    | 2012-Jul-22 04:26 |  44.0314 |                   |
+    | 2012-Jul-22 04:27 |  43.9814 | exit zenith hole  |
+    | 2012-Jul-22 04:28 |  43.9302 |                   |
+    | 2012-Jul-22 04:29 |  43.8777 |                   |
+    | 2012-Jul-22 07:54 |  15.0088 | comet set         |
+    | 2012-Jul-22 07:55 |  14.8141 |                   |
+    | 2012-Jul-22 23:37 |  14.8374 |                   |
+    | 2012-Jul-22 23:38 |  15.0322 | comet rise        |
+    |-------------------+----------+-------------------|
+    """
+    def setup(self):
+        super(TestCometZenithDistanceIntervals, self).setup()
+        start = datetime(2012, 7, 22)
+        end = datetime(2012, 7, 23)
+        zenith_hole_radius = 46.0  # degrees; altitude > 44 should be excluded
+        self.v = Visibility(self.site, start, end, self.horizon,
+                            ha_limit_neg=-12.0, ha_limit_pos=12.0,
+                            zenith_blind_spot=zenith_hole_radius)
+
+    def test_sidereal_target(self):
+        target = self.comet_target
+
+        target_intervals = self.v.get_target_intervals(target=target)
+        zenith_intervals = self.v.get_zenith_distance_intervals(target, target_intervals,
+                                                                chunksize=timedelta(minutes=1))
+        # first interval ends when the target enters the zenith hole (chunksize = 1 min)
+        # second interval begins when the target exits the zenith hole
+        # second interval ends when the target goes below the horizon (15) (chuncksize=15 min default)
+        # third interval begins when the target rises above the horizon (15) (chuncksize=15 min default)
+        expected_intervals = [
+            (self.v.start_date, datetime(2012, 7, 22, 3, 9)),
+            (datetime(2012, 7, 22, 4, 27), datetime(2012, 7, 22, 7, 45)),
+            (datetime(2012, 7, 22, 23, 45), self.v.end_date)
+        ]
+        assert_equal(expected_intervals, zenith_intervals)
+
+
+class TestZDvsAltitude(TestZenithDistanceCalculation):
+    """Test that zd + alt = 90-degrees for a variety of targets.
+    """
+
+    def test_zd_vs_alt_degenerate(self):
+        """
+        degenerate case: test that zd + alt = 90-degrees
+        """
+        latitude = Angle(0.0)
+        dec = Angle(0.0)
+        local_hour_angle = Angle(0.0)
+        zd = calculate_zenith_distance(latitude, dec, local_hour_angle)
+        alt = calculate_altitude(latitude.in_degrees(),
+                                 dec.in_degrees(),
+                                 local_hour_angle.in_degrees())
+        assert_almost_equals((90.0 - zd.in_degrees()), alt.in_degrees())
+
+    def test_zd_vs_alt_sidereal_target(self):
+        """
+        sidereal target: test that zd + alt = 90-degrees
+        """
+        target = self.sidereal_target
+        start_time = datetime(2012, 2, 1)
+        tdb = date_to_tdb(start_time)
+        # get the apparent ra/dec for the target
+        target_app_ra, target_app_dec = mean_to_apparent(target, tdb)  # for sidereal targets
+        # get the local_hour_angle from
+        latitude = self.site['latitude']
+
+        local_hour_angle = calc_local_hour_angle(target_app_ra,
+                                                 self.site['longitude'], start_time)
+
+        zd = calculate_zenith_distance(latitude, target_app_dec, local_hour_angle)
+
+        alt = calculate_altitude(latitude.in_degrees(),
+                                 target_app_dec.in_degrees(),
+                                 local_hour_angle.in_degrees())
+        assert_almost_equals((90.0 - zd.in_degrees()), alt.in_degrees(), places=4)
+
+    def test_zd_vs_alt_non_sidereal_major_planet_target(self):
+        """
+        non-sidereal (major_planet): test that zd + alt = 90-degrees
+        """
+        target = self.major_planet_target
+        start_time = datetime(2012, 2, 1)
+        # get the apparent ra/dec for the target
+        # target_app_ra, target_app_dec = mean_to_apparent(target, tdb)  # for sidereal targets
+        # for non-sidereal targets
+        target_app_ra, target_app_dec = elem_to_topocentric_apparent(start_time, target, self.site,
+                                                                     target_to_jform(target))
+
+        latitude = self.site['latitude']
+        local_hour_angle = calc_local_hour_angle(target_app_ra, self.site['longitude'], start_time)
+        zd = calculate_zenith_distance(latitude, target_app_dec, local_hour_angle)
+        alt = calculate_altitude(latitude.in_degrees(),
+                                 target_app_dec.in_degrees(),
+                                 local_hour_angle.in_degrees())
+        assert_almost_equals((90.0 - zd.in_degrees()), alt.in_degrees(), places=4)
+
+    def test_zd_vs_alt_non_sidereal_minor_planet_target(self):
+        """
+        non-sidereal (minor_planet): test that zd + alt = 90-degrees
+        """
+        target = self.minor_planet_target
+        start_time = datetime(2012, 2, 1)
+        # get the apparent ra/dec for the target
+        # target_app_ra, target_app_dec = mean_to_apparent(target, tdb)  # for sidereal targets
+        # for non-sidereal targets
+        target_app_ra, target_app_dec = elem_to_topocentric_apparent(start_time, target, self.site,
+                                                                     target_to_jform(target))
+
+        latitude = self.site['latitude']
+        local_hour_angle = calc_local_hour_angle(target_app_ra, self.site['longitude'], start_time)
+        zd = calculate_zenith_distance(latitude, target_app_dec, local_hour_angle)
+        alt = calculate_altitude(latitude.in_degrees(),
+                                 target_app_dec.in_degrees(),
+                                 local_hour_angle.in_degrees())
+        assert_almost_equals((90.0 - zd.in_degrees()), alt.in_degrees(), places=4)
+
+    def test_zd_vs_alt_non_sidereal_comet_target(self):
+        """
+        non-sidereal (comet): test that zd + alt = 90-degrees
+        """
+        target = self.comet_target
+        start_time = datetime(2012, 2, 1)
+        # get the apparent ra/dec for the target
+        # target_app_ra, target_app_dec = mean_to_apparent(target, tdb)  # for sidereal targets
+        # for non-sidereal targets
+        target_app_ra, target_app_dec = elem_to_topocentric_apparent(start_time, target, self.site,
+                                                                     target_to_jform(target))
+
+        latitude = self.site['latitude']
+        local_hour_angle = calc_local_hour_angle(target_app_ra, self.site['longitude'], start_time)
+        zd = calculate_zenith_distance(latitude, target_app_dec, local_hour_angle)
+        alt = calculate_altitude(latitude.in_degrees(),
+                                 target_app_dec.in_degrees(),
+                                 local_hour_angle.in_degrees())
+        assert_almost_equals((90.0 - zd.in_degrees()), alt.in_degrees(), places=4)

@@ -204,6 +204,10 @@ def calc_local_hour_angle(ra_app, longitude, date):
             theta_0 = GAST (Greenwich apparent sidereal time)
             L       = Site longitude (east +ve)
             alpha   = Apparent Right Ascension
+
+        :param ra_app: Angle
+        :param longitude: east positive Angle
+        :param date: UTC datetime.datetime
      '''
     app_sidereal_time = calc_apparent_sidereal_time(date)
 
@@ -1066,6 +1070,22 @@ def calculate_altitude(latitude, dec, local_hour_angle):
                )
 
     return Angle(radians=altitude)
+
+
+def calculate_zenith_distance(latitude, dec, local_hour_angle):
+    """
+    Calls SLA_ZD
+
+    :param latitude: Angle
+    :param dec: Angle
+    :param local_hour_angle: Angle
+
+    :return: zenith_distance (radians, [0,pi])
+    """
+    zd = sla.sla_zd(ha=local_hour_angle.in_radians(),
+                    dec=dec.in_radians(),
+                    phi=latitude.in_radians())
+    return Angle(radians=zd)
 
 
 def calculate_airmass_at_times(times, target, obs_latitude, obs_longitude, obs_height):
