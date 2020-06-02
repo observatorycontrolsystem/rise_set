@@ -11,15 +11,12 @@ August 2012
 from setuptools import setup, find_packages
 
 setup(
-    name = 'rise_set',
+    name = 'ocs_rise_set',
     version = '0.4.12',
     description = 'Routines for accurate rise/set/transit calculations',
     author = 'Eric Saunders',
     author_email = 'esaunders@lcogt.net',
     packages = ['rise_set'],
-    dependency_links = [
-        "http://github.com/LCOGT/pyslalib/tarball/master#egg=pyslalib",
-    ],
     setup_requires = [
         "numpy"
     ],
@@ -41,7 +38,7 @@ setup(
     test_suite = 'nose.collector',
     classifiers=[
         'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3.3',
+        'Programming Language :: Python :: 3.7',
     ]
 
 )
