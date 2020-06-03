@@ -24,7 +24,7 @@ Add the `ocs_rise_set` package to your python environment (you may need to insta
 
 #### Running the Tests
 
-The unit tests are currently using nosetests, so their are a few tests dependencies to install. After cloning this project, from the project root and inside your virtual environment:
+The unit tests are currently using nosetests, so there are a few tests dependencies to install. After cloning this project, from the project root and inside your virtual environment:
 
 ```bash
 (venv) $ pip install -r test_requirements.pip
