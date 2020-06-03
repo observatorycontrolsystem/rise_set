@@ -5,6 +5,11 @@ from rise_set.rates import ProperMotion
 from rise_set.visibility import Visibility
 from rise_set.astrometry import make_ra_dec_target
 
+'''
+    This example shows how to calculate the observable intervals of a target for a given site.
+    It also shows how to calculate the intermediate visibility windows if they are useful.
+'''
+
 HOURS_PER_DEGREES = 15.0
 
 # Maui telescope location details
