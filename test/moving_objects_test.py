@@ -1032,13 +1032,13 @@ class TestMovingObjects(object):
         assert_equal(received, expected)
 
 
-    def test_tims_target(self):
+    def test_special_neo_target(self):
         window = {
                    'start'    : str_to_dt('2014-07-17 23:00:00'),
                    'end'      : str_to_dt('2014-07-18 11:00:00'),
                  }
 
-        elements = read_neocp_orbit('test/tim_is_kinda_cool.neocp')
+        elements = read_neocp_orbit('test/special_neo_target.neocp')
 
         for x, y in list(elements.items()):
             print(x, y)
