@@ -1,12 +1,16 @@
-"""``visibility.py`` - Visibility class for calculating the observable intervals of a target at a given site.
+"""``visibility.py`` - Visibility class for calculating the observable intervals.
 
 Examples:
     Get the observable intervals of a target:
 
     >>> from rise_set.angle import Angle
     >>> from rise_set.visibility import Visibility
-    >>> visibility = Visibility(site_details, start_date, end_date, horizon, twilight='nautical')
-    >>> observable_intervals = visibility.get_observable_intervals(target, airmass=1.6, moon_distance=Angle(degrees=30))
+    >>> visibility = Visibility(
+    >>>     site_details, start_date, end_date, horizon, twilight='nautical'
+    >>> )
+    >>> observable_intervals = visibility.get_observable_intervals(
+    >>>     target, airmass=1.6, moon_distance=Angle(degrees=30)
+    >>> )
 """
 
 # Required for true (non-integer) division
@@ -71,10 +75,11 @@ def set_airmass_limit(airmass, horizon):
 class Visibility(object):
     """The Visibility class is used to calculate target visibilities for a given site.
 
-    The Visibility class is instantiated with a given site and time range. It can be used repeatedly with 
-    different targets to get those targets observable intervals at the given site. It takes ha_limits, horizon limits,
-    airmass limits, moon angular distance limits, and zenith blind spot limits into account when computing over
-    all observable intervals for a target.
+    The Visibility class is instantiated with a given site and time range. 
+    It can be used repeatedly with different targets to get those targets 
+    observable intervals at the given site. It takes ha_limits, horizon limits, 
+    airmass limits, moon angular distance limits, and zenith blind spot limits 
+    into account when computing over all observable intervals for a target.
 
     Args:
         site (dict): Dictionary of site properties. Should contain Angles for latitude and longitude
@@ -114,10 +119,13 @@ class Visibility(object):
 
     def get_dark_intervals(self):
         """Returns the dark intervals for the site.
-        Returns the night time dark intervals for the given site and date range set in this visibility object.
+        
+        Returns the night time dark intervals for the given site and date range set
+        in this visibility object.
 
         Returns:
-            list: A list of tuples of start/end datetime pairs that make up the dark intervals for this site.
+            list: A list of tuples of start/end datetime pairs that make up the dark
+                  intervals for this site.
         """
         # Don't compute this again if we've already done it
         if self.dark_intervals:
@@ -132,10 +140,13 @@ class Visibility(object):
 
     def get_moon_dark_intervals(self):
         """Returns the dark moon intervals for the site.
-        Returns the dark moon intervals (moon is not visible) for the given site and date range set in this visibility object.
+        
+        Returns the dark moon intervals (moon is not visible) for the given
+        site and date range set in this visibility object.
 
         Returns:
-            list: A list of tuples of start/end datetime pairs that make up the dark moon intervals for this site.
+            list: A list of tuples of start/end datetime pairs that make up
+                  the dark moon intervals for this site.
         """
         # Don't compute this again if we've already done it
         if self.moon_dark_intervals:
@@ -192,8 +203,9 @@ class Visibility(object):
 
     def get_moon_distance_intervals(self, target, target_intervals, moon_distance=Angle(degrees=30), chunksize=datetime.timedelta(minutes=30)):
         """Returns the moon distance intervals for the given target.
-        Returns the intervals for which the given target is greater than the angular moon distance away from the moon at the given site 
-        and date range set in this visibility object.
+        
+        Returns the intervals for which the given target is greater than the angular moon distance
+        away from the moon at the given site and date range set in this visibility object.
 
         Args:
             target (dict): A dictionary of target details in the rise-set library format
@@ -207,20 +219,25 @@ class Visibility(object):
 
     def get_zenith_distance_intervals(self, target, target_intervals, chunksize=datetime.timedelta(minutes=1)):
         """Returns the zenith distance intervals for the given target.
+        
         Returns the intervals for which the given target is greater than zenith distance away from the zenith at the given site 
         and date range set in this visibility object.
 
         Args:
             target (dict): A dictionary of target details in the rise-set library format
-            target_intervals (list): A list of datetime tuples that represent the above horizon intervals for the target. Returned by get_target_intervals()
-            chunksize (timedelta): The time delta over which to calculate if the target intervals are out of range of the zenith.
+            target_intervals (list): A list of datetime tuples that represent the above horizon intervals for the target.
+                                     Returned by get_target_intervals()
+            chunksize (timedelta): The time delta over which to calculate if the target intervals are out of range of 
+                                   the zenith.
         Returns:
-            list: A list of tuples of start/end datetime pairs that make up the intervals over which this target is greater than zenith distance away from zenith.
+            list: A list of tuples of start/end datetime pairs that make up the intervals over which this target is greater
+                  than zenith distance away from zenith.
         """
         return self._get_chunked_intervals(target, target_intervals, self._add_zenith_interval, self.zenith_blind_spot, chunksize)
 
     def get_target_intervals(self, target, up=True, airmass=None):
         """Returns the above or below horizon intervals for the given target.
+        
         Returns the above (up=True) or below (up=False) horizon intervals for the given target and given site and date range set in this visibility object.
 
         Args:
@@ -287,6 +304,7 @@ class Visibility(object):
 
     def get_ha_intervals(self, target):
         """Returns the hour angle intervals for the given target.
+
         Returns the hour anle intervals for the given target and given site and date range set in this visibility object.
         The hour angle intervals are uninterupted chunks of time that the target is within the hour angle limits of the
         telescope.
@@ -344,6 +362,7 @@ class Visibility(object):
 
     def get_observable_intervals(self, target, airmass=None, moon_distance=Angle(degrees=30)):
         """Returns the observable intervals for the given target.
+        
         Returns the observable intervals for the given target and given site and date range set in this visibility object.
         The observable intervals are the intersections of the dark intervals at the site, the above horizon target intervals,
         the moon distance intervals of the target, the hour angle intervals of the target, and the zenith blind spot intervals
@@ -358,7 +377,6 @@ class Visibility(object):
         Raises:
             rise_set.exceptions.RiseSetError: If there was a problem calculating the rise/set/transfer times of the target
         """
-
         # get the intervals of each separately
         dark               = self.get_dark_intervals()
         above_horizon      = self.get_target_intervals(target, airmass=airmass)

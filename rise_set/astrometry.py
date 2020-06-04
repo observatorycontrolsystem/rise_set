@@ -7,8 +7,8 @@ sunset and twilight times.
 The code uses SLALIB for the heavy lifting. The rise/set/transit algorithms here
 are implementations of Astronomical Algorithms, Ch. 14 (Jean Meeus).
 
-The input to most astrometry calculation involves a target dictionary containing the 
-necessary target data. This package contains functions to help creating a target 
+The input to most astrometry calculation involves a target dictionary containing the
+necessary target data. This package contains functions to help creating a target
 dictionary and checking for the required fields for the supported target types.
 Supported targets include:
 
@@ -26,11 +26,19 @@ Examples:
     >>> from rise_set.visibility import Visibility
     >>> from rise_set.astrometry import calculate_airmass_at_times
     >>> visibility = Visibility(site, start_date, end_date, horizon, twilight='nautical')
-    >>> observable_intervals = visibility.get_observable_intervals(target, airmass=1.6, moon_distance=Angle(degrees=30))
+    >>> observable_intervals = visibility.get_observable_intervals(
+    >>>    target, airmass=1.6, moon_distance=Angle(degrees=30)
+    >>> )
     >>> night_chunks = []
     >>> for interval in observable_intervals:
-    >>>     night_chunks.extend([interval[0] + timedelta(minutes=i) for i in range(0, int(interval[1] - interval[0].total_seconds() / 60), 10)])
-    >>> airmass_values = calculate_airmass_at_times(night_chunks, target, site['latitude'], site['longitude'], site['altitude'])
+    >>>     night_chunks.extend(
+    >>>         [interval[0] + timedelta(minutes=i) for i in range(
+    >>>             0, int(interval[1] - interval[0].total_seconds() / 60), 10
+    >>>         )]
+    >>>     )
+    >>> airmass_values = calculate_airmass_at_times(
+    >>>     night_chunks, target, site['latitude'], site['longitude'], site['altitude']
+    >>> )
 """
 
 # Required for true (non-integer) division
@@ -308,7 +316,7 @@ def make_major_planet_target(target_type, epochofel, inclination, long_node, arg
     coordinates of a JPL formatted major planet.
 
     Args:
-        target_type (str): The string representation of this target type ('JPL_MAJOR_PLANET')
+        target_type (str): The string representation of this target ('JPL_MAJOR_PLANET')
         epochofel (float): The epoch of elements
         inclination (float): The inclination of the target in degrees
         long_node (float): The longitude of the ascending node in degrees
