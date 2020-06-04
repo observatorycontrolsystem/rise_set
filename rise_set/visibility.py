@@ -73,6 +73,7 @@ def set_airmass_limit(airmass, horizon):
 
 
 class Visibility(object):
+    
     """The Visibility class is used to calculate target visibilities for a given site.
 
     The Visibility class is instantiated with a given site and time range. 

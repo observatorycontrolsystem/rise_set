@@ -253,6 +253,7 @@ def calc_local_hour_angle(ra_app, longitude, date):
 def make_ra_dec_target(ra, dec, ra_proper_motion=None, dec_proper_motion=None, parallax=None,
                        rad_vel=None, epoch=None):
     """ Creates a rise-set target with an ra and dec
+
     Creates a dictionary rise-set formatted target that must at least have an ra/dec,
     but can optionally have ra/dec proper motion, radial velocity, parallax, and epoch.
 
@@ -283,6 +284,7 @@ def make_ra_dec_target(ra, dec, ra_proper_motion=None, dec_proper_motion=None, p
 def make_hour_angle_target(hour_angle, dec, ra_proper_motion=None, dec_proper_motion=None, parallax=None,
                            epoch=None):
     """ Creates a rise-set target with an ha and dec
+
     Creates a dictionary rise-set formatted target that must at least have an ha/dec,
     but can optionally have ra/dec proper motion, radial velocity, parallax, and epoch.
 
@@ -312,6 +314,7 @@ def make_hour_angle_target(hour_angle, dec, ra_proper_motion=None, dec_proper_mo
 def make_major_planet_target(target_type, epochofel, inclination, long_node, arg_perihelion,
                              semi_axis, eccentricity, mean_anomaly, dailymot):
     """ Creates a rise-set target for a JPL major planet
+
     Creates a dictionary rise-set formatted target that must have all the necessary
     coordinates of a JPL formatted major planet.
 
@@ -347,6 +350,7 @@ def make_major_planet_target(target_type, epochofel, inclination, long_node, arg
 def make_minor_planet_target(target_type, epoch, inclination, long_node, arg_perihelion,
                               semi_axis, eccentricity, mean_anomaly):
     """ Creates a rise-set target for a MPC minor planet
+
     Creates a dictionary rise-set formatted target that must have all the necessary
     coordinates of a MPC formatted minor planet.
 
@@ -379,6 +383,7 @@ def make_minor_planet_target(target_type, epoch, inclination, long_node, arg_per
 def make_comet_target(target_type, epoch, epochofperih, inclination, long_node, arg_perihelion,
                               perihdist, eccentricity):
     """ Creates a rise-set target for a MPC comet
+
     Creates a dictionary rise-set formatted target that must have all the necessary
     coordinates of a MPC formatted comet.
 
@@ -410,6 +415,7 @@ def make_comet_target(target_type, epoch, epochofperih, inclination, long_node, 
 
 def make_satellite_target(alt, az, diff_alt_rate, diff_az_rate, diff_alt_accel, diff_az_accel, diff_epoch_rate):
     """ Creates a rise-set target for a Satellite
+
     Creates a dictionary rise-set formatted target that must have all the necessary
     coordinates of a Satellite target. Satellite targets act as a noop / passthrough,
     since no rise/set calculation is performed on them. Instead, when a visibility function
@@ -1211,6 +1217,7 @@ def calculate_zenith_distance(latitude, dec, local_hour_angle):
 
 def calculate_airmass_at_times(times, target, obs_latitude, obs_longitude, obs_height):
     """ Returns the airmass values at each of the times passed in for the given target
+
     Returns the airmass values for a target and observer specified at each time value 
     in the input times list. This uses the speedier slalib aop quick function which caches the object lat/lon/height and
     refraction parameters.
