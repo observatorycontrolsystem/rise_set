@@ -7,10 +7,8 @@ sunset and twilight times.
 The code uses SLALIB for the heavy lifting. The rise/set/transit algorithms here
 are implementations of Astronomical Algorithms, Ch. 14 (Jean Meeus).
 
-The input to most astrometry calculation involves a target dictionary containing the
-necessary target data. This package contains functions to help creating a target
-dictionary and checking for the required fields for the supported target types.
-Supported targets include:
+This package contains functions for creating a target dictionary and validating
+required fields for the supported target types. Supported targets include:
 
     1) Ra/Dec target
     2) Hour Angle/Dec target

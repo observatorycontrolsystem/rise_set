@@ -73,7 +73,7 @@ def set_airmass_limit(airmass, horizon):
 
 
 class Visibility(object):
-    
+
     """The Visibility class is used to calculate target visibilities for a given site.
 
     The Visibility class is instantiated with a given site and time range. 
@@ -126,7 +126,7 @@ class Visibility(object):
 
         Returns:
             list: A list of tuples of start/end datetime pairs that make up the dark
-                  intervals for this site.
+                intervals for this site.
         """
         # Don't compute this again if we've already done it
         if self.dark_intervals:
@@ -147,7 +147,7 @@ class Visibility(object):
 
         Returns:
             list: A list of tuples of start/end datetime pairs that make up
-                  the dark moon intervals for this site.
+                the dark moon intervals for this site.
         """
         # Don't compute this again if we've already done it
         if self.moon_dark_intervals:
@@ -232,7 +232,7 @@ class Visibility(object):
                                    the zenith.
         Returns:
             list: A list of tuples of start/end datetime pairs that make up the intervals over which this target is greater
-                  than zenith distance away from zenith.
+                than zenith distance away from zenith.
         """
         return self._get_chunked_intervals(target, target_intervals, self._add_zenith_interval, self.zenith_blind_spot, chunksize)
 
