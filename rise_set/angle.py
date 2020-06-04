@@ -22,6 +22,8 @@ from builtins import object
 import math
 import re
 
+from rise_set.exceptions import InvalidAngleError, AngleConfigError
+
 # Usually one would use the six.string_types for the following,
 # but since this is a small project we can use this to remove
 # the dependency on six.
@@ -180,14 +182,3 @@ class Angle(object):
 
     def __hash__(self):
         return hash(self.__key())
-
-
-
-class InvalidAngleError(Exception):
-    '''Error for out-of-range angles provided to the Angle class.'''
-    pass
-
-
-class AngleConfigError(Exception):
-    '''Error for invalid constructor arguments to the Angle class.'''
-    pass

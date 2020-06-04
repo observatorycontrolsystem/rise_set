@@ -10,6 +10,8 @@ Author: Eric Saunders
 December 2013
 '''
 
+from rise_set.exceptions import MovingViolation
+
 def coalesce_adjacent_intervals(intervals):
     '''Combine a set of datetime 2-tuples, coalescing adjacent intervals into
        larger intervals wherever possible.
@@ -105,8 +107,3 @@ def target_to_jform(target):
         raise MovingViolation("Unsupported target type: '{}'".format(target_type))
 
     return jform
-
-
-class MovingViolation(Exception):
-    '''Exception for moving object errors.'''
-    pass

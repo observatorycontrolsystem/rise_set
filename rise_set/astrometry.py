@@ -1,6 +1,4 @@
-#!/usr/bin/env python
-
-'''rise_set/astrometry.py - astrometry calculations for telescope scheduling.
+"""``astrometry.py`` - Astrometry calculations for telescope scheduling.
 
 This package provides routines for finding the positions of astronomical bodies
 to reasonable precision. It can be used to calculate target uptime and sunrise,
@@ -9,10 +7,31 @@ sunset and twilight times.
 The code uses SLALIB for the heavy lifting. The rise/set/transit algorithms here
 are implementations of Astronomical Algorithms, Ch. 14 (Jean Meeus).
 
+The input to most astrometry calculation involves a target dictionary containing the 
+necessary target data. This package contains functions to help creating a target 
+dictionary and checking for the required fields for the supported target types.
+Supported targets include:
 
-Author: Eric Saunders (esaunders@lcogt.net)
-May 2010
-'''
+    1) Ra/Dec target
+    2) Hour Angle/Dec target
+    3) Major Planet target
+    4) Minor Planet target
+    5) Comet target
+    6) Satellite target (a No-op target)
+
+Examples:
+    Get the airmass values during the observable interval of a target:
+
+    >>> from rise_set.angle import Angle
+    >>> from rise_set.visibility import Visibility
+    >>> from rise_set.astrometry import calculate_airmass_at_times
+    >>> visibility = Visibility(site, start_date, end_date, horizon, twilight='nautical')
+    >>> observable_intervals = visibility.get_observable_intervals(target, airmass=1.6, moon_distance=Angle(degrees=30))
+    >>> night_chunks = []
+    >>> for interval in observable_intervals:
+    >>>     night_chunks.extend([interval[0] + timedelta(minutes=i) for i in range(0, int(interval[1] - interval[0].total_seconds() / 60), 10)])
+    >>> airmass_values = calculate_airmass_at_times(night_chunks, target, site['latitude'], site['longitude'], site['altitude'])
+"""
 
 # Required for true (non-integer) division
 from __future__ import division
@@ -29,6 +48,7 @@ from pyslalib import slalib as sla
 
 # Internal imports
 from rise_set.angle import Angle
+from rise_set.exceptions import InvalidDateTimeError, RiseSetError, IncompleteTargetError
 from rise_set.sky_coordinates import RightAscension, Declination
 from rise_set.rates import ProperMotion
 from rise_set.utils import is_moving_object, MovingViolation, target_to_jform
@@ -143,7 +163,7 @@ def gregorian_to_ut_mjd(date):
                     0 : 'OK',
                     1 : 'IHOUR outside range 0-23',
                     2 : 'IMIN outside range 0-59',
-                    3 : 'SEC outside range 0-59.999',
+                    3 : 'SEC outside range 0-59.999 ',
                   }
     dtf2d_status = 0
 
@@ -224,7 +244,21 @@ def calc_local_hour_angle(ra_app, longitude, date):
 
 def make_ra_dec_target(ra, dec, ra_proper_motion=None, dec_proper_motion=None, parallax=None,
                        rad_vel=None, epoch=None):
-    ''' This is for simple ra/dec targets with optional proper motion'''
+    """ Creates a rise-set target with an ra and dec
+    Creates a dictionary rise-set formatted target that must at least have an ra/dec,
+    but can optionally have ra/dec proper motion, radial velocity, parallax, and epoch.
+
+    Args:
+        ra (Angle): A rise-set Angle for the target ra
+        dec (Angle): A rise-set Angle for the target dec
+        ra_proper_motion (ProperMotion): ra proper motion for the target
+        dec_proper_motion (ProperMotion): dec proper motion for the target
+        parallax (float): target parallax value
+        rad_vel (float): target radial velocity value
+        epoch (float): target coordinates epoch (2000 default)
+    Returns:
+        dict: A dictionary of target details to use as input to other rise-set functions
+    """
     target = {
                 'ra'                : ra,
                 'dec'               : dec,
@@ -240,7 +274,21 @@ def make_ra_dec_target(ra, dec, ra_proper_motion=None, dec_proper_motion=None, p
 
 def make_hour_angle_target(hour_angle, dec, ra_proper_motion=None, dec_proper_motion=None, parallax=None,
                            epoch=None):
-    ''' This is for simple hour_angle/dec targets with optional proper motion'''
+    """ Creates a rise-set target with an ha and dec
+    Creates a dictionary rise-set formatted target that must at least have an ha/dec,
+    but can optionally have ra/dec proper motion, radial velocity, parallax, and epoch.
+
+    Args:
+        hour_angle (Angle): A rise-set Angle for the target ha
+        dec (Angle): A rise-set Angle for the target dec
+        ra_proper_motion (ProperMotion): ra proper motion for the target
+        dec_proper_motion (ProperMotion): dec proper motion for the target
+        parallax (float): target parallax value
+        rad_vel (float): target radial velocity value
+        epoch (float): target coordinates epoch (2000 default)
+    Returns:
+        dict: A dictionary of target details to use as input to other rise-set functions
+    """
     target = {
                 'hour_angle'        : hour_angle,
                 'dec'               : dec,
@@ -255,7 +303,24 @@ def make_hour_angle_target(hour_angle, dec, ra_proper_motion=None, dec_proper_mo
 
 def make_major_planet_target(target_type, epochofel, inclination, long_node, arg_perihelion,
                              semi_axis, eccentricity, mean_anomaly, dailymot):
-    ''' This is for JPL_MAJOR_PLANET type targets'''
+    """ Creates a rise-set target for a JPL major planet
+    Creates a dictionary rise-set formatted target that must have all the necessary
+    coordinates of a JPL formatted major planet.
+
+    Args:
+        target_type (str): The string representation of this target type ('JPL_MAJOR_PLANET')
+        epochofel (float): The epoch of elements
+        inclination (float): The inclination of the target in degrees
+        long_node (float): The longitude of the ascending node in degrees
+        arg_perihelion (float): The argument of perihelion in degrees
+        semi_axis (float): The semi-axis of the target
+        eccentricity (float): The eccentricty of the target
+        mean_anomaly (float): The mean anomaly of the target in degrees
+        dailymot (float): The daily motion of the target in degrees
+
+    Returns:
+        dict: A dictionary of target details to use as input to other rise-set functions
+    """
     target = {
                'type'           : target_type,
                'epochofel'      : epochofel,
@@ -273,7 +338,22 @@ def make_major_planet_target(target_type, epochofel, inclination, long_node, arg
 
 def make_minor_planet_target(target_type, epoch, inclination, long_node, arg_perihelion,
                               semi_axis, eccentricity, mean_anomaly):
-    ''' This is for MPC_MINOR_PLANET type targets'''
+    """ Creates a rise-set target for a MPC minor planet
+    Creates a dictionary rise-set formatted target that must have all the necessary
+    coordinates of a MPC formatted minor planet.
+
+    Args:
+        target_type (str): The string representation of this target type ('MPC_MINOR_PLANET')
+        epoch (float): The epoch of the target ephemerites
+        inclination (float): The inclination of the target in degrees
+        long_node (float): The longitude of the ascending node in degrees
+        arg_perihelion (float): The argument of perihelion in degrees
+        semi_axis (float): The semi-axis of the target
+        eccentricity (float): The eccentricty of the target
+        mean_anomaly (float): The mean anomaly of the target in degrees
+    Returns:
+        dict: A dictionary of target details to use as input to other rise-set functions
+    """
     target = {
                'type'           : target_type,
                'epoch'          : epoch,
@@ -290,7 +370,22 @@ def make_minor_planet_target(target_type, epoch, inclination, long_node, arg_per
 
 def make_comet_target(target_type, epoch, epochofperih, inclination, long_node, arg_perihelion,
                               perihdist, eccentricity):
-    ''' This is for MPC_COMET type targets'''
+    """ Creates a rise-set target for a MPC comet
+    Creates a dictionary rise-set formatted target that must have all the necessary
+    coordinates of a MPC formatted comet.
+
+    Args:
+        target_type (str): The string representation of this target type ('MPC_COMET')
+        epoch (float): The epoch of the target ephemerites
+        epochofperih (float): The epoch of perihelion
+        inclination (float): The inclination of the target in degrees
+        long_node (float): The longitude of the ascending node in degrees
+        arg_perihelion (float): The argument of perihelion in degrees
+        perihdist (float): The perihelion distance of the target
+        eccentricity (float): The eccentricty of the target
+    Returns:
+        dict: A dictionary of target details to use as input to other rise-set functions
+    """
     target = {
                'type'           : target_type,
                'epoch'          : epoch,
@@ -306,7 +401,25 @@ def make_comet_target(target_type, epoch, epochofperih, inclination, long_node, 
 
 
 def make_satellite_target(alt, az, diff_alt_rate, diff_az_rate, diff_alt_accel, diff_az_accel, diff_epoch_rate):
+    """ Creates a rise-set target for a Satellite
+    Creates a dictionary rise-set formatted target that must have all the necessary
+    coordinates of a Satellite target. Satellite targets act as a noop / passthrough,
+    since no rise/set calculation is performed on them. Instead, when a visibility function
+    is called on a satellite target, it just returns the entire visible night for that telescope
+    within the interval.
 
+    Args:
+        target_type (str): The string representation of this target type ('MPC_COMET')
+        alt (float): The altitude of the target in meters
+        az (float): The azimuth of the target
+        diff_alt_rate (float): The differential altitude rate (velocity) of the target
+        diff_az_rate (float): The differential azimuth rate (velocity) of the target
+        diff_alt_accel (float): The differential altitude acceleration of the target in meters
+        diff_az_accel (float): The differential azimuth acceleration of the target        
+        diff_epoch_rate (float): The differential epoch rate
+    Returns:
+        dict: A dictionary of target details to use as input to other rise-set functions
+    """
     target = {
                 'type': 'Satellite',
                 'diff_epoch_rate': diff_epoch_rate,
@@ -1089,17 +1202,20 @@ def calculate_zenith_distance(latitude, dec, local_hour_angle):
 
 
 def calculate_airmass_at_times(times, target, obs_latitude, obs_longitude, obs_height):
-    '''
-        Calculate a list of airmasses given a list of times and a target and object lat/lon/height.
-        This uses the speedier slalib aop quick function which caches the object lat/lon/height and
-        refraction parameters.
-    :param times: list of datetime objects
-    :param target: target dictionary, must have at least 'ra' and 'dec' set
-    :param obs_latitude: Angle for the observers latitude
-    :param obs_longitude: Angle for the observers longitude
-    :param obs_height: observers altitude in meters
-    :return: list of airmass values corresponding to the input list of times
-    '''
+    """ Returns the airmass values at each of the times passed in for the given target
+    Returns the airmass values for a target and observer specified at each time value 
+    in the input times list. This uses the speedier slalib aop quick function which caches the object lat/lon/height and
+    refraction parameters.
+
+    Args:
+        times (list): A list of datetimes during which to calculate the airmass of the target
+        target (dict): A dictionary of target details in the rise-set library format
+        obs_latitude (Angle): The site/observer latitude within a rise-set Angle
+        obs_longitude (Angle): The site/observer longitude within a rise-set Angle
+        obs_height (float): The site/observer altitude in meters
+    Returns:
+        list: A list of airmass values that correspond to the input list of datetimes
+    """
     airmasses = []
     aop_params = None
 
@@ -1169,18 +1285,3 @@ def apparent_to_altzd(ra, dec, aop_params):
     (obs_az, obs_zd, obs_ha, obs_dec, obs_ra) = sla.sla_aopqk(ra.in_radians(), dec.in_radians(), aop_params)
 
     return Angle(radians=obs_az), Angle(radians=obs_zd)
-
-
-class InvalidDateTimeError(Exception):
-    '''Raised when an invalid date is encountered.'''
-    pass
-
-
-class RiseSetError(Exception):
-    '''Raised when a target either never rises or never sets.'''
-    pass
-
-
-class IncompleteTargetError(Exception):
-    '''Raised when a target is missing a key value (RA, Dec).'''
-    pass

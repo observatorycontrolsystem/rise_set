@@ -124,7 +124,7 @@ class TestIntervals(object):
 
         dark_intervals = visibility.get_dark_intervals()
 #        dark_intervals = visibility.get_target_intervals('sun', up=False)
-#        dark_intervals = visibility.find_when_target_is_up('sun', dt=datetime(2014, 3, 20))
+#        dark_intervals = visibility._find_when_target_is_up('sun', dt=datetime(2014, 3, 20))
 
         for start, end in dark_intervals:
             assert_less(start, end)
@@ -150,7 +150,7 @@ class TestIntervals(object):
                         self.dt.replace(day=10)
                      )
                     ]
-        received = self.visibility.find_when_target_is_up(self.sun, self.dt)
+        received = self.visibility._find_when_target_is_up(self.sun, self.dt)
 
 
         # Ignore microseconds for these tests
@@ -167,7 +167,7 @@ class TestIntervals(object):
                      self.dt.replace(hour=14,   minute=50,
                                      second=42,            ))
                     ]
-        received = self.visibility.find_when_target_is_down(self.sun, self.dt)
+        received = self.visibility._find_when_target_is_down(self.sun, self.dt)
 
         # Ignore microseconds for these tests
         received = zero_out_microseconds(received)
@@ -189,7 +189,7 @@ class TestIntervals(object):
                                  twilight='nautical',
                                )
 
-        received = visibility.find_when_target_is_down(self.sun, dt, star=None,
+        received = visibility._find_when_target_is_down(self.sun, dt, star=None,
                                                                      airmass=None)
 
         assert_less(received[0][0], received[0][1])
@@ -242,8 +242,8 @@ class TestIntervals(object):
         assert_equal(received, expected)
 
 
-    @patch('rise_set.visibility.Visibility.get_ra_target_intervals')
-    @patch('rise_set.visibility.Visibility.get_moving_object_target_intervals')
+    @patch('rise_set.visibility.Visibility._get_ra_target_intervals')
+    @patch('rise_set.visibility.Visibility._get_moving_object_target_intervals')
     def test_get_target_intervals_no_target_specified(self, mock_func1, mock_func2):
         target = {}
 
@@ -269,8 +269,8 @@ class TestIntervals(object):
 
         assert_equal(target_intervals, dark_intervals)
 
-    @patch('rise_set.visibility.Visibility.get_ra_target_intervals')
-    @patch('rise_set.visibility.Visibility.get_moving_object_target_intervals')
+    @patch('rise_set.visibility.Visibility._get_ra_target_intervals')
+    @patch('rise_set.visibility.Visibility._get_moving_object_target_intervals')
     def test_get_target_intervals_mpc_comet_type_is_a_moving_object(self, moving_obj_func,
                                                                     ra_dec_func):
         target = {'type' : 'mpc_comet'}
