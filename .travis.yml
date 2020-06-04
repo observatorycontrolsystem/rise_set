@@ -10,10 +10,11 @@ addons:
     packages:
     - gfortran
 install:
+- pip install -U coverage coveralls
 - pip install -r requirements.pip
 - pip install -r test_requirements.pip
-script:
-- nosetests
+script: nosetests --with-coverage 
+after_success: coveralls
 deploy:
   provider: pypi
   skip_existing: true
