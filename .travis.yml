@@ -1,0 +1,20 @@
+language: python
+python:
+- '2.7'
+- '3.5'
+- '3.6'
+- '3.7'
+- '3.8'
+install:
+- pip install -r requirements.pip
+- pip install -r test_requirements.pip
+script:
+- nosetests
+deploy:
+  provider: pypi
+  skip_existing: true
+  on:
+    tags: true
+  user: __token__
+  password:
+    secure: QWH/eOyXIih/0d/X3XmHn5k6b745ntgVT7z9OxurubNjO1dPPzlX91ks/UmQoYGWGeUHHjCpFu53qsCoQfJ1qa+CXSzScSVHdctl3vX+I4OvrcIVtCcXKmt7jEiTLFk0goC0aUvfCLS/qEvXK6332KGra9e92AQXsP6ZekfP1dseuD8fmVL8xb46sR0VlBjrDFZ3hXQKgEFFj5qeinZnovQptyUHs/9aBP5UXTKKqV1Ry0L4WQzBChqOMnuhw/9zTXXZnW6o6Q4yex0vI6Ik+k5RADS0keYZvrxxvxHMjNuJcJi0Rtanevk3gqX91GBUDRCyl7vX+JFC6+t/mmTRYu/6YNXFuIVxrDDYpl2LcFgLElcMuLy+PetfSrsEGGaPrdXYNw86lVRdgXs7aHPv6GHfCQlxBCkEobiIyc6o3C4eniwNn5cCQKrTklokGQdCRxPeIdakIvkcqKrplLt+Mdo6r8OGU3c1eofKSp0nB4+sEjxInMu0WUEo1jEXB99rLx8AAXZNikHafRgSIICRZ/uekMgWB6JV3E58A+q3onKXA8ObXD7yG+6uKfdw5V3HxEb9VyV4szqildBeOXL2/uWNb4AnQ8pMTO+JUqPdaeThIxxtbqQb8p9C4b7ETCEuHyTcCvvNhRfixWqBfEvbJmGE53AKQqIdHwl9busp6vY=
