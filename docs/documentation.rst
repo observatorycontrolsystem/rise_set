@@ -15,5 +15,5 @@ Visibility API and Example Usage
 
 Exceptions
 ^^^^^^^^^^
-.. automodule:: exceptions
+.. automodule:: rise_set.exceptions
    :members:

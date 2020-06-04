@@ -14,7 +14,7 @@
 from datetime import datetime
 import os
 import sys
-sys.path.insert(0, os.path.abspath('../rise_set'))
+sys.path.insert(0, os.path.abspath('../'))
 
 
 # -- Project information -----------------------------------------------------
@@ -70,7 +70,10 @@ source_suffix = [
 ]
 
 # -- Options for autodoc -------------------------------------------------
-autodoc_mock_imports = []
+autodoc_mock_imports = [
+    'pyslalib',
+    'numpy'
+]
 
 # -- Options for napoleon -------------------------------------------------
 napoleon_google_docstring = True
