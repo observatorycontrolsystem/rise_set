@@ -11,7 +11,7 @@ August 2012
 from setuptools import setup, find_packages
 
 setup(
-    name = 'ocs_rise_set',
+    name = 'ocs-rise-set',
     version = '0.4.12',
     description = 'Routines for accurate rise/set/transit calculations',
     author = 'Eric Saunders',
