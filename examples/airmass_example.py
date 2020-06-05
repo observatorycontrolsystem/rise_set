@@ -10,9 +10,7 @@ from rise_set.visibility import Visibility
 """
 
 def date_range_from_interval(start_time, end_time, dt=timedelta(minutes=15)):
-    """
-        simple generator to generate datetimes evenly spaced throughout interval including start
-    """
+    """simple generator to generate datetimes evenly spaced throughout interval including start"""
     time = start_time
     while time < end_time:
         yield time
