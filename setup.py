@@ -12,7 +12,7 @@ from setuptools import setup
 
 setup(
     name = 'ocs-rise-set',
-    version = '0.4.12',
+    version = '0.5.0',
     description = 'Routines for accurate rise/set/transit calculations',
     author = 'Eric Saunders',
     author_email = 'esaunders@lcogt.net',
