@@ -8,7 +8,7 @@ Eric Saunders
 August 2012
 '''
 
-from setuptools import setup, find_packages
+from setuptools import setup
 
 setup(
     name = 'ocs-rise-set',

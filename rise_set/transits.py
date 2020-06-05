@@ -173,7 +173,6 @@ def get_transit_intervals(target, ephemeris, site, start_date, end_date, verbose
     enddiff = end_date-ephemeris['tt']
     stopepoch = int(old_div((old_div(enddiff.microseconds,864e10) + old_div(enddiff.seconds,86400) + enddiff.days),ephemeris['period']))+1
 
-    sitestr = site['name']
     visible_transits = []
     titles = []
     for epoch in range(startepoch, stopepoch+1):
