@@ -5,14 +5,12 @@ from rise_set.rates import ProperMotion
 from rise_set.astrometry import calculate_airmass_at_times, make_ra_dec_target
 from rise_set.visibility import Visibility
 
-'''
+"""
     This example shows how to calculate the airmass values for a target at intervals throughout its visibility window
-'''
+"""
 
 def date_range_from_interval(start_time, end_time, dt=timedelta(minutes=15)):
-    '''
-        simple generator to generate datetimes evenly spaced throughout interval including start
-    '''
+    """simple generator to generate datetimes evenly spaced throughout interval including start"""
     time = start_time
     while time < end_time:
         yield time

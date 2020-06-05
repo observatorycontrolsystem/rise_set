@@ -12,14 +12,13 @@ December 2013
 
 from __future__ import division
 from __future__ import print_function
-from builtins import str
 from builtins import range
 from builtins import object
 
 from rise_set.astrometry import (gregorian_to_ut_mjd, elem_to_topocentric_apparent,
-                                 calc_local_hour_angle, calculate_altitude, date_to_tdb)
+                                 calc_local_hour_angle, calculate_altitude)
 from rise_set.angle      import Angle
-from rise_set.utils      import coalesce_adjacent_intervals, MovingViolation, target_to_jform
+from rise_set.utils      import coalesce_adjacent_intervals, target_to_jform
 
 import re
 

@@ -31,7 +31,7 @@ from rise_set.utils import MovingViolation, is_moving_object
 from rise_set.astrometry import elem_to_topocentric_apparent
 
 from datetime import datetime, timedelta
-from nose.tools import (assert_equal, assert_almost_equal, nottest, assert_raises,
+from nose.tools import (assert_equal, assert_almost_equal, assert_raises,
                         assert_false, assert_true)
 from mock import patch
 

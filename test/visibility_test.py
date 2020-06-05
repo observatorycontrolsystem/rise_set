@@ -5,7 +5,6 @@ from builtins import range
 from builtins import object
 
 from nose.tools import assert_equal, assert_almost_equals, assert_less, raises
-from nose import SkipTest
 from datetime import datetime, timedelta
 
 #Import the module to test
@@ -20,7 +19,7 @@ from rise_set.astrometry import (make_satellite_target, make_minor_planet_target
                                  calc_local_hour_angle, elem_to_topocentric_apparent, target_to_jform)
 from rise_set.rates import ProperMotion
 from rise_set.moving_objects import initialise_sites
-from rise_set.utils          import intersect_many_intervals, coalesce_adjacent_intervals
+from rise_set.utils          import coalesce_adjacent_intervals
 from mock import patch
 
 def intervals_almost_equal(received, expected, tolerance=1e-5):
@@ -470,14 +469,6 @@ class TestIntervals(object):
 
         v = Visibility(site, start_date, end_date, twilight='nautical', horizon=25,
                        ha_limit_neg=-12, ha_limit_pos=12)
-
-
-#        # get the intervals of each separately
-#        dark               = v.get_dark_intervals()
-#        above_horizon      = v.get_target_intervals(target)
-#        within_hour_angle  = v.get_ha_intervals(target)
-#        # find the overlapping intervals between them
-#        received = intersect_many_intervals(dark, above_horizon, within_hour_angle)
 
         received = v.get_observable_intervals(target, moon_distance=Angle(degrees=0))
 
