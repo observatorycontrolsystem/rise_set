@@ -370,8 +370,8 @@ if __name__ == '__main__':
     
 
     # define the arguments and defaults
-    today = datetime.strftime(datetime.today()+timedelta(days=1), format='%Y%m%d')
-    month = datetime.strftime(datetime.today()+timedelta(days=30), format='%Y%m%d')
+    today = (datetime.today()+timedelta(days=1)).strftime(format='%Y%m%d')
+    month = (datetime.today()+timedelta(days=30)).strftime(format='%Y%m%d')
     parser = argparse.ArgumentParser(description='Schedule transit observations on the LCOGT network')
     parser.add_argument('--name'         ,dest='name'         ,action='store'     ,type=str                ,help='Planet name from exoplanets.org from which to get ra, dec, period, uperiod, tt, utt, t14, ut14. Specifying those separately will override the exoplanets.org values. Spaces are ignored -- e.g., "WASP-12b" is equivalent to "WASP-12 b"')
     parser.add_argument('--period'       ,dest='per'          ,action='store'     ,type=float              ,help='Period of the planet (days).')
