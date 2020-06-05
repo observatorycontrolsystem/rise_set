@@ -78,3 +78,6 @@ Thumbs.db
 # Intellij #
 ############
 .idea
+
+# Sphinx documentation
+docs/_build/

@@ -17,6 +17,7 @@ March 2011
 from __future__ import division
 from builtins import object
 
+from rise_set.exceptions import RatesConfigError
 
 class ProperMotion(object):
 
@@ -91,9 +92,3 @@ class ProperMotion(object):
 
     def __repr__(self):
         return "%s/%s" % (self.component, self.time)
-
-
-
-class RatesConfigError(Exception):
-    '''Error for invalid constructor arguments to the ProperMotion class.'''
-    pass

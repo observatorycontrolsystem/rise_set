@@ -1,0 +1,9 @@
+[run]
+source = rise_set
+
+[report]
+omit =
+    */docs/*
+    */examples/*
+    *.neocp
+    *.dat
