@@ -125,8 +125,7 @@ class Visibility(object):
         in this visibility object.
 
         Returns:
-            list: A list of tuples of start/end datetime pairs that make up the dark
-                intervals for this site.
+            list: A list of tuples of start/end datetime pairs that make up the dark intervals for this site.
         """
         # Don't compute this again if we've already done it
         if self.dark_intervals:
@@ -146,8 +145,7 @@ class Visibility(object):
         site and date range set in this visibility object.
 
         Returns:
-            list: A list of tuples of start/end datetime pairs that make up
-                the dark moon intervals for this site.
+            list: A list of tuples of start/end datetime pairs that make up the dark moon intervals for this site.
         """
         # Don't compute this again if we've already done it
         if self.moon_dark_intervals:
@@ -231,8 +229,7 @@ class Visibility(object):
             chunksize (timedelta): The time delta over which to calculate if the target intervals are out of range of 
                                    the zenith.
         Returns:
-            list: A list of tuples of start/end datetime pairs that make up the intervals over which this target is greater
-                than zenith distance away from zenith.
+            list: A list of tuples of start/end datetime pairs that make up the intervals over which this target is greater than zenith distance away from zenith.
         """
         return self._get_chunked_intervals(target, target_intervals, self._add_zenith_interval, self.zenith_blind_spot, chunksize)
 
