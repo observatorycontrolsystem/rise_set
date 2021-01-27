@@ -1,0 +1,62 @@
+name: Build
+
+on:
+  # Run this workflow for pushes on all branches
+  push:
+    branches:
+      - '**'
+  # Run this workflow when a tag or branch is created
+  create:
+
+jobs:
+  run_tests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [2.7, 3.6, 3.7, 3.8, 3.9]
+    steps:
+    - name: Check out repository
+      uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.pip
+        pip install -r test_requirements.pip
+        pip install coveralls
+    - name: Run tests
+      run: nosetests --with-coverage
+    - name: Coveralls report
+      run: coveralls --service=github
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  publish_to_pypi:
+    # Only run this job if the run_tests job has succeeded, and if
+    # this workflow was triggered by the creation of a new tag
+    needs: run_tests
+    if: github.event_name == 'create' && github.event.ref_type == 'tag' && github.event.repository.fork == false
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check out repository
+      uses: actions/checkout@v2
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install setuptools wheel twine
+    - name: Build package and publish to PyPI
+      env:
+        TWINE_USERNAME: __token__
+        # TODO: Set this to secrets.PYPI_RISE_SET_API_TOKEN when done testing
+        TWINE_PASSWORD: ${{ secrets.TEST_PYPI_TOKEN }}
+      run: |
+        python setup.py sdist bdist_wheel
+        # TODO: Remove this repository flag when done testing
+        twine upload --repository testpypi dist/*
