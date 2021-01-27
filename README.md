@@ -6,7 +6,7 @@ This library provides Python routines for finding the positions of astronomical 
 
 ## Prerequisites
 
--   Python >= 2.7
+-   Python >= 3.6
 -   Ability to compile fortran (gfortran installed)
 
 ## Installation
