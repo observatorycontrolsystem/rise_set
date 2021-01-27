@@ -1,5 +1,9 @@
 # Rise-set Library
 
+![Build](https://github.com/observatorycontrolsystem/rise_set/workflows/Build/badge.svg)
+[![Coverage Status](https://coveralls.io/repos/github/observatorycontrolsystem/rise_set/badge.svg?branch=master)](https://coveralls.io/github/observatorycontrolsystem/rise_set?branch=master)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/8b05ac4107534c7297dfff464360af57)](https://www.codacy.com/gh/observatorycontrolsystem/rise_set/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=observatorycontrolsystem/rise_set&amp;utm_campaign=Badge_Grade)
+
 ***WARNING: The API of this library will be updated in the near future***
 
 This library provides Python routines for finding the positions of astronomical bodies to reasonable precision. It is primarily used to calculate target uptime and sunrise, sunset and twilight times, accurate to 30s-1m. It also supports calculating target airmass over time. The library depends on Fortran SLALIB to perform the computations. The rise/set/transit algorithms are implementations of Astronomical Algorithms, Ch. 14 (Jean Meeus). This library was initially authored by [Eric Saunders](https://github.com/ire-and-curses).
