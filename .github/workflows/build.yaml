@@ -24,11 +24,11 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install coveralls 'numpy<1.20'
+        pip install coveralls coverage 'numpy<1.20'
         pip install -r requirements.pip
         pip install -r test_requirements.pip
     - name: Run tests
-      run: nosetests --with-coverage
+      run: coverage run -m nose
     - name: Coveralls report
       run: coveralls --service=github
       env:
