@@ -19,7 +19,7 @@ from rise_set.astrometry import (make_satellite_target, make_minor_planet_target
                                  calc_local_hour_angle, elem_to_topocentric_apparent, target_to_jform)
 from rise_set.rates import ProperMotion
 from rise_set.moving_objects import initialise_sites
-from rise_set.utils          import coalesce_adjacent_intervals
+from rise_set.utils          import coalesce_adjacent_intervals, intersect_intervals, intersect_many_intervals
 from mock import patch
 
 def intervals_almost_equal(received, expected, tolerance=1e-5):
@@ -1062,6 +1062,118 @@ class TestMoonDistanceCalculation(object):
         assert_equal(moon_distance_intervals[0][1], target_intervals[0][1])
         assert_equal(moon_distance_intervals[1][0], target_intervals[1][0])
         assert_equal(moon_distance_intervals[1][1], target_intervals[1][1])
+
+
+class TestMoonPhaseCalculation(object):
+    ''' All time intervals to test against are obtained from JPL Horizons
+    '''
+    def setup(self):
+        self.site = {
+            'latitude'  : Angle(degrees = 20.0),
+            'longitude' : Angle(degrees = -150.0),
+            'ha_limit_neg': Angle(degrees=-4.6*12.0),
+            'ha_limit_pos': Angle(degrees=4.6*12.0),
+            'horizon': Angle(degrees=15.0)
+        }
+
+        self.horizon = 15.0
+        self.sidereal_target = {
+            'ra'                : RightAscension('20 41 25.91'),
+            'dec'               : Declination('+20 00 00.00'),
+            'epoch'             : 2000,
+        }
+
+    def test_moon_phase_none_removed(self):
+        start = datetime(2012, 1, 2)
+        end = datetime(2012, 1, 3)
+        max_moon_phase = 1.0
+
+        v = Visibility(self.site, start, end, self.horizon)
+        target_intervals   = v.get_target_intervals(target=self.sidereal_target)
+        moon_phase_intervals = v.get_moon_phase_intervals(target_intervals, max_moon_phase)
+
+        assert_equal(moon_phase_intervals, target_intervals)
+
+        # Test the observable intervals as well, must combine moon phase with dark and ha intervals
+        observable_intervals = v.get_observable_intervals(target=self.sidereal_target, moon_distance=Angle(degrees=0), moon_phase=max_moon_phase)
+        ha_intervals = v.get_ha_intervals(self.sidereal_target)
+        dark_intervals = v.get_dark_intervals()
+        combined_moon_phase_intervals = intersect_many_intervals(moon_phase_intervals, ha_intervals, dark_intervals)
+        assert_equal(combined_moon_phase_intervals, observable_intervals)
+
+    def test_moon_phase_all_removed_except_when_moon_down(self):
+        start = datetime(2012, 1, 2)
+        end = datetime(2012, 1, 3)
+        # Moon phase is always above 0.5 in this time range, so only moon dark periods will go through
+        max_moon_phase = 0.5
+
+        v = Visibility(self.site, start, end, self.horizon)
+        target_intervals   = v.get_target_intervals(target=self.sidereal_target)
+        moon_phase_intervals = v.get_moon_phase_intervals(target_intervals, max_moon_phase)
+        moon_down_intervals = v.get_moon_dark_intervals()
+        moon_down_intervals = intersect_intervals(target_intervals, moon_down_intervals)
+
+        assert_equal(moon_phase_intervals, moon_down_intervals)
+
+        # Test the observable intervals as well, must combine moon phase with dark and ha intervals
+        observable_intervals = v.get_observable_intervals(target=self.sidereal_target, moon_distance=Angle(degrees=0), moon_phase=max_moon_phase)
+        ha_intervals = v.get_ha_intervals(self.sidereal_target)
+        dark_intervals = v.get_dark_intervals()
+        combined_moon_phase_intervals = intersect_many_intervals(moon_phase_intervals, ha_intervals, dark_intervals)
+        assert_equal(combined_moon_phase_intervals, observable_intervals)
+
+    def test_moon_phase_some_removed(self):
+        start = datetime(2012, 1, 2)
+        end = datetime(2012, 1, 3)
+        # Moon phase goes above 0.6 at ~09:30
+        max_moon_phase = 0.6
+
+        v = Visibility(self.site, start, end, self.horizon)
+        target_intervals   = v.get_target_intervals(target=self.sidereal_target)
+        moon_phase_intervals = v.get_moon_phase_intervals(target_intervals, max_moon_phase)
+        moon_down_intervals = v.get_moon_dark_intervals()
+        # The first target interval is below the moon phase constraint, but the second is above it so its only good while the moon is down
+        expected_intervals = [target_intervals[0], (target_intervals[1][0], moon_down_intervals[0][1])]
+        assert_equal(moon_phase_intervals, expected_intervals)
+
+        # Test the observable intervals as well, must combine moon phase with dark and ha intervals
+        observable_intervals = v.get_observable_intervals(target=self.sidereal_target, moon_distance=Angle(degrees=0), moon_phase=max_moon_phase)
+        ha_intervals = v.get_ha_intervals(self.sidereal_target)
+        dark_intervals = v.get_dark_intervals()
+        combined_moon_phase_intervals = intersect_many_intervals(moon_phase_intervals, ha_intervals, dark_intervals)
+        assert_equal(combined_moon_phase_intervals, observable_intervals)
+
+    def test_moon_phase_longer(self):
+        start = datetime(2012, 1, 1)
+        end = datetime(2012, 2, 1)
+        # Somewhat low max moon phase, should only allow intervals between 1/18 - 1/29
+        max_moon_phase = 0.3
+
+        v = Visibility(self.site, start, end, self.horizon)
+        target_intervals   = v.get_target_intervals(target=self.sidereal_target)
+        moon_phase_intervals = v.get_moon_phase_intervals(target_intervals, max_moon_phase)
+        moon_down_intervals = v.get_moon_dark_intervals()
+        moon_down_intervals = intersect_intervals(target_intervals, moon_down_intervals)
+
+        expected_intervals = []
+        # Add in dark moon intervals while the constraint is not met
+        for interval in moon_down_intervals:
+            if interval[0] < datetime(2012, 1, 18, 5):
+                expected_intervals.append(interval)
+
+        # Add in target intervals while the constraint is met
+        for interval in target_intervals:
+            if interval[0] > datetime(2012, 1, 18, 5) and interval[0] < datetime(2012, 1, 28, 16):
+                expected_intervals.append(interval)
+
+        # Add in one interval to bridge the gap - this one ends at 1-28-22-57 is about when moon phase goes above the constraint again.
+        expected_intervals.append((datetime(2012, 1, 28, 16, 49, 18, 193648), datetime(2012, 1, 28, 22, 57, 23, 36345)))
+        # Add dark moon intervals when the moon phase constraint is no longer met
+        for interval in moon_down_intervals:
+            if interval[0] > datetime(2012, 1, 28, 23):
+                expected_intervals.append(interval)
+
+        assert_equal(moon_phase_intervals, expected_intervals)
 
 
 class TestZenithDistanceCalculation(object):

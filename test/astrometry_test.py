@@ -14,7 +14,7 @@ from rise_set.astrometry import (InvalidDateTimeError, IncompleteTargetError, Ri
                                  calc_rise_set_hour_angle, calc_rising_day_fraction,
                                  calc_transit_day_fraction, day_frac_to_hms, calc_planet_rise_set,
                                  calc_local_hour_angle, make_ra_dec_target, apparent_planet_pos,
-                                 calculate_moonphase, calculate_moonphase_at_times)
+                                 calculate_moon_phase, calculate_moon_phase_at_times)
 
 from rise_set.angle import Angle
 from rise_set.visibility import MOON_REFRACTION
@@ -990,7 +990,7 @@ class TestCalculateMoonphase(object):
         self.cpt_latitude = Angle(degrees=-32.3805542)
         self.cpt_longitude = Angle(degrees=20.8101815)
 
-        # Month of 00:00 moonphases for ogg from JPL Horizons db
+        # Month of 00:00 moon_phases for ogg from JPL Horizons db
         self.start_date = datetime(2016, 4, 20)
         self.end_date = datetime(2016, 5, 20)
         self.times = []
@@ -999,7 +999,7 @@ class TestCalculateMoonphase(object):
             self.times.append(time)
             time += timedelta(days=1)
 
-        self.ogg_moonphase_groundtruth = [
+        self.ogg_moon_phase_groundtruth = [
             95.87696,
             98.73682,
             99.89271,
@@ -1033,28 +1033,28 @@ class TestCalculateMoonphase(object):
             96.85012
         ]
 
-    def test_calculate_moonphase(self):
-        moonphase_1 = calculate_moonphase(self.start_date, self.ogg_latitude.in_radians(), self.ogg_longitude.in_radians())
-        assert_almost_equal(moonphase_1, self.ogg_moonphase_groundtruth[0] / 100.0, 2)
+    def test_calculate_moon_phase(self):
+        moon_phase_1 = calculate_moon_phase(self.start_date, self.ogg_latitude.in_radians(), self.ogg_longitude.in_radians())
+        assert_almost_equal(moon_phase_1, self.ogg_moon_phase_groundtruth[0] / 100.0, 2)
 
-        moonphase_2 = calculate_moonphase(self.end_date, self.ogg_latitude.in_radians(), self.ogg_longitude.in_radians())
-        assert_almost_equal(moonphase_2, self.ogg_moonphase_groundtruth[-1] / 100.0, 2)
+        moon_phase_2 = calculate_moon_phase(self.end_date, self.ogg_latitude.in_radians(), self.ogg_longitude.in_radians())
+        assert_almost_equal(moon_phase_2, self.ogg_moon_phase_groundtruth[-1] / 100.0, 2)
 
-    def test_calculate_moonphase_list(self):
-        moonphases = calculate_moonphase_at_times(self.times, self.ogg_latitude, self.ogg_longitude)
-        for i, moonphase in enumerate(moonphases):
-            assert_almost_equal(moonphase, self.ogg_moonphase_groundtruth[i] / 100.0, 2)
+    def test_calculate_moon_phase_list(self):
+        moon_phases = calculate_moon_phase_at_times(self.times, self.ogg_latitude, self.ogg_longitude)
+        for i, moon_phase in enumerate(moon_phases):
+            assert_almost_equal(moon_phase, self.ogg_moon_phase_groundtruth[i] / 100.0, 2)
 
-    def test_moonphase_similar_between_sites(self):
+    def test_moon_phase_similar_between_sites(self):
         time = self.start_date
         times = []
         while time <= self.start_date + timedelta(days=365):
             times.append(time)
             time += timedelta(days=1)
 
-        ogg_moonphases = calculate_moonphase_at_times(times, self.ogg_latitude, self.ogg_longitude)
-        cpt_moonphases = calculate_moonphase_at_times(times, self.cpt_latitude, self.cpt_longitude)
+        ogg_moon_phases = calculate_moon_phase_at_times(times, self.ogg_latitude, self.ogg_longitude)
+        cpt_moon_phases = calculate_moon_phase_at_times(times, self.cpt_latitude, self.cpt_longitude)
 
-        for i, moonphase in enumerate(ogg_moonphases):
+        for i, moon_phase in enumerate(ogg_moon_phases):
             # Ensure that the difference never exceeds 2% between cpt and ogg over a year
-            assert_less(abs(moonphase - cpt_moonphases[i]), 0.02)
+            assert_less(abs(moon_phase - cpt_moon_phases[i]), 0.02)

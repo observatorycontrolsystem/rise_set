@@ -1300,7 +1300,7 @@ def apparent_to_altzd(ra, dec, aop_params):
     return Angle(radians=obs_az), Angle(radians=obs_zd)
 
 
-def calculate_moonphase(time, obs_latitude, obs_longitude):
+def calculate_moon_phase(time, obs_latitude, obs_longitude):
     """Compute the illuminated fraction (phase) of the Moon for the specific
     time and observing site.
 
@@ -1341,8 +1341,8 @@ def calculate_moonphase(time, obs_latitude, obs_longitude):
     return mphase
 
 
-def calculate_moonphase_at_times(times, obs_latitude, obs_longitude):
-    """ Returns the moonphase fraction for each of the times passed in for the given observer position
+def calculate_moon_phase_at_times(times, obs_latitude, obs_longitude):
+    """ Returns the moon_phase fraction for each of the times passed in for the given observer position
 
      Parameters
     ----------
@@ -1352,10 +1352,10 @@ def calculate_moonphase_at_times(times, obs_latitude, obs_longitude):
 
     Returns
     -------
-    list of moonphases : Illuminated fraction of the Moon from 0 (New Moon) to 1 (Full Moon) corresponding to times list passed in
+    list of moon_phases : Illuminated fraction of the Moon from 0 (New Moon) to 1 (Full Moon) corresponding to times list passed in
     """
-    moonphases = []
+    moon_phases = []
     for time in times:
-        moonphases.append(calculate_moonphase(time, obs_latitude.in_radians(), obs_longitude.in_radians()))
+        moon_phases.append(calculate_moon_phase(time, obs_latitude.in_radians(), obs_longitude.in_radians()))
 
-    return moonphases
+    return moon_phases
