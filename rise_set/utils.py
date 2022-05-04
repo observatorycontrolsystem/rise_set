@@ -65,6 +65,33 @@ def intersect_many_intervals(*args):
     return intersection
 
 
+def inverse_intervals(intervals, bounded_start, bounded_end):
+
+    ''' Computes the inverse set of intervals within a bounded start and end.
+    Returns a new set of datetime tuples that is the inverse of the input set.
+    '''
+    inverse_intervals = []
+    current_interval_start = bounded_start
+    for interval in intervals:
+        if current_interval_start > bounded_end:
+            break
+        if interval[0] < bounded_start:
+            if interval[1] > bounded_start:
+                current_interval_start = interval[1]
+        elif interval[0] < bounded_end:
+            inverse_intervals.append((current_interval_start, interval[0]))
+            current_interval_start = interval[1]
+        else:
+            inverse_intervals.append((current_interval_start, bounded_end))
+            current_interval_start = bounded_end
+            break
+    if current_interval_start < bounded_end:
+        # Add the final interval here if bounded_end is greater than the last interval
+        inverse_intervals.append((current_interval_start, bounded_end))
+
+    return inverse_intervals
+
+
 def is_moving_object(target):
     # If a type is not specified, default to sidereal objects
     if 'type' in target and target['type'].lower() in ('mpc_minor_planet', 'mpc_comet', 'jpl_major_planet'):

@@ -11,7 +11,7 @@ December 2013
 from builtins import object
 
 from rise_set.utils import (coalesce_adjacent_intervals, intersect_intervals,
-                            intersect_many_intervals)
+                            intersect_many_intervals, inverse_intervals)
 
 import datetime
 from nose.tools import assert_equal
@@ -225,3 +225,33 @@ class TestUtils(object):
 
         received = intersect_many_intervals(int1,int2,int3)
         assert_equal(received,expected)
+
+
+    def test_inverse_intervals_outside_bound(self):
+        start_bound = datetime.datetime(2013, 6, 15)
+        end_bound = datetime.datetime(2013, 6, 16)
+        intervals = [(datetime.datetime(2013, 6, 15, 9), datetime.datetime(2013, 6, 15, 11)), (datetime.datetime(2013, 6, 15, 15, 30), datetime.datetime(2013, 6, 15, 17))]
+        inverse = inverse_intervals(intervals, start_bound, end_bound)
+        expected_intervals = [(start_bound, intervals[0][0]), (intervals[0][1], intervals[1][0]), (intervals[1][1], end_bound)]
+        assert_equal(inverse, expected_intervals)
+
+
+    def test_inverse_intervals_inside_bound_between_intervals(self):
+        start_bound = datetime.datetime(2013, 6, 15)
+        end_bound = datetime.datetime(2013, 6, 16)
+        intervals = [(datetime.datetime(2013, 6, 14, 9), datetime.datetime(2013, 6, 15, 11)), (datetime.datetime(2013, 6, 15, 15, 30), datetime.datetime(2013, 6, 16, 17))]
+        inverse = inverse_intervals(intervals, start_bound, end_bound)
+        expected_intervals = [(intervals[0][1], intervals[1][0])]
+        assert_equal(inverse, expected_intervals)
+
+
+    def test_inverse_intervals_inside_bound_within_intervals(self):
+        start_bound = datetime.datetime(2013, 6, 15)
+        end_bound = datetime.datetime(2013, 6, 16)
+        intervals = [
+            (datetime.datetime(2013, 6, 14, 9), datetime.datetime(2013, 6, 14, 11)), (datetime.datetime(2013, 6, 15, 9), datetime.datetime(2013, 6, 15, 11)), 
+            (datetime.datetime(2013, 6, 15, 15, 30), datetime.datetime(2013, 6, 15, 17)), (datetime.datetime(2013, 6, 16, 15, 30), datetime.datetime(2013, 6, 16, 17))
+        ]
+        inverse = inverse_intervals(intervals, start_bound, end_bound)
+        expected_intervals = [(start_bound, intervals[1][0]), (intervals[1][1], intervals[2][0]), (intervals[2][1], end_bound)]
+        assert_equal(inverse, expected_intervals)

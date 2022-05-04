@@ -13,7 +13,8 @@ from rise_set.astrometry import (InvalidDateTimeError, IncompleteTargetError, Ri
                                  calc_rise_set, calc_setting_day_fraction,
                                  calc_rise_set_hour_angle, calc_rising_day_fraction,
                                  calc_transit_day_fraction, day_frac_to_hms, calc_planet_rise_set,
-                                 calc_local_hour_angle, make_ra_dec_target, apparent_planet_pos)
+                                 calc_local_hour_angle, make_ra_dec_target, apparent_planet_pos,
+                                 calculate_moonphase, calculate_moonphase_at_times)
 
 from rise_set.angle import Angle
 from rise_set.visibility import MOON_REFRACTION
@@ -979,3 +980,81 @@ class TestGetAirmassForTarget(object):
                                                self.cpt_height)
         assert_equal(1, len(airmasses))
         assert_almost_equal(1.52, airmasses[0], 2)
+
+
+class TestCalculateMoonphase(object):
+    def setup(self):
+        self.ogg_latitude = Angle(degrees=20.7069444444)
+        self.ogg_longitude = Angle(degrees=-156.258055556)
+
+        self.cpt_latitude = Angle(degrees=-32.3805542)
+        self.cpt_longitude = Angle(degrees=20.8101815)
+
+        # Month of 00:00 moonphases for ogg from JPL Horizons db
+        self.start_date = datetime(2016, 4, 20)
+        self.end_date = datetime(2016, 5, 20)
+        self.times = []
+        time = self.start_date
+        while time <= self.end_date:
+            self.times.append(time)
+            time += timedelta(days=1)
+
+        self.ogg_moonphase_groundtruth = [
+            95.87696,
+            98.73682,
+            99.89271,
+            99.31632,
+            97.01722,
+            93.04303,
+            87.47863,
+            80.44604,
+            72.10735,
+            62.67322,
+            52.41858,
+            41.70478,
+            31.00263,
+            20.90423,
+            12.10411,
+            5.33056,
+            1.22370,
+            0.19076,
+            2.29967,
+            7.26661,
+            14.54375,
+            23.45906,
+            33.34490,
+            43.61745,
+            53.80428,
+            63.53658,
+            72.52580,
+            80.53850,
+            87.37654,
+            92.86536,
+            96.85012
+        ]
+
+    def test_calculate_moonphase(self):
+        moonphase_1 = calculate_moonphase(self.start_date, self.ogg_latitude.in_radians(), self.ogg_longitude.in_radians())
+        assert_almost_equal(moonphase_1, self.ogg_moonphase_groundtruth[0] / 100.0, 2)
+
+        moonphase_2 = calculate_moonphase(self.end_date, self.ogg_latitude.in_radians(), self.ogg_longitude.in_radians())
+        assert_almost_equal(moonphase_2, self.ogg_moonphase_groundtruth[-1] / 100.0, 2)
+
+    def test_calculate_moonphase_list(self):
+        moonphases = calculate_moonphase_at_times(self.times, self.ogg_latitude, self.ogg_longitude)
+        for i, moonphase in enumerate(moonphases):
+            assert_almost_equal(moonphase, self.ogg_moonphase_groundtruth[i] / 100.0, 2)
+
+    def test_moonphase_similar_between_sites(self):
+        time = self.start_date
+        times = []
+        while time <= self.start_date + timedelta(days=365):
+            times.append(time)
+            time += timedelta(days=1)
+
+        ogg_moonphases = calculate_moonphase_at_times(times, self.ogg_latitude, self.ogg_longitude)
+        cpt_moonphases = calculate_moonphase_at_times(times, self.cpt_latitude, self.cpt_longitude)
+
+        for i, moonphase in enumerate(ogg_moonphases):
+            # Ensure that the difference never exceeds 2% between cpt and ogg over a year
+            assert_less(abs(moonphase - cpt_moonphases[i]), 0.02)

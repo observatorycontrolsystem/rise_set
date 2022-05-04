@@ -26,13 +26,13 @@ import copy
 # Internal imports
 from rise_set.astrometry import (
     calc_local_hour_angle, calc_sunrise_set, calc_planet_rise_set, calc_rise_set, RiseSetError,
-    Star, gregorian_to_ut_mjd, ut_mjd_to_gmst, date_to_tdb, apparent_planet_pos,
+    Star, gregorian_to_ut_mjd, ut_mjd_to_gmst, date_to_tdb, apparent_planet_pos, calculate_moonphase,
     calculate_zenith_distance, mean_to_apparent, angular_distance_between, elem_to_topocentric_apparent)
 from rise_set.angle import Angle
 from rise_set.exceptions import InvalidHourAngleLimit
 from rise_set.moving_objects import find_moving_object_up_intervals
 from rise_set.utils import (
-    coalesce_adjacent_intervals, intersect_intervals, is_sidereal_target,
+    coalesce_adjacent_intervals, intersect_intervals, is_sidereal_target, inverse_intervals,
     intersect_many_intervals, is_moving_object, is_static_target, target_to_jform)
 
 # Import logging modules
@@ -232,6 +232,40 @@ class Visibility(object):
             list: A list of tuples of start/end datetime pairs that make up the intervals over which this target is greater than zenith distance away from zenith.
         """
         return self._get_chunked_intervals(target, target_intervals, self._add_zenith_interval, self.zenith_blind_spot, chunksize)
+
+    def get_moon_phase_intervals(self, target_intervals, max_moon_phase=1.0, chunksize=datetime.timedelta(minutes=30)):
+        """ Returns the intervals in which the target is visible and the moon phase does not exceed max_moon_phase
+
+        Args:
+            target_intervals (list): A list of datetime tuples that represent the above horizon intervals for the target.
+                                     Returned by get_target_intervals()
+            max_moon_phase (float): max allowablable fractional moon phase from 0 to 1 (full moon).
+            chunksize (timedelta): The time delta over which to calculate if the target intervals are out of range of
+                                   the zenith.
+        Returns:
+            list: A list of tuples of start/end datetime pairs that make up the intervals over which this target is visible and the moon phase is less than max_moon_phase
+        """
+        bad_intervals = []
+        moon_up_intervals = self.get_target_intervals(target="moon", up=True)
+        target_moon_up_intervals = intersect_intervals(target_intervals, moon_up_intervals)
+        # Here we collect the bad intervals where the moon is up and the moon phase is greater than the max constraint
+        for start, end in target_moon_up_intervals:
+            chunkstart = start
+            chunkend = min(chunkstart + chunksize, end)
+            while chunkstart != chunkend and chunkend <= end:
+                moon_phase = calculate_moonphase(chunkstart, self.site['latitude'].in_radians(), self.site['longitude'].in_radians())
+                if moon_phase > max_moon_phase:
+                    bad_intervals.append((chunkstart, chunkend))
+
+                # increment the chunkstart/end up
+                chunkstart = chunkend
+                chunkend = min(chunkstart + chunksize, end)
+
+        bad_intervals = coalesce_adjacent_intervals(bad_intervals)
+        # Bad intervals are inversed to get good intervals and then intersected with target intervals to get target intervals where moonphase constraint is met
+        good_intervals = inverse_intervals(bad_intervals)
+        good_intervals = intersect_intervals(good_intervals, target_intervals)
+        return good_intervals
 
     def get_target_intervals(self, target, up=True, airmass=None):
         """Returns the above or below horizon intervals for the given target.
