@@ -36,7 +36,6 @@ def coalesce_adjacent_intervals(intervals):
 
 
 def intersect_intervals(int1, int2):
-
     ''' Computes the intersections of two sets of datetime 2-tuples, each of which
     represents the overlap between the two tuples.
     '''
@@ -54,7 +53,6 @@ def intersect_intervals(int1, int2):
 
 
 def intersect_many_intervals(*args):
-
     ''' Generalizes intersect_intervals to an arbitrary number of lists
     e.g., when the object is up, sun is down, and hour angle within limits
     '''
@@ -66,8 +64,8 @@ def intersect_many_intervals(*args):
 
 
 def inverse_intervals(intervals, bounded_start, bounded_end):
-
     ''' Computes the inverse set of intervals within a bounded start and end.
+
     Returns a new set of datetime tuples that is the inverse of the input set.
     '''
     inverse_intervals = []

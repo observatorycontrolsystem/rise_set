@@ -249,7 +249,7 @@ class TestUtils(object):
         start_bound = datetime.datetime(2013, 6, 15)
         end_bound = datetime.datetime(2013, 6, 16)
         intervals = [
-            (datetime.datetime(2013, 6, 14, 9), datetime.datetime(2013, 6, 14, 11)), (datetime.datetime(2013, 6, 15, 9), datetime.datetime(2013, 6, 15, 11)), 
+            (datetime.datetime(2013, 6, 14, 9), datetime.datetime(2013, 6, 14, 11)), (datetime.datetime(2013, 6, 15, 9), datetime.datetime(2013, 6, 15, 11)),
             (datetime.datetime(2013, 6, 15, 15, 30), datetime.datetime(2013, 6, 15, 17)), (datetime.datetime(2013, 6, 16, 15, 30), datetime.datetime(2013, 6, 16, 17))
         ]
         inverse = inverse_intervals(intervals, start_bound, end_bound)

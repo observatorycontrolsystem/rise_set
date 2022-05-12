@@ -218,7 +218,7 @@ class Visibility(object):
 
     def get_zenith_distance_intervals(self, target, target_intervals, chunk_size=datetime.timedelta(minutes=1)):
         """Returns the zenith distance intervals for the given target.
-        
+
         Returns the intervals for which the given target is greater than zenith distance away from the zenith at the given site 
         and date range set in this visibility object.
 
@@ -234,7 +234,7 @@ class Visibility(object):
         return self._get_chunked_intervals(target, target_intervals, self._add_zenith_interval, self.zenith_blind_spot, chunk_size)
 
     def get_moon_phase_intervals(self, target_intervals, moon_phase=1.0, chunk_size=datetime.timedelta(minutes=30)):
-        """ Returns the intervals in which the target is visible and the moon phase does not exceed moon_phase
+        """Returns the intervals in which the target is visible and the moon phase does not exceed moon_phase
 
         Args:
             target_intervals (list): A list of datetime tuples that represent the above horizon intervals for the target.

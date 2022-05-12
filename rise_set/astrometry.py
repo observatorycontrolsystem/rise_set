@@ -1214,7 +1214,7 @@ def calculate_zenith_distance(latitude, dec, local_hour_angle):
 
 
 def calculate_airmass_at_times(times, target, obs_latitude, obs_longitude, obs_height):
-    """ Returns the airmass values at each of the times passed in for the given target
+    """Returns the airmass values at each of the times passed in for the given target
 
     Returns the airmass values for a target and observer specified at each time value 
     in the input times list. This uses the speedier slalib aop quick function which caches the object lat/lon/height and
@@ -1301,8 +1301,7 @@ def apparent_to_altzd(ra, dec, aop_params):
 
 
 def calculate_moon_phase(time, obs_latitude, obs_longitude):
-    """Compute the illuminated fraction (phase) of the Moon for the specific
-    time and observing site.
+    """Compute the illuminated fraction (phase) of the Moon for the specific time and observing site.
 
     Uses the "medium" precision version of the algorithm in Chapter 48 of
     Jean Meeus, Astronomical Algorithms, second edition, 1998, Willmann-Bell.
@@ -1342,7 +1341,7 @@ def calculate_moon_phase(time, obs_latitude, obs_longitude):
 
 
 def calculate_moon_phase_at_times(times, obs_latitude, obs_longitude):
-    """ Returns the moon_phase fraction for each of the times passed in for the given observer position
+    """Returns the moon_phase fraction for each of the times passed in for the given observer position
 
      Parameters
     ----------
