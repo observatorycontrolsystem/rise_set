@@ -60,7 +60,7 @@ moon_distance_intervals = visibility.get_moon_distance_intervals(target, target_
 print(f"moon_distance_intervals = {moon_distance_intervals}")
 
 # Get the moon phase intervals over which either the moon is below the horizon or the phase is less than maximum_moon_phase
-moon_phase_intervals = visibility.get_moon_phase_intervals(target_intervals, moon_phase=maximum_moon_phase,
+moon_phase_intervals = visibility.get_moon_phase_intervals(target_intervals, max_moon_phase=maximum_moon_phase,
                                                            chunk_size=timedelta(minutes=30))
 print(f"moon_phase_intervals = {moon_phase_intervals}")
 

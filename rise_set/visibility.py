@@ -233,7 +233,7 @@ class Visibility(object):
         """
         return self._get_chunked_intervals(target, target_intervals, self._add_zenith_interval, self.zenith_blind_spot, chunk_size)
 
-    def get_moon_phase_intervals(self, target_intervals, moon_phase=1.0, chunk_size=datetime.timedelta(minutes=30)):
+    def get_moon_phase_intervals(self, target_intervals, max_moon_phase=1.0, chunk_size=datetime.timedelta(minutes=30)):
         """Returns the intervals in which the target is visible and the moon phase does not exceed moon_phase
 
         Args:
@@ -257,7 +257,7 @@ class Visibility(object):
             chunk_end = min(chunk_start + chunk_size, end)
             while chunk_start != chunk_end and chunk_end <= end:
                 moon_phase = calculate_moon_phase(chunk_start, self.site['latitude'].in_radians(), self.site['longitude'].in_radians())
-                if moon_phase > moon_phase:
+                if moon_phase > max_moon_phase:
                     bad_intervals.append((chunk_start, chunk_end))
 
                 # increment the chunk_start/end up
