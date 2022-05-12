@@ -1395,7 +1395,7 @@ class TestMajorPlanetZenithDistanceIntervals(TestZenithDistanceCalculation):
 
         target_intervals = self.v.get_target_intervals(target=target)
         zenith_intervals = self.v.get_zenith_distance_intervals(target, target_intervals,
-                                                                chunksize=timedelta(minutes=1))
+                                                                chunk_size=timedelta(minutes=1))
 
         # these intervals are tailored to the specific JPL Horizons output for this target
         expected_intervals = [
@@ -1440,11 +1440,11 @@ class TestCometZenithDistanceIntervals(TestZenithDistanceCalculation):
 
         target_intervals = self.v.get_target_intervals(target=target)
         zenith_intervals = self.v.get_zenith_distance_intervals(target, target_intervals,
-                                                                chunksize=timedelta(minutes=1))
-        # first interval ends when the target enters the zenith hole (chunksize = 1 min)
+                                                                chunk_size=timedelta(minutes=1))
+        # first interval ends when the target enters the zenith hole (chunk_size = 1 min)
         # second interval begins when the target exits the zenith hole
-        # second interval ends when the target goes below the horizon (15) (chuncksize=15 min default)
-        # third interval begins when the target rises above the horizon (15) (chuncksize=15 min default)
+        # second interval ends when the target goes below the horizon (15) (chunk_size=15 min default)
+        # third interval begins when the target rises above the horizon (15) (chunk_size=15 min default)
         expected_intervals = [
             (self.v.start_date, datetime(2012, 7, 22, 3, 9)),
             (datetime(2012, 7, 22, 4, 27), datetime(2012, 7, 22, 7, 45)),

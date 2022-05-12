@@ -242,19 +242,19 @@ class Sites(object):
             yield site_dict
 
 
-def chunk_windows(window, chunksize):
+def chunk_windows(window, chunk_size):
     '''Given a user window, split that window into interval tuples (start, end)
-       of size chunksize.'''
+       of size chunk_size.'''
     chunk_start = window['start']
-    chunk_end   = chunk_start + chunksize
+    chunk_end   = chunk_start + chunk_size
 
     intervals = []
     while chunk_end <= window['end']:
         interval = (chunk_start, chunk_end)
         intervals.append(interval)
 
-        chunk_start += chunksize
-        chunk_end   += chunksize
+        chunk_start += chunk_size
+        chunk_end   += chunk_size
 
     # Pick up any partial remaining interval
     if chunk_start < window['end']:
@@ -264,14 +264,14 @@ def chunk_windows(window, chunksize):
     return intervals
 
 
-def find_moving_object_network_up_intervals(window, elements, site_filename, chunksize):
+def find_moving_object_network_up_intervals(window, elements, site_filename, chunk_size):
     '''Network wide wrapper for find_moving_object_up_intervals.'''
 
     sites = initialise_sites(site_filename)
     up_intervals_at = {}
     for site in sites:
         up_intervals, altitudes = find_moving_object_up_intervals(window, elements, site,
-                                                                  chunksize)
+                                                                  chunk_size)
         coalesced_intervals = coalesce_adjacent_intervals(up_intervals)
         up_intervals_at[site['name']] = coalesced_intervals
 
@@ -303,7 +303,7 @@ def ephemeris_chunk_above_horizon(alt1, alt2, horizon):
     return False
 
 
-def find_moving_object_up_intervals(window, elements, site, chunksize=timedelta(minutes=15)):
+def find_moving_object_up_intervals(window, elements, site, chunk_size=timedelta(minutes=15)):
     '''Return only the (interval, altitude) pairs for which the moving object is
        above the horizon and within the hour angle limits at the provided site.
        If you just want rising and setting visible intevals, supply hour angle limits
@@ -313,7 +313,7 @@ def find_moving_object_up_intervals(window, elements, site, chunksize=timedelta(
     # Map the type of moving object to SLALIB numeric convention
     jform = target_to_jform(elements)
 
-    coords = calc_ephemerides(window, elements, site, chunksize, jform)
+    coords = calc_ephemerides(window, elements, site, chunk_size, jform)
 
     intervals   = []
     altitudes   = []
@@ -351,11 +351,11 @@ def find_moving_object_up_intervals(window, elements, site, chunksize=timedelta(
     return up_intervals, up_altitudes
 
 
-def calc_ephemerides(window, elements, site, chunksize=timedelta(minutes=15), JFORM=2):
+def calc_ephemerides(window, elements, site, chunk_size=timedelta(minutes=15), JFORM=2):
     '''Return the apparent RA/Dec for the moving object specified by elements, for a given
-       site, every chunksize minutes within the window.'''
+       site, every chunk_size minutes within the window.'''
 
-    chunked_intervals = chunk_windows(window, chunksize)
+    chunked_intervals = chunk_windows(window, chunk_size)
 
     coords = []
     for start, end in chunked_intervals:

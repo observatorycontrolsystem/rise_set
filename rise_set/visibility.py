@@ -170,7 +170,7 @@ class Visibility(object):
         # if that zenith distance is > the constraint, add this interval to final intervals
         return target_zenith_dist.in_degrees() >= constraint.in_degrees()
 
-    def _get_chunked_intervals(self, target, target_intervals, compare_func, constraint, chunksize=datetime.timedelta(minutes=30)):
+    def _get_chunked_intervals(self, target, target_intervals, compare_func, constraint, chunk_size=datetime.timedelta(minutes=30)):
         '''Returns a set of datetime 2-tuples, each of which represents an interval
            of time that the target is greater than the constraint away from the thing-to-be-avoided.
            The supplied compare_func calculates the distance to it's specific obstacle (moon, zenith).
@@ -178,29 +178,29 @@ class Visibility(object):
         intervals = []
 
         for start, end in target_intervals:
-            chunkstart = start
-            chunkend = min(chunkstart + chunksize, end)
-            while chunkstart != chunkend and chunkend <= end:
+            chunk_start = start
+            chunk_end = min(chunk_start + chunk_size, end)
+            while chunk_start != chunk_end and chunk_end <= end:
                 # get the tdb date of the start time of the interval
-                tdb = date_to_tdb(chunkstart)
+                tdb = date_to_tdb(chunk_start)
                 # get the apparent ra/dec for the target, and for the moon at this timestamp
                 if is_sidereal_target(target):
                     target_app_ra, target_app_dec = mean_to_apparent(target, tdb)
                 else:
-                    target_app_ra, target_app_dec = elem_to_topocentric_apparent(chunkstart, target, self.site,
+                    target_app_ra, target_app_dec = elem_to_topocentric_apparent(chunk_start, target, self.site,
                                                                                  target_to_jform(target))
 
-                if compare_func({'time': chunkstart, 'tdb': tdb}, target_app_ra, target_app_dec, constraint):
-                    intervals.append((chunkstart, chunkend))
+                if compare_func({'time': chunk_start, 'tdb': tdb}, target_app_ra, target_app_dec, constraint):
+                    intervals.append((chunk_start, chunk_end))
 
-                # increment the chunkstart/end up
-                chunkstart = chunkend
-                chunkend = min(chunkstart + chunksize, end)
+                # increment the chunk_start/end up
+                chunk_start = chunk_end
+                chunk_end = min(chunk_start + chunk_size, end)
 
         intervals = coalesce_adjacent_intervals(intervals)
         return intervals
 
-    def get_moon_distance_intervals(self, target, target_intervals, moon_distance=Angle(degrees=30), chunksize=datetime.timedelta(minutes=30)):
+    def get_moon_distance_intervals(self, target, target_intervals, moon_distance=Angle(degrees=30), chunk_size=datetime.timedelta(minutes=30)):
         """Returns the moon distance intervals for the given target.
         
         Returns the intervals for which the given target is greater than the angular moon distance
@@ -210,13 +210,13 @@ class Visibility(object):
             target (dict): A dictionary of target details in the rise-set library format
             target_intervals (list): A list of datetime tuples that represent the above horizon intervals for the target. Returned by get_target_intervals()
             moon_distance (Angle): The minimum angular moon distance that the target must be away from the moon
-            chunksize (timedelta): The time delta over which to calculate if the target intervals are out of range of the zenith.
+            chunk_size (timedelta): The time delta over which to calculate if the target intervals are out of range of the zenith.
         Returns:
             list: A list of tuples of start/end datetime pairs that make up the intervals over which this target is greater than angular moon distance away from moon.
         """
-        return self._get_chunked_intervals(target, target_intervals, self._add_moon_interval, moon_distance, chunksize)
+        return self._get_chunked_intervals(target, target_intervals, self._add_moon_interval, moon_distance, chunk_size)
 
-    def get_zenith_distance_intervals(self, target, target_intervals, chunksize=datetime.timedelta(minutes=1)):
+    def get_zenith_distance_intervals(self, target, target_intervals, chunk_size=datetime.timedelta(minutes=1)):
         """Returns the zenith distance intervals for the given target.
         
         Returns the intervals for which the given target is greater than zenith distance away from the zenith at the given site 
@@ -226,21 +226,21 @@ class Visibility(object):
             target (dict): A dictionary of target details in the rise-set library format
             target_intervals (list): A list of datetime tuples that represent the above horizon intervals for the target.
                                      Returned by get_target_intervals()
-            chunksize (timedelta): The time delta over which to calculate if the target intervals are out of range of 
-                                   the zenith.
+            chunk_size (timedelta): The time delta over which to calculate if the target intervals are out of range of
+                                    the zenith.
         Returns:
             list: A list of tuples of start/end datetime pairs that make up the intervals over which this target is greater than zenith distance away from zenith.
         """
-        return self._get_chunked_intervals(target, target_intervals, self._add_zenith_interval, self.zenith_blind_spot, chunksize)
+        return self._get_chunked_intervals(target, target_intervals, self._add_zenith_interval, self.zenith_blind_spot, chunk_size)
 
-    def get_moon_phase_intervals(self, target_intervals, max_moon_phase=1.0, chunksize=datetime.timedelta(minutes=30)):
-        """ Returns the intervals in which the target is visible and the moon phase does not exceed max_moon_phase
+    def get_moon_phase_intervals(self, target_intervals, moon_phase=1.0, chunk_size=datetime.timedelta(minutes=30)):
+        """ Returns the intervals in which the target is visible and the moon phase does not exceed moon_phase
 
         Args:
             target_intervals (list): A list of datetime tuples that represent the above horizon intervals for the target.
                                      Returned by get_target_intervals()
-            max_moon_phase (float): max allowablable fractional moon phase from 0 to 1 (full moon).
-            chunksize (timedelta): The time delta over which to calculate if the target intervals are out of range of
+            moon_phase (float): max allowablable fractional moon phase from 0 to 1 (full moon).
+            chunk_size (timedelta): The time delta over which to calculate if the target intervals are out of range of
                                    the zenith.
         Returns:
             list: A list of tuples of start/end datetime pairs that make up the intervals over which this target is visible and the moon phase is less than max_moon_phase
@@ -253,16 +253,16 @@ class Visibility(object):
         target_moon_up_intervals = intersect_intervals(target_intervals, moon_up_intervals)
         # Here we collect the bad intervals where the moon is up and the moon phase is greater than the max constraint
         for start, end in target_moon_up_intervals:
-            chunkstart = start
-            chunkend = min(chunkstart + chunksize, end)
-            while chunkstart != chunkend and chunkend <= end:
-                moon_phase = calculate_moon_phase(chunkstart, self.site['latitude'].in_radians(), self.site['longitude'].in_radians())
-                if moon_phase > max_moon_phase:
-                    bad_intervals.append((chunkstart, chunkend))
+            chunk_start = start
+            chunk_end = min(chunk_start + chunk_size, end)
+            while chunk_start != chunk_end and chunk_end <= end:
+                moon_phase = calculate_moon_phase(chunk_start, self.site['latitude'].in_radians(), self.site['longitude'].in_radians())
+                if moon_phase > moon_phase:
+                    bad_intervals.append((chunk_start, chunk_end))
 
-                # increment the chunkstart/end up
-                chunkstart = chunkend
-                chunkend = min(chunkstart + chunksize, end)
+                # increment the chunk_start/end up
+                chunk_start = chunk_end
+                chunk_end = min(chunk_start + chunk_size, end)
 
         bad_intervals = coalesce_adjacent_intervals(bad_intervals)
         # Bad intervals are inversed to get good intervals and then intersected with target intervals to get target intervals where moon_phase constraint is met
