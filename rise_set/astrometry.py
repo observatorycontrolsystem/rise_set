@@ -1214,7 +1214,7 @@ def calculate_zenith_distance(latitude, dec, local_hour_angle):
 
 
 def calculate_airmass_at_times(times, target, obs_latitude, obs_longitude, obs_height):
-    """ Returns the airmass values at each of the times passed in for the given target
+    """Returns the airmass values at each of the times passed in for the given target
 
     Returns the airmass values for a target and observer specified at each time value 
     in the input times list. This uses the speedier slalib aop quick function which caches the object lat/lon/height and
@@ -1298,3 +1298,63 @@ def apparent_to_altzd(ra, dec, aop_params):
     (obs_az, obs_zd, obs_ha, obs_dec, obs_ra) = sla.sla_aopqk(ra.in_radians(), dec.in_radians(), aop_params)
 
     return Angle(radians=obs_az), Angle(radians=obs_zd)
+
+
+def calculate_moon_phase(time, obs_latitude, obs_longitude):
+    """Compute the illuminated fraction (phase) of the Moon for the specific time and observing site.
+
+    Uses the "medium" precision version of the algorithm in Chapter 48 of
+    Jean Meeus, Astronomical Algorithms, second edition, 1998, Willmann-Bell.
+    Meeus claims a max error in mphase of 0.0014 (0.14%)
+
+    Parameters
+    ----------
+    time : `datetime` UTC datetime of observation
+    obs_longitude : Observer's longitude (East +ve; radians)
+    obs_latitude : Observer's latitude (North +ve; radians)
+
+    Returns
+    -------
+    mphase : Illuminated fraction of the Moon from 0 (New Moon) to 1 (Full Moon)
+    """
+    mjd_utc = gregorian_to_ut_mjd(time)
+    # Convert datetime to MJD_TDB
+    tdb = ut_mjd_to_tdb(mjd_utc)  #not TDB but good enough
+    (moon_ra, moon_dec, _) = sla.sla_rdplan(tdb, 3, obs_longitude, obs_latitude)
+
+    (sun_ra, sun_dec, _) = sla.sla_rdplan (tdb, 0, obs_longitude, obs_latitude)
+
+    cosphi = ( sin(sun_dec) * sin(moon_dec) + cos(sun_dec) * cos(moon_dec) * cos(sun_ra - moon_ra))
+    _log.debug("cos(phi)=%s" % cosphi)
+
+    # Full formula for phase angle, i. Requires r (Earth-Sun distance) and del(ta) (the
+    # Earth-Moon distance) neither of which we have with our methods. However Meeus
+    # _Astronomical Algorithms_ p 345 reckons we can "put cos(i) = -cos(phi) and k (the
+    # Moon phase) will never be in error by more than 0.0014"
+    #    i = atan2( r * sin(phi), del - r * cos(phi) )
+
+    cosi = -cosphi
+    _log.debug("cos(i)=%s" % cosi)
+    mphase = (1.0 + cosi) / 2.0
+
+    return mphase
+
+
+def calculate_moon_phase_at_times(times, obs_latitude, obs_longitude):
+    """Returns the moon_phase fraction for each of the times passed in for the given observer position
+
+     Parameters
+    ----------
+    times : list of `datetime` UTC datetimes
+    obs_longitude : Observer's longitude Angle object
+    obs_latitude : Observer's latitude Angle object
+
+    Returns
+    -------
+    list of moon_phases : Illuminated fraction of the Moon from 0 (New Moon) to 1 (Full Moon) corresponding to times list passed in
+    """
+    moon_phases = []
+    for time in times:
+        moon_phases.append(calculate_moon_phase(time, obs_latitude.in_radians(), obs_longitude.in_radians()))
+
+    return moon_phases

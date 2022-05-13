@@ -597,42 +597,42 @@ class TestMovingObjects(object):
                    'end'   : datetime(2013, 12, 11)
                  }
 
-        chunksize = timedelta(hours=6)
+        chunk_size = timedelta(hours=6)
 
         expected = [
                      {
                        'ra_app'  : Angle(degrees=285.22681),
                        'dec_app' : Angle(degrees=-18.16350),
                        'start'   : window['start'],
-                       'end'     : window['start'] + (1 * chunksize),
+                       'end'     : window['start'] + (1 * chunk_size),
                      },
                      {
                        'ra_app'  : Angle(degrees=285.35677),
                        'dec_app' : Angle(degrees=-18.15597),
-                       'start'   : window['start'] + (1 * chunksize),
-                       'end'     : window['start'] + (2 * chunksize),
+                       'start'   : window['start'] + (1 * chunk_size),
+                       'end'     : window['start'] + (2 * chunk_size),
                      },
                      {
                        'ra_app'  : Angle(degrees=285.48538),
                        'dec_app' : Angle(degrees=-18.14841),
-                       'start'   : window['start'] + (2 * chunksize),
-                       'end'     : window['start'] + (3 * chunksize),
+                       'start'   : window['start'] + (2 * chunk_size),
+                       'end'     : window['start'] + (3 * chunk_size),
                      },
                      {
                        'ra_app'  : Angle(degrees=285.61369),
                        'dec_app' : Angle(degrees=-18.14033),
-                       'start'   : window['start'] + (3 * chunksize),
-                       'end'     : window['start'] + (4 * chunksize),
+                       'start'   : window['start'] + (3 * chunk_size),
+                       'end'     : window['start'] + (4 * chunk_size),
                      },
                      {
                        'ra_app'  : Angle(degrees=285.74337),
                        'dec_app' : Angle(degrees=-18.13206),
-                       'start'   : window['start'] + (4 * chunksize),
-                       'end'     : window['start'] + (4 * chunksize),
+                       'start'   : window['start'] + (4 * chunk_size),
+                       'end'     : window['start'] + (4 * chunk_size),
                      },
                    ]
 
-        received = calc_ephemerides(window, self.elements, self.cpt, chunksize)
+        received = calc_ephemerides(window, self.elements, self.cpt, chunk_size)
 
         for e, r in zip(expected, received):
             assert_almost_equal(e['ra_app'].in_degrees(), r['ra_app'].in_degrees(), places=3)
@@ -647,7 +647,7 @@ class TestMovingObjects(object):
                    'end'   : datetime(2013, 12, 11)
                  }
 
-        chunksize = timedelta(hours=3)
+        chunk_size = timedelta(hours=3)
 
         expected_intervals = [
                                 (
@@ -666,7 +666,7 @@ class TestMovingObjects(object):
 
         received_ints, received_alts = find_moving_object_up_intervals(window,
                                                                self.elements,
-                                                               self.cpt, chunksize)
+                                                               self.cpt, chunk_size)
 
         assert_equal(len(expected_intervals), len(received_ints))
         assert_equal(len(expected_altitudes), len(received_alts))
@@ -684,7 +684,7 @@ class TestMovingObjects(object):
                    'end'   : datetime(2013, 12, 10, 8, 30)
                  }
 
-        chunksize = timedelta(minutes=15)
+        chunk_size = timedelta(minutes=15)
 
         expected_intervals = [
                                (
@@ -704,7 +704,7 @@ class TestMovingObjects(object):
 
         received_ints, received_alts = find_moving_object_up_intervals(window,
                                                                self.elements,
-                                                               self.cpt, chunksize)
+                                                               self.cpt, chunk_size)
 
         assert_equal(len(expected_intervals), len(received_ints))
         assert_equal(len(expected_altitudes), len(received_alts))
@@ -722,7 +722,7 @@ class TestMovingObjects(object):
                    'end'   : datetime(2013, 12, 10, 8, 31)
                  }
 
-        chunksize = timedelta(minutes=15)
+        chunk_size = timedelta(minutes=15)
 
         expected_intervals = [
                                (
@@ -747,7 +747,7 @@ class TestMovingObjects(object):
 
         received_ints, received_alts = find_moving_object_up_intervals(window,
                                                                self.elements,
-                                                               self.cpt, chunksize)
+                                                               self.cpt, chunk_size)
 
         assert_equal(len(expected_intervals), len(received_ints))
         assert_equal(len(expected_altitudes), len(received_alts))
@@ -920,14 +920,14 @@ class TestMovingObjects(object):
                     },
                ]
 
-        chunksize = timedelta(minutes=15)
+        chunk_size = timedelta(minutes=15)
 
         alt_mock.return_value   = Angle(degrees=20)
         ha_mock.return_value    = Angle(degrees=-7*15)
         ephem_mock.return_value = ephem
 
         received_ints, received_alts = find_moving_object_up_intervals(window, elements,
-                                                                  site_dict, chunksize)
+                                                                  site_dict, chunk_size)
         assert_equal(received_ints, [])
 
 
@@ -939,7 +939,7 @@ class TestMovingObjects(object):
 
         site_filename = 'test/thirty_degree_telescopes.dat'
 
-        chunksize = timedelta(minutes=15)
+        chunk_size = timedelta(minutes=15)
 
         expected = {
                      '1m0a.doma.elp' : [],
@@ -959,7 +959,7 @@ class TestMovingObjects(object):
                    }
 
         received = find_moving_object_network_up_intervals(window, self.elements,
-                                                           site_filename, chunksize)
+                                                           site_filename, chunk_size)
 
         for site in list(expected.keys()):
             print(site)
@@ -972,7 +972,7 @@ class TestMovingObjects(object):
                    'end'      : str_to_dt('2013-12-05 08:33:55'),
                  }
 
-        chunksize = timedelta(hours=2)
+        chunk_size = timedelta(hours=2)
 
         expected = [
                      (
@@ -994,7 +994,7 @@ class TestMovingObjects(object):
                    ]
 
 
-        received = chunk_windows(window, chunksize)
+        received = chunk_windows(window, chunk_size)
 
         assert_equal(received, expected)
 
@@ -1005,7 +1005,7 @@ class TestMovingObjects(object):
                    'end'      : str_to_dt('2013-12-05 06:33:55'),
                  }
 
-        chunksize = timedelta(hours=2)
+        chunk_size = timedelta(hours=2)
 
         expected = [
                      (
@@ -1027,7 +1027,7 @@ class TestMovingObjects(object):
                    ]
 
 
-        received = chunk_windows(window, chunksize)
+        received = chunk_windows(window, chunk_size)
 
         assert_equal(received, expected)
 
@@ -1044,10 +1044,10 @@ class TestMovingObjects(object):
             print(x, y)
 
         site_filename = 'test/telescopes.dat'
-        chunksize = timedelta(minutes=10)
+        chunk_size = timedelta(minutes=10)
 
         received = find_moving_object_network_up_intervals(window, elements,
-                                                           site_filename, chunksize)
+                                                           site_filename, chunk_size)
 
         expected = {
                      '1m0a.doma.elp' : [

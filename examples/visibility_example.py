@@ -34,6 +34,7 @@ target = make_ra_dec_target(
 # Extra data needed for computing visibility
 airmass_limit = 1.6
 moon_distance_limit = Angle(degrees=30.0)
+maximum_moon_phase = 1.0
 start_date = datetime(2020, 6, 1)
 end_date = datetime(2020, 6, 3, 23, 22, 0)
 
@@ -54,10 +55,15 @@ ha_intervals = visibility.get_ha_intervals(target)
 print(f"ha_intervals = {ha_intervals}")
 
 # Get the moon distance intervals over which the target is above the horizon and not within moon_distance_limit of the moon
-moon_distance_intervals = visibility.get_moon_distance_intervals(target, target_intervals, moon_distance=moon_distance_limit, 
-                                                                 chunksize=timedelta(minutes=30))
+moon_distance_intervals = visibility.get_moon_distance_intervals(target, target_intervals, moon_distance=moon_distance_limit,
+                                                                 chunk_size=timedelta(minutes=30))
 print(f"moon_distance_intervals = {moon_distance_intervals}")
 
-# Gets the observable intervals for the target by intersecting the target_intervals, ha_intervals, and moon_distance intervals
-observable_intervals = visibility.get_observable_intervals(target, airmass=airmass_limit, moon_distance=moon_distance_limit)
+# Get the moon phase intervals over which either the moon is below the horizon or the phase is less than maximum_moon_phase
+moon_phase_intervals = visibility.get_moon_phase_intervals(target_intervals, max_moon_phase=maximum_moon_phase,
+                                                           chunk_size=timedelta(minutes=30))
+print(f"moon_phase_intervals = {moon_phase_intervals}")
+
+# Gets the observable intervals for the target by intersecting the target_intervals, ha_intervals, and moon_distance, and moon phase intervals
+observable_intervals = visibility.get_observable_intervals(target, airmass=airmass_limit, moon_distance=moon_distance_limit, moon_phase=maximum_moon_phase)
 print(f"observable_intervals = {observable_intervals}")

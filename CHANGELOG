@@ -49,3 +49,4 @@ v.0.4.10 - Fix hour angle limit check to convert target ra to apparent ra
 v.0.4.11 - Add hour angle type target
 v.0.4.12 - Add zenith blind spot support
 v.0.5.1  - First release as ocs-rise-set
+v.0.5.2  - Added max moon_phase constraint support
