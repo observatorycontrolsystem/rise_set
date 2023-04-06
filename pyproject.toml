@@ -6,7 +6,6 @@ authors = ["Eric Saunders <esaunders@lcogt.net>"]
 readme = "README.md"
 packages = [{include = "rise_set"}]
 classifiers = [
-    "Programming Language :: Python :: 2.7",
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
     "Topic :: Scientific/Engineering :: Astronomy",
