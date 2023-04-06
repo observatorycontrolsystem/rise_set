@@ -13,7 +13,7 @@ classifiers = [
 
 [tool.poetry.dependencies]
 python = ">=3.7,<3.10"
-pyslalib = {git = "https://github.com/LCOGT/pyslalib.git"}
+pyslalib = {git = "https://github.com/LCOGT/pyslalib.git@1671358d66a4142a7f6369c815d3f8830f8b5ac7"}
 future = "^0.18.3"
 
 [tool.poetry.group.dev.dependencies]
