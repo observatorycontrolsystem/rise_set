@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "ocs-rise-set"
-version = "0.5.3"
+version = "0.6.0"
 description = "Routines for accurate rise/set/transit calculations"
 authors = ["Eric Saunders <esaunders@lcogt.net>"]
 readme = "README.md"
