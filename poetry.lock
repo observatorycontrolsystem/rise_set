@@ -178,10 +178,10 @@ numpy = "<1.22"
 [package.source]
 type = "git"
 url = "https://github.com/LCOGT/pyslalib.git"
-reference = "HEAD"
+reference = "1671358d66a4142a7f6369c815d3f8830f8b5ac7"
 resolved_reference = "1671358d66a4142a7f6369c815d3f8830f8b5ac7"
 
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.7,<3.10"
-content-hash = "a6c0245d31c6e3c873dd3ed202512df56d9c68a42b8a674aa3c0d4d4f8c0cacf"
+content-hash = "c684f66d421b4b275c7a559353b24062176195031cc3f3e828647fecf0e75d06"
