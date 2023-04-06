@@ -12,7 +12,7 @@ from setuptools import setup
 
 setup(
     name = 'ocs-rise-set',
-    version = '0.5.2',
+    version = '0.5.3',
     description = 'Routines for accurate rise/set/transit calculations',
     author = 'Eric Saunders',
     author_email = 'esaunders@lcogt.net',
@@ -21,7 +21,7 @@ setup(
         "numpy"
     ],
     install_requires = [
-        "pySLALIB",
+        "pySLALIB @ git+https://github.com/jashan-lco/pyslalib.git",
         "numpy",
         "future",
     ],
