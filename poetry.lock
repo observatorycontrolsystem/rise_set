@@ -163,25 +163,20 @@ files = [
 ]
 
 [[package]]
-name = "pySLALIB"
-version = "1.0.5"
-description = ""
+name = "pyslalib"
+version = "1.0.6"
+description = "f2py and numpy based wrappers for SLALIB"
 category = "main"
 optional = false
 python-versions = "*"
-files = []
-develop = false
+files = [
+    {file = "pySLALIB-1.0.6.tar.gz", hash = "sha256:60a56fecdb9ef6feb46cb3544c40973a319e413c53dd36bade11c5b04afe2d25"},
+]
 
 [package.dependencies]
 numpy = "<1.22"
 
-[package.source]
-type = "git"
-url = "https://github.com/LCOGT/pyslalib.git"
-reference = "1671358d66a4142a7f6369c815d3f8830f8b5ac7"
-resolved_reference = "1671358d66a4142a7f6369c815d3f8830f8b5ac7"
-
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.7,<3.10"
-content-hash = "c684f66d421b4b275c7a559353b24062176195031cc3f3e828647fecf0e75d06"
+content-hash = "895438bb3f6859f6e9fea5710d6be40233648a3443d9a5a0724098c6327b03d6"
