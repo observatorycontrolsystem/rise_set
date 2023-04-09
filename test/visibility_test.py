@@ -21,6 +21,7 @@ from rise_set.rates import ProperMotion
 from rise_set.moving_objects import initialise_sites
 from rise_set.utils          import coalesce_adjacent_intervals, intersect_intervals, intersect_many_intervals
 from mock import patch
+import unittest
 
 def intervals_almost_equal(received, expected, tolerance=1e-5):
     """
@@ -49,9 +50,9 @@ def zero_out_microseconds(received):
     return zeroed
 
 
-class TestIntervals(object):
+class TestIntervals(unittest.TestCase):
 
-    def setup(self):
+    def setup_method(self, method):
 
         self.sun        = 'sun'
         self.bpl        = {
@@ -720,9 +721,9 @@ class TestIntervals(object):
         assert_equal(observable_intervals[0][1], dark_intervals[0][1])
 
 
-class TestAirmassCalculation(object):
+class TestAirmassCalculation(unittest.TestCase):
 
-    def setup(self):
+    def setup_method(self, method):
         pass
 
     def interval_for_airmass(self, airmass):
@@ -768,7 +769,7 @@ class TestAirmassCalculation(object):
         horizon  = 30
         airmass  = 1.2
         expected = 56.44
-        assert_almost_equals(set_airmass_limit(airmass, horizon), expected, places=2)
+        self.assertAlmostEqual(set_airmass_limit(airmass, horizon), expected, places=2)
 
 
     def test_airmass_is_applied_if_above_horizon_and_not_otherwise(self):
@@ -783,7 +784,7 @@ class TestAirmassCalculation(object):
 class TestMoonDistanceCalculation(object):
     ''' All time intervals to test against are obtained from JPL Horizons
     '''
-    def setup(self):
+    def setup_method(self):
         self.site = {
             'latitude'  : Angle(degrees = 20.0),
             'longitude' : Angle(degrees = -150.0),
@@ -1067,7 +1068,7 @@ class TestMoonDistanceCalculation(object):
 class TestMoonPhaseCalculation(object):
     ''' All time intervals to test against are obtained from JPL Horizons
     '''
-    def setup(self):
+    def setup_method(self):
         self.site = {
             'latitude'  : Angle(degrees = 20.0),
             'longitude' : Angle(degrees = -150.0),
@@ -1176,10 +1177,10 @@ class TestMoonPhaseCalculation(object):
         assert_equal(moon_phase_intervals, expected_intervals)
 
 
-class TestZenithDistanceCalculation(object):
+class TestZenithDistanceCalculation(unittest.TestCase):
     """ All time intervals to test against are obtained from JPL Horizons
     """
-    def setup(self):
+    def setup_method(self, method):
         self.site = {
             'latitude': Angle(degrees=20.0),
             'longitude': Angle(degrees=-150.0),
@@ -1242,8 +1243,8 @@ class TestObservableIntervalsZDIgnoredForStaticTargets(TestZenithDistanceCalcula
     """
     The zenith distance calculation should be ignored for satellite and hour angle targets.
     """
-    def setup(self):
-        super(TestObservableIntervalsZDIgnoredForStaticTargets, self).setup()
+    def setup_method(self, method):
+        super(TestObservableIntervalsZDIgnoredForStaticTargets, self).setup_method(method)
         start = datetime(2012, 2, 1)
         end = datetime(2012, 2, 2)
 
@@ -1277,8 +1278,8 @@ class TestZDIntervalsZeroZenithDistance(TestZenithDistanceCalculation):
     """Test that a zero zenith distance leaves the target intervals untouched.
     """
 
-    def setup(self):
-        super(TestZDIntervalsZeroZenithDistance, self).setup()
+    def setup_method(self, method):
+        super(TestZDIntervalsZeroZenithDistance, self).setup_method(method)
         start = datetime(2012, 2, 1)
         end = datetime(2012, 2, 2)
         self.v = Visibility(self.site, start, end, self.horizon)  # zenith_blind_spot defaults to 0
@@ -1324,8 +1325,8 @@ class TestZDIntervals180ZenithDistance(TestZenithDistanceCalculation):
     """Test that a giant zenith distance like 180 removes all intervals from a variety of targets.
     """
 
-    def setup(self):
-        super(TestZDIntervals180ZenithDistance, self).setup()
+    def setup_method(self, method):
+        super(TestZDIntervals180ZenithDistance, self).setup_method(method)
         start = datetime(2012, 2, 1)
         end = datetime(2012, 2, 2)
         self.v = Visibility(self.site, start, end, self.horizon, zenith_blind_spot=180.0)
@@ -1364,8 +1365,8 @@ class TestZDIntervals180ZenithDistance(TestZenithDistanceCalculation):
 
 class TestMajorPlanetZenithDistanceIntervals(TestZenithDistanceCalculation):
 
-    def setup(self):
-        super(TestMajorPlanetZenithDistanceIntervals, self).setup()
+    def setup_method(self, method):
+        super(TestMajorPlanetZenithDistanceIntervals, self).setup_method(method)
         start = datetime(2012, 2, 1)
         end = datetime(2012, 2, 2)
         zenith_hole_radius = 9.0  # degrees; altitude > 81 should be excluded
@@ -1426,8 +1427,8 @@ class TestCometZenithDistanceIntervals(TestZenithDistanceCalculation):
     | 2012-Jul-22 23:38 |  15.0322 | comet rise        |
     |-------------------+----------+-------------------|
     """
-    def setup(self):
-        super(TestCometZenithDistanceIntervals, self).setup()
+    def setup_method(self, method):
+        super(TestCometZenithDistanceIntervals, self).setup_method(method)
         start = datetime(2012, 7, 22)
         end = datetime(2012, 7, 23)
         zenith_hole_radius = 46.0  # degrees; altitude > 44 should be excluded
@@ -1468,7 +1469,7 @@ class TestZDvsAltitude(TestZenithDistanceCalculation):
         alt = calculate_altitude(latitude.in_degrees(),
                                  dec.in_degrees(),
                                  local_hour_angle.in_degrees())
-        assert_almost_equals((90.0 - zd.in_degrees()), alt.in_degrees())
+        self.assertAlmostEqual((90.0 - zd.in_degrees()), alt.in_degrees())
 
     def test_zd_vs_alt_sidereal_target(self):
         """
@@ -1490,7 +1491,7 @@ class TestZDvsAltitude(TestZenithDistanceCalculation):
         alt = calculate_altitude(latitude.in_degrees(),
                                  target_app_dec.in_degrees(),
                                  local_hour_angle.in_degrees())
-        assert_almost_equals((90.0 - zd.in_degrees()), alt.in_degrees(), places=4)
+        self.assertAlmostEqual((90.0 - zd.in_degrees()), alt.in_degrees(), places=4)
 
     def test_zd_vs_alt_non_sidereal_major_planet_target(self):
         """
@@ -1510,7 +1511,7 @@ class TestZDvsAltitude(TestZenithDistanceCalculation):
         alt = calculate_altitude(latitude.in_degrees(),
                                  target_app_dec.in_degrees(),
                                  local_hour_angle.in_degrees())
-        assert_almost_equals((90.0 - zd.in_degrees()), alt.in_degrees(), places=4)
+        self.assertAlmostEqual((90.0 - zd.in_degrees()), alt.in_degrees(), places=4)
 
     def test_zd_vs_alt_non_sidereal_minor_planet_target(self):
         """
@@ -1530,7 +1531,7 @@ class TestZDvsAltitude(TestZenithDistanceCalculation):
         alt = calculate_altitude(latitude.in_degrees(),
                                  target_app_dec.in_degrees(),
                                  local_hour_angle.in_degrees())
-        assert_almost_equals((90.0 - zd.in_degrees()), alt.in_degrees(), places=4)
+        self.assertAlmostEqual((90.0 - zd.in_degrees()), alt.in_degrees(), places=4)
 
     def test_zd_vs_alt_non_sidereal_comet_target(self):
         """
@@ -1550,4 +1551,4 @@ class TestZDvsAltitude(TestZenithDistanceCalculation):
         alt = calculate_altitude(latitude.in_degrees(),
                                  target_app_dec.in_degrees(),
                                  local_hour_angle.in_degrees())
-        assert_almost_equals((90.0 - zd.in_degrees()), alt.in_degrees(), places=4)
+        self.assertAlmostEqual((90.0 - zd.in_degrees()), alt.in_degrees(), places=4)

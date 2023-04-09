@@ -19,7 +19,7 @@ from nose.tools import assert_equal
 
 class TestUtils(object):
 
-    def setup(self):
+    def setup_method(self):
         self.some_adjacent_intervals = [
                # Two contiguous intervals
                (datetime.datetime(year=2011, month=2, day=1, hour=12, minute=0),

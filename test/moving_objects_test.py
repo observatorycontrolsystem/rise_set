@@ -43,7 +43,7 @@ def str_to_dt(dt_str):
 
 class TestSites(object):
 
-    def setup(self):
+    def setup_method(self):
         self.site_dict1 = {
                              'name'         : '1m0a.doma.cpt',
                              'latitude'     : -32.38059,
@@ -132,7 +132,7 @@ class TestSites(object):
 
 class TestMovingObjects(object):
 
-    def setup(self):
+    def setup_method(self):
         # Asteroid (470) Kilia
         # From MPC webpages: http://minorplanetcenter.net/iau/MPEph/MPEph.html
         # Epoch 2013 Nov. 4.0 TT = JDT 2456600.5                  MPC

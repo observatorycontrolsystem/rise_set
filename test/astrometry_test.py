@@ -40,7 +40,7 @@ class TestLeapSeconds(object):
 class TestAstrometry(object):
     '''Unit tests for the astrometry module.'''
 
-    def setup(self):
+    def setup_method(self):
         self.date      = datetime(year=1988, month=3, day=20)
         self.bad_month = YiannisIsTryingToBreakMyDateCalculator()
         self.mjd       = 47240.0
@@ -117,7 +117,7 @@ class TestAstrometry(object):
 
 
 class TestMoon(object):
-    def setup(self):
+    def setup_method(self):
         self.site = {
                         'name': 'test',
                         'latitude': Angle(degrees=-30.0),
@@ -398,7 +398,7 @@ class TestMoon(object):
 
 class TestSunriseSunset(object):
 
-    def setup(self):
+    def setup_method(self):
         self.lsc =  {
                       'name'      : '1m0a.domb.lsc',
                       'latitude'  : Angle(degrees=-30.1673472222),
@@ -473,7 +473,7 @@ class TestSunriseSunset(object):
 class TestVenusRiseTransitSet(object):
     '''Implementation of Example 14.a from Astronomical Algorithms, p.99'''
 
-    def setup(self):
+    def setup_method(self):
         self.boston = {
            'latitude'  : Angle(degrees = 42.3333),
            'longitude' : Angle(degrees = -71.0833)
@@ -526,7 +526,7 @@ class TestDenebFromMaui(object):
     # Thanks. You bastards.
 
 
-    def setup(self):
+    def setup_method(self):
 
         # Target
         # Note: Aladin units are mas/yr...
@@ -608,7 +608,7 @@ class TestCanopusFromSidingSpring(object):
     # SLALIB (rest of library) convention = East is +ve
 
 
-    def setup(self):
+    def setup_method(self):
 
         # Target
         # Note: Aladin units are mas/yr...
@@ -684,7 +684,7 @@ class TestNGC2997FromCPT(object):
     '''Integration test: rise/set/transit of a Southern star with telescope horizon.
        Should rise and set, *not* be circumpolar. This test asserts #5969.'''
 
-    def setup(self):
+    def setup_method(self):
 
         self.ngc2997 = {
                     'ra' : RightAscension(degrees=146.4116375),
@@ -726,7 +726,7 @@ class TestCanopusFromStAndrews(object):
     # SLALIB (rest of library) convention = East is +ve
 
 
-    def setup(self):
+    def setup_method(self):
 
         # Target
         # Note: Aladin units are mas/yr...
@@ -781,7 +781,7 @@ class TestCapellaFromStAndrews(object):
     # SLALIB (rest of library) convention = East is +ve
 
 
-    def setup(self):
+    def setup_method(self):
         # Target
         # Note: Aladin units for proper motion are mas/yr...
         self.capella = {
@@ -842,7 +842,7 @@ class TestPolarisFromSidingSpring(object):
     # SLALIB (rest of library) convention = East is +ve
 
 
-    def setup(self):
+    def setup_method(self):
 
         # Target
         # Note: Aladin units for proper motion are mas/yr...
@@ -883,7 +883,7 @@ class TestMimosaFromSidingSpring(object):
     # SLALIB (rest of library) convention = East is +ve
 
 
-    def setup(self):
+    def setup_method(self):
         # Target
         # Note: Aladin units for proper motion are mas/yr...
         self.mimosa = {
@@ -913,7 +913,7 @@ class TestGetAirmassForTarget(object):
         were obtained from testing the same source/target on PyEphem and Astropy. All have differing values by ~0.1
         but they are all close.
     '''
-    def setup(self):
+    def setup_method(self):
         self.target_1 = make_ra_dec_target(ra=Angle(degrees=148.925583), dec=Angle(degrees=69.673889))
         self.target_2 = make_ra_dec_target(ra=Angle(degrees=68.9791666667), dec=Angle(degrees=16.5))
 
@@ -983,7 +983,7 @@ class TestGetAirmassForTarget(object):
 
 
 class TestCalculateMoonphase(object):
-    def setup(self):
+    def setup_method(self):
         self.ogg_latitude = Angle(degrees=20.7069444444)
         self.ogg_longitude = Angle(degrees=-156.258055556)
 

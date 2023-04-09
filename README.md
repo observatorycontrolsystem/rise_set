@@ -32,5 +32,6 @@ The unit tests are currently using nosetests, so there are a few tests dependenc
 
 ```bash
 $ poetry env use python3.9
-$ poetry run nosetests
+$ poetry install
+$ poetry run pytest
 ```
