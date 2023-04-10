@@ -4,7 +4,7 @@
   # https://devenv.sh/packages/
   packages = [
     pkgs.git
-    pkgs.python39
+    pkgs.python310
     pkgs.poetry
     pkgs.gfortran
     pkgs.zlib
