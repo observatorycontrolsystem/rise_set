@@ -32,7 +32,7 @@ Add the `ocs_rise_set` package to your python environment (you may need to insta
 The unit tests are currently using nosetests, so there are a few tests dependencies to install. After cloning this project, from the project root and inside your virtual environment (using Poetry):
 
 ```bash
-$ poetry env use python3.9
+$ poetry env use python3.10
 $ poetry install
 $ poetry run pytest
 ```
