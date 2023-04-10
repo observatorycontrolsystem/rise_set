@@ -3,6 +3,7 @@
 ![Build](https://github.com/observatorycontrolsystem/rise_set/workflows/Build/badge.svg)
 [![Coverage Status](https://coveralls.io/repos/github/observatorycontrolsystem/rise_set/badge.svg?branch=master)](https://coveralls.io/github/observatorycontrolsystem/rise_set?branch=master)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/8b05ac4107534c7297dfff464360af57)](https://www.codacy.com/gh/observatorycontrolsystem/rise_set/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=observatorycontrolsystem/rise_set&amp;utm_campaign=Badge_Grade)
+[![PyPI](https://img.shields.io/pypi/v/ocs-rise-set?style=flat)](https://pypi.org/project/ocs-rise-set/)
 
 ***WARNING: The API of this library will be updated in the near future***
 
