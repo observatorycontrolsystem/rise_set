@@ -220,18 +220,13 @@ name = "pyslalib"
 version = "1.0.9"
 description = "f2py and numpy based wrappers for SLALIB"
 optional = false
-python-versions = ">=3.8,<3.12"
-files = []
-develop = false
+python-versions = "<3.12,>=3.8"
+files = [
+    {file = "pyslalib-1.0.9.tar.gz", hash = "sha256:62f1f263d3ffb029bf9c0c0f0688a0ba55be379e7b7df775821e27c2ead7a8b5"},
+]
 
 [package.dependencies]
 numpy = "<1.24"
-
-[package.source]
-type = "git"
-url = "https://github.com/LCOGT/pyslalib.git"
-reference = "v1.0.9"
-resolved_reference = "ca607dd509afa5e06f1a8281f1f96a60846f74fc"
 
 [[package]]
 name = "pytest"
@@ -269,4 +264,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<3.12"
-content-hash = "3255d87e39a8106ae3342772a874b1e26a755ed9ab5c52a49893404a4bea9e9d"
+content-hash = "92efb45e3eeaefc4ba39c63f5aeec2d17f77407aa8e576c9b353257c915377ae"

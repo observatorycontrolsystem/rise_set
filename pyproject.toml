@@ -14,7 +14,7 @@ classifiers = [
 [tool.poetry.dependencies]
 python = ">=3.8,<3.12"
 future = "^0.18.3"
-pyslalib = {git = "https://github.com/LCOGT/pyslalib.git", rev = "v1.0.9"}
+pyslalib = "1.0.9"
 
 [tool.poetry.group.dev.dependencies]
 mock = "^5.0.1"
