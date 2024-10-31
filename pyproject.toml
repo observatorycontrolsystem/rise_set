@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "ocs-rise-set"
-version = "0.6.2"
+version = "0.6.3"
 description = "Routines for accurate rise/set/transit calculations"
 authors = ["Eric Saunders <esaunders@lcogt.net>"]
 readme = "README.md"
@@ -12,9 +12,9 @@ classifiers = [
 ]
 
 [tool.poetry.dependencies]
-python = ">=3.7,<3.11"
+python = ">=3.8,<3.12"
 future = "^0.18.3"
-pyslalib = "1.0.6"
+pyslalib = {git = "https://github.com/LCOGT/pyslalib.git", rev = "v1.0.9"}
 
 [tool.poetry.group.dev.dependencies]
 mock = "^5.0.1"

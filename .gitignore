@@ -82,7 +82,5 @@ Thumbs.db
 # Sphinx documentation
 docs/_build/
 
-# Devenv
-.devenv*
-devenv.local.nix
-
+.devenv
+.pre-commit-config.yaml
