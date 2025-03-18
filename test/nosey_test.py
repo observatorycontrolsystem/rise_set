@@ -5,12 +5,11 @@ from builtins import object
 import rise_set.angle as angle
 from math import pi
 
-from nose.tools import eq_
 
 def test_from_degrees():
     a = angle.Angle(degrees = 0)
     a.from_degrees(37)
-    eq_(a.in_degrees(), 37)
+    assert a.in_degrees() == 37
 
 
 
@@ -22,9 +21,9 @@ class SomeTestClassIJustMadeUp(object):
 
     def test_from_degrees(self):
         self.angle.from_degrees(37)
-        eq_(self.angle.in_degrees(), 37)
+        assert self.angle.in_degrees() == 37
 
 
     def test_from_radians(self):
         self.angle.from_radians(pi)
-        eq_(self.angle.in_degrees(), 180)
+        assert self.angle.in_degrees() == 180

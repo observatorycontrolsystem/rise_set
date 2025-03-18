@@ -50,4 +50,4 @@ v.0.4.11 - Add hour angle type target
 v.0.4.12 - Add zenith blind spot support
 v.0.5.1  - First release as ocs-rise-set
 v.0.5.2  - Added max moon_phase constraint support
-v.0.6.4  - Support for python 3.12 and numpy > 1.23
+v.0.6.4  - Support for python 3.12 and numpy > 1.23, Drop support for python 3.8

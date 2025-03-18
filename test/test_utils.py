@@ -14,7 +14,6 @@ from rise_set.utils import (coalesce_adjacent_intervals, intersect_intervals,
                             intersect_many_intervals, inverse_intervals)
 
 import datetime
-from nose.tools import assert_equal
 
 
 class TestUtils(object):
@@ -59,10 +58,10 @@ class TestUtils(object):
         input_intervals = list(self.some_adjacent_intervals)
         received = coalesce_adjacent_intervals(self.some_adjacent_intervals)
 
-        assert_equal(received, self.expected_coalescence)
+        assert received == self.expected_coalescence
 
         # Confirm the input list was not modified in place
-        assert_equal(input_intervals, self.some_adjacent_intervals)
+        assert input_intervals == self.some_adjacent_intervals
 
 
     def test_intersect_case01(self):
@@ -74,7 +73,7 @@ class TestUtils(object):
         int2 = [(datetime.datetime(2013, 6, 15,  0, 0, 0), datetime.datetime(2013, 6, 15,  3, 0, 0))]
         received = intersect_intervals(int1, int2)
 
-        assert_equal(received, expected)
+        assert received == expected
 
 
     def test_intersect_case02(self):
@@ -86,7 +85,7 @@ class TestUtils(object):
         int2 = [(datetime.datetime(2013, 6, 15,  9, 0, 0), datetime.datetime(2013, 6, 15, 14, 0, 0))]
         received = intersect_intervals(int1, int2)
 
-        assert_equal(received, expected)
+        assert received == expected
 
 
     def test_intersect_case03(self):
@@ -98,7 +97,7 @@ class TestUtils(object):
         int2 = [(datetime.datetime(2013, 6, 15, 13, 0, 0), datetime.datetime(2013, 6, 15, 14, 0, 0))]
         received = intersect_intervals(int1, int2)
 
-        assert_equal(received, expected)
+        assert received == expected
 
 
     def test_intersect_case04(self):
@@ -110,7 +109,7 @@ class TestUtils(object):
         int2 = [(datetime.datetime(2013, 6, 15, 13, 0, 0), datetime.datetime(2013, 6, 15, 16, 0, 0))]
         received = intersect_intervals(int1, int2)
 
-        assert_equal(received, expected)
+        assert received == expected
 
 
     def test_intersect_case05(self):
@@ -122,7 +121,7 @@ class TestUtils(object):
         int2 = [(datetime.datetime(2013, 6, 15, 16, 0, 0), datetime.datetime(2013, 6, 15, 18, 0, 0))]
         received = intersect_intervals(int1, int2)
 
-        assert_equal(received, expected)
+        assert received == expected
 
 
     def test_intersect_case06(self):
@@ -134,7 +133,7 @@ class TestUtils(object):
         int2 = [(datetime.datetime(2013, 6, 15, 11, 0, 0), datetime.datetime(2013, 6, 15, 16, 0, 0))]
         received = intersect_intervals(int1, int2)
 
-        assert_equal(received, expected)
+        assert received == expected
 
 ## Edge cases ##
 
@@ -147,7 +146,7 @@ class TestUtils(object):
         int2 = [(datetime.datetime(2013, 6, 15, 12, 0, 0), datetime.datetime(2013, 6, 15, 15, 0, 0))]
         received = intersect_intervals(int1, int2)
 
-        assert_equal(received, expected)
+        assert received == expected
 
 
     def test_intersect_case08(self):
@@ -159,7 +158,7 @@ class TestUtils(object):
         int2 = [(datetime.datetime(2013, 6, 15,  9, 0, 0), datetime.datetime(2013, 6, 15, 12, 0, 0))]
         received = intersect_intervals(int1, int2)
 
-        assert_equal(received, expected)
+        assert received == expected
 
 
     def test_intersect_case09(self):
@@ -171,7 +170,7 @@ class TestUtils(object):
         int2 = [(datetime.datetime(2013, 6, 15, 15, 0, 0), datetime.datetime(2013, 6, 15, 18, 0, 0))]
         received = intersect_intervals(int1, int2)
 
-        assert_equal(received, expected)
+        assert received == expected
 
 
     def test_intersect_case10(self):
@@ -183,7 +182,7 @@ class TestUtils(object):
         int2 = [(datetime.datetime(2013, 6, 15, 12, 0, 0), datetime.datetime(2013, 6, 15, 16, 0, 0))]
         received = intersect_intervals(int1, int2)
 
-        assert_equal(received, expected)
+        assert received == expected
 
     def test_intersect_case11(self):
         # case 11     |......|
@@ -194,7 +193,7 @@ class TestUtils(object):
         int2 = [(datetime.datetime(2013, 6, 15, 11, 0, 0), datetime.datetime(2013, 6, 15, 15, 0, 0))]
         received = intersect_intervals(int1, int2)
 
-        assert_equal(received, expected)
+        assert received == expected
 
 ## Multiple intersections
 
@@ -210,7 +209,7 @@ class TestUtils(object):
 
         received = intersect_intervals(int1, int2)
 
-        assert_equal(received, expected)
+        assert received == expected
 
 
     def test_intersect_many(self):
@@ -224,7 +223,7 @@ class TestUtils(object):
         int3 = [(datetime.datetime(2013, 6, 15, 14, 0, 0), datetime.datetime(2013, 6, 15, 17, 0, 0))]
 
         received = intersect_many_intervals(int1,int2,int3)
-        assert_equal(received,expected)
+        assert received == expected
 
 
     def test_inverse_intervals_outside_bound(self):
@@ -233,7 +232,7 @@ class TestUtils(object):
         intervals = [(datetime.datetime(2013, 6, 15, 9), datetime.datetime(2013, 6, 15, 11)), (datetime.datetime(2013, 6, 15, 15, 30), datetime.datetime(2013, 6, 15, 17))]
         inverse = inverse_intervals(intervals, start_bound, end_bound)
         expected_intervals = [(start_bound, intervals[0][0]), (intervals[0][1], intervals[1][0]), (intervals[1][1], end_bound)]
-        assert_equal(inverse, expected_intervals)
+        assert inverse == expected_intervals
 
 
     def test_inverse_intervals_inside_bound_between_intervals(self):
@@ -242,7 +241,7 @@ class TestUtils(object):
         intervals = [(datetime.datetime(2013, 6, 14, 9), datetime.datetime(2013, 6, 15, 11)), (datetime.datetime(2013, 6, 15, 15, 30), datetime.datetime(2013, 6, 16, 17))]
         inverse = inverse_intervals(intervals, start_bound, end_bound)
         expected_intervals = [(intervals[0][1], intervals[1][0])]
-        assert_equal(inverse, expected_intervals)
+        assert inverse == expected_intervals
 
 
     def test_inverse_intervals_inside_bound_within_intervals(self):
@@ -254,4 +253,4 @@ class TestUtils(object):
         ]
         inverse = inverse_intervals(intervals, start_bound, end_bound)
         expected_intervals = [(start_bound, intervals[1][0]), (intervals[1][1], intervals[2][0]), (intervals[2][1], end_bound)]
-        assert_equal(inverse, expected_intervals)
+        assert inverse == expected_intervals

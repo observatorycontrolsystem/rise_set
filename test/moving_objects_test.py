@@ -31,8 +31,7 @@ from rise_set.utils import MovingViolation, is_moving_object
 from rise_set.astrometry import elem_to_topocentric_apparent
 
 from datetime import datetime, timedelta
-from nose.tools import (assert_equal, assert_almost_equal, assert_raises,
-                        assert_false, assert_true)
+import pytest
 from mock import patch
 
 
@@ -81,7 +80,7 @@ class TestSites(object):
         self.sites.add_site(self.site_dict1)
         self.sites.add_site(self.site_dict2)
 
-        assert_equal(self.sites.sites, expected)
+        assert self.sites.sites == expected
 
 
     def test_can_add_new_sites(self):
@@ -92,7 +91,7 @@ class TestSites(object):
 
         self.sites.add_sites([self.site_dict1, self.site_dict2])
 
-        assert_equal(self.sites.sites, expected)
+        assert self.sites.sites == expected
 
 
     def test_cant_add_same_site_coords_again(self):
@@ -103,20 +102,20 @@ class TestSites(object):
         self.sites.add_site(self.site_dict1)
         self.sites.add_site(self.site_dict3)
 
-        assert_equal(self.sites.sites, expected)
+        assert self.sites.sites == expected
 
 
     def test_can_get_site(self):
         self.sites.add_site(self.site_dict1)
         received = self.sites.get(self.site_dict1['name'])
 
-        assert_equal(received, self.site_dict1)
+        assert received == self.site_dict1
 
 
     def test_none_if_no_site_found(self):
         received = self.sites.get(self.site_dict1['name'])
 
-        assert_equal(received, None)
+        assert received == None
 
 
     def test_initialise_sites(self):
@@ -124,8 +123,8 @@ class TestSites(object):
                          '1m0a.doma.cpt', '1m0a.doma.lsc'])
         sites = initialise_sites('test/telescopes.dat')
 
-        assert_equal(len(sites.sites), 4)
-        assert_equal(set(sites.sites.keys()), expected_keys)
+        assert len(sites.sites) == 4
+        assert set(sites.sites.keys()) == expected_keys
 
 
 
@@ -221,23 +220,23 @@ class TestMovingObjects(object):
 
     def test_is_moving_object_defaults_to_extra_solar_objects(self):
         target = {}
-        assert_false(is_moving_object(target))
+        assert not is_moving_object(target)
 
     def test_is_moving_object_understands_planets(self):
         target = {'type' : 'MPC_MINOR_PLANET'}
-        assert_true(is_moving_object(target))
+        assert is_moving_object(target)
 
     def test_is_moving_object_understands_comets(self):
         target = {'type' : 'MPC_MINOR_PLANET'}
-        assert_true(is_moving_object(target))
+        assert is_moving_object(target)
 
     def test_is_moving_object_is_case_insensitive(self):
         target = {'type' : 'MpC_MiNoR_PlAnEt'}
-        assert_true(is_moving_object(target))
+        assert is_moving_object(target)
 
     def test_is_moving_object_other_types_dont_move(self):
         target = {'type' : 'TIMS_CAT'}
-        assert_false(is_moving_object(target))
+        assert not is_moving_object(target)
 
 
     def test_read_neocp_orbit1(self):
@@ -264,7 +263,7 @@ class TestMovingObjects(object):
         recieved = read_neocp_orbit('test/P109rXK.neocp')
 
         for e in list(expected.keys()):
-            assert_equal(expected[e], recieved[e])
+            assert expected[e] == recieved[e]
 
     def test_read_neocp_orbit2(self):
 
@@ -292,7 +291,7 @@ class TestMovingObjects(object):
         recieved = read_neocp_orbit('test/2013TL117.neocp')
 
         for e in list(expected.keys()):
-            assert_equal(expected[e], recieved[e])
+            assert expected[e] == recieved[e]
 
 
     def test_read_neocp_orbit3(self):
@@ -322,7 +321,7 @@ class TestMovingObjects(object):
         recieved = read_neocp_orbit('test/00001_Ceres.neocp')
 
         for e in list(expected.keys()):
-            assert_equal(expected[e], recieved[e])
+            assert expected[e] == recieved[e]
 
 
 
@@ -355,7 +354,7 @@ class TestMovingObjects(object):
         recieved = read_neocp_orbit('test/LSCTLF3.neocp')
 
         for e in list(expected.keys()):
-            assert_equal(expected[e], recieved[e])
+            assert expected[e] == recieved[e]
 
 
 
@@ -388,7 +387,7 @@ class TestMovingObjects(object):
         recieved = read_neocp_orbit('test/LSCTLF3_V2.neocp')
 
         for e in list(expected.keys()):
-            assert_equal(expected[e], recieved[e])
+            assert expected[e] == recieved[e]
 
 
 
@@ -419,7 +418,7 @@ class TestMovingObjects(object):
         recieved = read_neocp_orbit('test/N007rdx.neocp')
 
         for e in list(expected.keys()):
-            assert_equal(expected[e], recieved[e])
+            assert expected[e] == recieved[e]
 
 
     def test_read_neocp_orbit7(self):
@@ -449,7 +448,7 @@ class TestMovingObjects(object):
         recieved = read_neocp_orbit('test/N007rdx.neocp')
 
         for e in list(expected.keys()):
-            assert_equal(expected[e], recieved[e])
+            assert expected[e] == recieved[e]
 
 
     def test_read_neocp_comet_orbit1(self):
@@ -476,7 +475,7 @@ class TestMovingObjects(object):
         recieved = read_neocp_orbit('test/Comet_SidingSpring.neocp')
 
         for e in list(expected.keys()):
-            assert_equal(expected[e], recieved[e])
+            assert expected[e] == recieved[e]
 
     def test_read_neocp_comet_orbit2(self):
 
@@ -502,7 +501,7 @@ class TestMovingObjects(object):
         recieved = read_neocp_orbit('test/Comet_299P.neocp')
 
         for e in list(expected.keys()):
-            assert_equal(expected[e], recieved[e])
+            assert expected[e] == recieved[e]
 
     def test_elem_to_topocentric_apparent_time1(self):
         dt = datetime(2013, 12, 9)
@@ -512,8 +511,8 @@ class TestMovingObjects(object):
 
 
         # Coordinates of (470) Kilia from JPL Horizons: 284.70994 -18.19420
-        assert_almost_equal(ra.in_degrees(), 284.70994, places=2)
-        assert_almost_equal(dec.in_degrees(), -18.19420, places=4)
+        assert ra.in_degrees() == pytest.approx(284.70994, 0.01)
+        assert dec.in_degrees() == pytest.approx(-18.19420, 0.0001)
 
 
     def test_elem_to_topocentric_apparent_time2(self):
@@ -524,19 +523,20 @@ class TestMovingObjects(object):
 
 
         # Coordinates from JPL Horizons: 225.22256  -5.29589
-        assert_almost_equal(ra.in_degrees(), 225.22256, places=2)
-        assert_almost_equal(dec.in_degrees(), -5.29589, places=2)
+        assert ra.in_degrees() == pytest.approx(225.22256, 0.01)
+        assert dec.in_degrees() == pytest.approx(-5.29589, 0.01)
 
 
     def test_elem_to_topocentric_apparent_bad_eccen(self):
         dt = datetime(2014,  6, 14)
         tdb = dt - timedelta(seconds=67.184)
 
-        assert_raises(MovingViolation, elem_to_topocentric_apparent, tdb, self.elements2, self.elp)
+        with pytest.raises(MovingViolation):
+            elem_to_topocentric_apparent(tdb, self.elements2, self.elp)
         try:
             ra, dec = elem_to_topocentric_apparent(tdb, self.elements2, self.elp)
         except MovingViolation as e:
-            assert_equal(str(e), 'Error: -2 (illegal eccentricity)')
+            assert str(e) == 'Error: -2 (illegal eccentricity)'
         else:
             assert False, "Didn't raise expected MovingViolation error"
 
@@ -545,11 +545,12 @@ class TestMovingObjects(object):
         dt = datetime(2014,  6, 14)
         tdb = dt - timedelta(seconds=67.184)
 
-        assert_raises(MovingViolation, elem_to_topocentric_apparent, tdb, self.elements3, self.elp)
+        with pytest.raises(MovingViolation):
+            elem_to_topocentric_apparent(tdb, self.elements3, self.elp)
         try:
             ra, dec = elem_to_topocentric_apparent(tdb, self.elements3, self.elp)
         except MovingViolation as e:
-            assert_equal(str(e), 'Error: -3 (illegal mean distance)')
+            assert str(e) == 'Error: -3 (illegal mean distance)'
         else:
             assert False, "Didn't raise expected MovingViolation error"
 
@@ -558,11 +559,12 @@ class TestMovingObjects(object):
         dt = datetime(2014,  6, 14)
         tdb = dt - timedelta(seconds=67.184)
 
-        assert_raises(MovingViolation, elem_to_topocentric_apparent, tdb, self.comet_elements1, self.elp, 42)
+        with pytest.raises(MovingViolation):
+            elem_to_topocentric_apparent(tdb, self.comet_elements1, self.elp, 42)
         try:
             ra, dec = elem_to_topocentric_apparent(tdb, self.comet_elements1, self.elp, 42)
         except MovingViolation as e:
-            assert_equal(str(e), 'Error: -1 (illegal JFORM)')
+            assert str(e) == 'Error: -1 (illegal JFORM)'
         else:
             assert False, "Didn't raise expected MovingViolation error"
 
@@ -575,8 +577,8 @@ class TestMovingObjects(object):
 
 
         # Coordinates from JPL Horizons: 153.36306  36.46146
-        assert_almost_equal(ra.in_degrees(), 153.36306, places=2)
-        assert_almost_equal(dec.in_degrees(), 36.46146, places=2)
+        assert ra.in_degrees() == pytest.approx(153.36306, 0.01)
+        assert dec.in_degrees() == pytest.approx(36.46146, 0.01)
 
 
     def test_elem_to_topocentric_apparent_comet2(self):
@@ -587,8 +589,8 @@ class TestMovingObjects(object):
 
 
         # Coordinates from JPL Horizons:  37.78519 -31.04102
-        assert_almost_equal(ra.in_degrees(),  37.78519, places=4)
-        assert_almost_equal(dec.in_degrees(),-31.04102, places=4)
+        assert ra.in_degrees() == pytest.approx(37.78519, 0.0001)
+        assert dec.in_degrees() == pytest.approx(-31.04102, 0.0001)
 
 
     def test_calc_ephemerides(self):
@@ -635,10 +637,10 @@ class TestMovingObjects(object):
         received = calc_ephemerides(window, self.elements, self.cpt, chunk_size)
 
         for e, r in zip(expected, received):
-            assert_almost_equal(e['ra_app'].in_degrees(), r['ra_app'].in_degrees(), places=3)
-            assert_almost_equal(e['dec_app'].in_degrees(), r['dec_app'].in_degrees(), places=4)
-            assert_equal(e['start'], r['start'])
-            assert_equal(e['end'], r['end'])
+            assert e['ra_app'].in_degrees() == pytest.approx(r['ra_app'].in_degrees(), 0.001)
+            assert e['dec_app'].in_degrees() == pytest.approx(r['dec_app'].in_degrees(), 0.0001)
+            assert e['start'] == r['start']
+            assert e['end'] == r['end']
 
 
     def test_find_moving_object_up_intervals1(self):
@@ -668,14 +670,14 @@ class TestMovingObjects(object):
                                                                self.elements,
                                                                self.cpt, chunk_size)
 
-        assert_equal(len(expected_intervals), len(received_ints))
-        assert_equal(len(expected_altitudes), len(received_alts))
+        assert len(expected_intervals) == len(received_ints)
+        assert len(expected_altitudes) == len(received_alts)
 
         for e, r in zip(expected_intervals, received_ints):
-            assert_equal(e, r)
+            assert e == r
 
         for e, r in zip(expected_altitudes, received_alts):
-            assert_almost_equal(e.in_degrees(), r.in_degrees(), places=3)
+            assert e.in_degrees() == pytest.approx(r.in_degrees(), 0.001)
 
 
     def test_find_moving_object_up_intervals2(self):
@@ -706,14 +708,14 @@ class TestMovingObjects(object):
                                                                self.elements,
                                                                self.cpt, chunk_size)
 
-        assert_equal(len(expected_intervals), len(received_ints))
-        assert_equal(len(expected_altitudes), len(received_alts))
+        assert len(expected_intervals) == len(received_ints)
+        assert len(expected_altitudes) == len(received_alts)
 
         for e, r in zip(expected_intervals, received_ints):
-            assert_equal(e, r)
+            assert e == r
 
         for e, r in zip(expected_altitudes, received_alts):
-            assert_almost_equal(e.in_degrees(), r.in_degrees(), places=3)
+            assert e.in_degrees() == pytest.approx(r.in_degrees(), 0.001)
 
 
     def test_find_moving_object_up_intervals3(self):
@@ -749,14 +751,14 @@ class TestMovingObjects(object):
                                                                self.elements,
                                                                self.cpt, chunk_size)
 
-        assert_equal(len(expected_intervals), len(received_ints))
-        assert_equal(len(expected_altitudes), len(received_alts))
+        assert len(expected_intervals) == len(received_ints)
+        assert len(expected_altitudes) == len(received_alts)
 
         for e, r in zip(expected_intervals, received_ints):
-            assert_equal(e, r)
+            assert e == r
 
         for e, r in zip(expected_altitudes, received_alts):
-            assert_almost_equal(e.in_degrees(), r.in_degrees(), places=3)
+            assert e.in_degrees() == pytest.approx(r.in_degrees(), 0.001)
 
 
     @patch('rise_set.moving_objects.calc_ephemerides')
@@ -768,7 +770,7 @@ class TestMovingObjects(object):
         elements = {'type' : 'MPC_MINOR_PLANET'}
         site     = None
         find_moving_object_up_intervals(window, elements, site)
-        assert_equal(ephem_mock.call_args[0][4], 2)
+        assert ephem_mock.call_args[0][4] == 2
 
 
     @patch('rise_set.moving_objects.calc_ephemerides')
@@ -791,7 +793,7 @@ class TestMovingObjects(object):
         try:
             find_moving_object_up_intervals(window, elements, site)
         except MovingViolation as e:
-            assert_equal(str(e), "Unsupported target type: 'tims_cat'")
+            assert str(e) == "Unsupported target type: 'tims_cat'"
         else:
             assert False, "Didn't raise expected MovingViolation error"
 
@@ -801,7 +803,7 @@ class TestMovingObjects(object):
         neg_limit = Angle(degrees=-4.6*self.HOURS_TO_DEGREES)
         pos_limit = Angle(degrees=4.6*self.HOURS_TO_DEGREES)
 
-        assert_equal(hour_angle_within_limits(ha, neg_limit, pos_limit), False)
+        assert not hour_angle_within_limits(ha, neg_limit, pos_limit)
 
 
     def test_hour_angle_beyond_pos_limit(self):
@@ -809,7 +811,7 @@ class TestMovingObjects(object):
         neg_limit = Angle(degrees=-4.6*self.HOURS_TO_DEGREES)
         pos_limit = Angle(degrees=4.6*self.HOURS_TO_DEGREES)
 
-        assert_equal(hour_angle_within_limits(ha, neg_limit, pos_limit), False)
+        assert not hour_angle_within_limits(ha, neg_limit, pos_limit)
 
 
     def test_hour_angle_within_limits(self):
@@ -817,7 +819,7 @@ class TestMovingObjects(object):
         neg_limit = Angle(degrees=-4.6*self.HOURS_TO_DEGREES)
         pos_limit = Angle(degrees=4.6*self.HOURS_TO_DEGREES)
 
-        assert_equal(hour_angle_within_limits(ha, neg_limit, pos_limit), True)
+        assert hour_angle_within_limits(ha, neg_limit, pos_limit)
 
 
     def test_ephemeris_chunk_within_ha_limits(self):
@@ -826,7 +828,7 @@ class TestMovingObjects(object):
         neg_limit  = Angle(degrees=-4.6*self.HOURS_TO_DEGREES)
         pos_limit  = Angle(degrees=4.6*self.HOURS_TO_DEGREES)
 
-        assert_equal(ephemeris_chunk_within_ha_limits(ha1, ha2, neg_limit, pos_limit), True)
+        assert ephemeris_chunk_within_ha_limits(ha1, ha2, neg_limit, pos_limit)
 
 
     def test_ephemeris_chunk_partially_outside_positive_ha_limit(self):
@@ -835,7 +837,7 @@ class TestMovingObjects(object):
         neg_limit  = Angle(degrees=-4.6*self.HOURS_TO_DEGREES)
         pos_limit  = Angle(degrees=4.6*self.HOURS_TO_DEGREES)
 
-        assert_equal(ephemeris_chunk_within_ha_limits(ha1, ha2, neg_limit, pos_limit), False)
+        assert not ephemeris_chunk_within_ha_limits(ha1, ha2, neg_limit, pos_limit)
 
 
     def test_ephemeris_chunk_fully_outside_positive_ha_limit(self):
@@ -844,7 +846,7 @@ class TestMovingObjects(object):
         neg_limit  = Angle(degrees=-4.6*self.HOURS_TO_DEGREES)
         pos_limit  = Angle(degrees=4.6*self.HOURS_TO_DEGREES)
 
-        assert_equal(ephemeris_chunk_within_ha_limits(ha1, ha2, neg_limit, pos_limit), False)
+        assert not ephemeris_chunk_within_ha_limits(ha1, ha2, neg_limit, pos_limit)
 
 
     def test_ephemeris_chunk_partially_outside_negative_ha_limit(self):
@@ -853,7 +855,7 @@ class TestMovingObjects(object):
         neg_limit  = Angle(degrees=-4.6*self.HOURS_TO_DEGREES)
         pos_limit  = Angle(degrees=4.6*self.HOURS_TO_DEGREES)
 
-        assert_equal(ephemeris_chunk_within_ha_limits(ha1, ha2, neg_limit, pos_limit), False)
+        assert not ephemeris_chunk_within_ha_limits(ha1, ha2, neg_limit, pos_limit)
 
 
     def test_ephemeris_chunk_fully_outside_negative_ha_limit(self):
@@ -862,7 +864,7 @@ class TestMovingObjects(object):
         neg_limit  = Angle(degrees=-4.6*self.HOURS_TO_DEGREES)
         pos_limit  = Angle(degrees=4.6*self.HOURS_TO_DEGREES)
 
-        assert_equal(ephemeris_chunk_within_ha_limits(ha1, ha2, neg_limit, pos_limit), False)
+        assert not ephemeris_chunk_within_ha_limits(ha1, ha2, neg_limit, pos_limit)
 
 
     def test_ephemeris_chunk_fully_above_horizon(self):
@@ -870,7 +872,7 @@ class TestMovingObjects(object):
         alt2    = Angle(degrees=21)
         horizon = Angle(degrees=15)
 
-        assert_equal(ephemeris_chunk_above_horizon(alt1, alt2, horizon), True)
+        assert ephemeris_chunk_above_horizon(alt1, alt2, horizon)
 
 
     def test_ephemeris_chunk_partially_above_horizon(self):
@@ -878,7 +880,7 @@ class TestMovingObjects(object):
         alt2    = Angle(degrees=16)
         horizon = Angle(degrees=15)
 
-        assert_equal(ephemeris_chunk_above_horizon(alt1, alt2, horizon), False)
+        assert not ephemeris_chunk_above_horizon(alt1, alt2, horizon)
 
 
     def test_ephemeris_chunk_below_horizon(self):
@@ -886,7 +888,7 @@ class TestMovingObjects(object):
         alt2    = Angle(degrees=11)
         horizon = Angle(degrees=15)
 
-        assert_equal(ephemeris_chunk_above_horizon(alt1, alt2, horizon), False)
+        assert not ephemeris_chunk_above_horizon(alt1, alt2, horizon)
 
 
     @patch('rise_set.moving_objects.calc_ephemerides')
@@ -928,7 +930,7 @@ class TestMovingObjects(object):
 
         received_ints, received_alts = find_moving_object_up_intervals(window, elements,
                                                                   site_dict, chunk_size)
-        assert_equal(received_ints, [])
+        assert received_ints == []
 
 
     def test_find_moving_object_network_up_intervals(self):
@@ -962,8 +964,7 @@ class TestMovingObjects(object):
                                                            site_filename, chunk_size)
 
         for site in list(expected.keys()):
-            print(site)
-            assert_equal(expected[site], received[site])
+            assert expected[site] == received[site]
 
 
     def test_chunk_windows(self):
@@ -996,7 +997,7 @@ class TestMovingObjects(object):
 
         received = chunk_windows(window, chunk_size)
 
-        assert_equal(received, expected)
+        assert received == expected
 
 
     def test_chunk_windows_span_ut_boundary(self):
@@ -1029,7 +1030,7 @@ class TestMovingObjects(object):
 
         received = chunk_windows(window, chunk_size)
 
-        assert_equal(received, expected)
+        assert received == expected
 
 
     def test_special_neo_target(self):
@@ -1078,5 +1079,4 @@ class TestMovingObjects(object):
 
 
         for site in list(expected.keys()):
-            print(site)
-            assert_equal(expected[site], received[site])
+            assert expected[site] == received[site]
