@@ -39,11 +39,13 @@ jobs:
         pip install coveralls
         poetry install
     - name: Run tests
-      run: poetry run coverage run -m pytest
+      run: |
+        poetry run coverage run -m pytest
+        poetry run coverage xml
     - name: Coveralls report
-      run: coveralls --service=github
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      uses: coverallsapp/github-action@v2
+      with:
+        parallel: true
 
   publish_to_pypi:
     # Only run this job if the run_tests job has succeeded, and if
