@@ -4,7 +4,7 @@ from __future__ import division
 from builtins import range
 from builtins import object
 
-from nose.tools import assert_equal, assert_almost_equals, assert_less, raises
+import pytest
 from datetime import datetime, timedelta
 
 #Import the module to test
@@ -127,7 +127,7 @@ class TestIntervals(unittest.TestCase):
 #        dark_intervals = visibility._find_when_target_is_up('sun', dt=datetime(2014, 3, 20))
 
         for start, end in dark_intervals:
-            assert_less(start, end)
+            assert start < end
 
 
     def test_can_get_sun_up_intervals(self):
@@ -172,7 +172,7 @@ class TestIntervals(unittest.TestCase):
         # Ignore microseconds for these tests
         received = zero_out_microseconds(received)
 
-        assert_equal(received, expected)
+        assert received == expected
 
 
     def test_sun_down_intervals_have_positive_duration(self):
@@ -192,7 +192,7 @@ class TestIntervals(unittest.TestCase):
         received = visibility._find_when_target_is_down(self.sun, dt, star=None,
                                                                      airmass=None)
 
-        assert_less(received[0][0], received[0][1])
+        assert received[0][0] < received[0][1]
 
 
 
@@ -214,7 +214,7 @@ class TestIntervals(unittest.TestCase):
         # Ignore microseconds for these tests
         received = zero_out_microseconds(received)
 
-        assert_equal(received, expected)
+        assert received == expected
 
 
     def test_get_target_intervals_ra_dec(self):
@@ -239,8 +239,7 @@ class TestIntervals(unittest.TestCase):
         # Ignore microseconds for these tests
         received = zero_out_microseconds(received)
 
-        assert_equal(received, expected)
-
+        assert received == expected
 
     @patch('rise_set.visibility.Visibility._get_ra_target_intervals')
     @patch('rise_set.visibility.Visibility._get_moving_object_target_intervals')
@@ -249,9 +248,8 @@ class TestIntervals(unittest.TestCase):
 
         received = self.visibility.get_target_intervals(target)
 
-        assert_equal(mock_func1.call_count, 0)
-        assert_equal(mock_func2.call_count, 1)
-
+        assert mock_func1.call_count == 0
+        assert mock_func2.call_count == 1
 
     def test_get_target_intervals_satellite_target(self):
         target = make_satellite_target(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
@@ -259,7 +257,7 @@ class TestIntervals(unittest.TestCase):
         target_intervals = self.visibility.get_target_intervals(target)
         dark_intervals = self.visibility.get_dark_intervals()
 
-        assert_equal(target_intervals, dark_intervals)
+        assert target_intervals == dark_intervals
 
     def test_get_target_intervals_hour_angle_target(self):
         target = make_hour_angle_target(0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
@@ -267,7 +265,7 @@ class TestIntervals(unittest.TestCase):
         target_intervals = self.visibility.get_target_intervals(target)
         dark_intervals = self.visibility.get_dark_intervals()
 
-        assert_equal(target_intervals, dark_intervals)
+        assert target_intervals == dark_intervals
 
     @patch('rise_set.visibility.Visibility._get_ra_target_intervals')
     @patch('rise_set.visibility.Visibility._get_moving_object_target_intervals')
@@ -277,9 +275,8 @@ class TestIntervals(unittest.TestCase):
 
         received = self.visibility.get_target_intervals(target)
 
-        assert_equal(moving_obj_func.call_count, 1)
-        assert_equal(ra_dec_func.call_count, 0)
-
+        assert moving_obj_func.call_count == 1
+        assert ra_dec_func.call_count == 0
 
     @patch('rise_set.visibility.find_moving_object_up_intervals')
     def test_get_target_intervals_mpc_minor_planet_type_gets_correct_intervals(self, mock_func):
@@ -298,7 +295,7 @@ class TestIntervals(unittest.TestCase):
 
         received = self.visibility.get_target_intervals(target)
 
-        assert_equal(mock_func.call_count, 1)
+        assert mock_func.call_count == 1
 
         args, kwargs = mock_func.call_args
 
@@ -313,11 +310,9 @@ class TestIntervals(unittest.TestCase):
                             'longitude': Angle(degrees=-119.863045833)
                           }
 
-        assert_equal(args[0], expected_window)
-        assert_equal(args[1], expected_target)
-        assert_equal(args[2], expected_site)
-
-
+        assert args[0] == expected_window
+        assert args[1] == expected_target
+        assert args[2] == expected_site
 
     def test_up_intervals_rise_set_transit_within_same_day(self):
         start = datetime(year=2011, month=10, day=13, hour=0, minute=30)
@@ -625,26 +620,23 @@ class TestIntervals(unittest.TestCase):
                        ha_limit_pos=site['ha_limit_pos'],
                        )
 
-        assert_equal(v.get_observable_intervals(target, moon_distance=Angle(degrees=0)), [])
+        assert v.get_observable_intervals(target, moon_distance=Angle(degrees=0)) == []
 
-
-
-    @raises(InvalidHourAngleLimit)
     def test_negative_hour_angle_too_big_is_rejected(self):
-        visibility = Visibility(None, None, None, ha_limit_neg=-13.0)
+        with pytest.raises(InvalidHourAngleLimit):
+            visibility = Visibility(None, None, None, ha_limit_neg=-13.0)
 
-    @raises(InvalidHourAngleLimit)
     def test_negative_hour_angle_too_small_is_rejected(self):
-        visibility = Visibility(None, None, None, ha_limit_neg=1.0)
+        with pytest.raises(InvalidHourAngleLimit):
+            visibility = Visibility(None, None, None, ha_limit_neg=1.0)
 
-    @raises(InvalidHourAngleLimit)
     def test_positive_hour_angle_too_big_is_rejected(self):
-        visibility = Visibility(None, None, None, ha_limit_pos=13.0)
+        with pytest.raises(InvalidHourAngleLimit):
+            visibility = Visibility(None, None, None, ha_limit_pos=13.0)
 
-    @raises(InvalidHourAngleLimit)
     def test_positive_hour_angle_too_small_is_rejected(self):
-        visibility = Visibility(None, None, None, ha_limit_pos=-1.0)
-
+        with pytest.raises(InvalidHourAngleLimit):
+            visibility = Visibility(None, None, None, ha_limit_pos=-1.0)
 
     def test_sites(self):
         site_filename="test/telescopes.dat"
@@ -686,8 +678,8 @@ class TestIntervals(unittest.TestCase):
         # Jupiter is above the horizon and within ha_limits from rise time 1:27 until 5:55
         observable_intervals = coalesce_adjacent_intervals(observable_intervals)
         rise_time = datetime(2012, 2, 1, 1, 27, 51, 357328)
-        assert_equal(observable_intervals[0][0], rise_time)
-        assert_equal(observable_intervals[0][1], datetime(2012, 2, 1, 5, 45))
+        assert observable_intervals[0][0] == rise_time
+        assert observable_intervals[0][1] == datetime(2012, 2, 1, 5, 45)
 
     def test_target_up_intervals_jpl_major_planet_high_ha(self):
         site = self.site.copy()
@@ -702,8 +694,8 @@ class TestIntervals(unittest.TestCase):
         observable_intervals = coalesce_adjacent_intervals(observable_intervals)
         rise_time = datetime(2012, 2, 1, 1, 27, 51, 357328)
 
-        assert_equal(observable_intervals[0][0], rise_time)
-        assert_equal(observable_intervals[0][1], datetime(2012, 2, 1, 7, 45))
+        assert observable_intervals[0][0] == rise_time
+        assert observable_intervals[0][1] == datetime(2012, 2, 1, 7, 45)
 
     def test_target_up_intervals_jpl_major_planet_high_ha_and_no_horizon(self):
         site = self.site.copy()
@@ -717,8 +709,8 @@ class TestIntervals(unittest.TestCase):
         # with maxed horizon and ha_limits, the observable intervals basically become the dark intervals
         observable_intervals = coalesce_adjacent_intervals(observable_intervals)
 
-        assert_equal(observable_intervals[0][0], dark_intervals[0][0])
-        assert_equal(observable_intervals[0][1], dark_intervals[0][1])
+        assert observable_intervals[0][0] == dark_intervals[0][0]
+        assert observable_intervals[0][1] == dark_intervals[0][1]
 
 
 class TestAirmassCalculation(unittest.TestCase):
@@ -755,14 +747,14 @@ class TestAirmassCalculation(unittest.TestCase):
     def test_set_airmass_limit_no_airmass(self):
         horizon  = 30
         expected = horizon
-        assert_equal(set_airmass_limit(None, horizon), expected)
+        assert set_airmass_limit(None, horizon) == expected
 
 
     def test_set_airmass_limit_airmass_worse_than_horizon(self):
         horizon  = 30
         airmass  = 3
         expected = horizon
-        assert_equal(set_airmass_limit(airmass, horizon), expected)
+        assert set_airmass_limit(airmass, horizon) == expected
 
 
     def test_set_airmass_limit_airmass_better_than_horizon(self):
@@ -778,7 +770,7 @@ class TestAirmassCalculation(unittest.TestCase):
         interval_with_airmass    = self.interval_for_airmass(airmass_above_horizon)
         interval_without_airmass = self.interval_for_airmass(airmass_below_horizon)
 
-        assert_less(interval_with_airmass, interval_without_airmass)
+        assert interval_with_airmass < interval_without_airmass
 
 
 class TestMoonDistanceCalculation(object):
@@ -841,7 +833,7 @@ class TestMoonDistanceCalculation(object):
         target_intervals   = v.get_target_intervals(target=self.sidereal_target)
         moon_distance_intervals = v.get_moon_distance_intervals(self.sidereal_target, target_intervals, moon_distance_constraint)
 
-        assert_equal(moon_distance_intervals, target_intervals)
+        assert moon_distance_intervals == target_intervals
 
     def test_moon_distance_none_removed(self):
         start = datetime(2012, 1, 2)
@@ -853,7 +845,7 @@ class TestMoonDistanceCalculation(object):
         target_intervals   = v.get_target_intervals(target=self.sidereal_target)
         moon_distance_intervals = v.get_moon_distance_intervals(self.sidereal_target, target_intervals, moon_distance_constraint)
 
-        assert_equal(moon_distance_intervals, target_intervals)
+        assert moon_distance_intervals == target_intervals
 
     def test_moon_distance_half_removed(self):
         start = datetime(2012, 1, 2)
@@ -867,7 +859,7 @@ class TestMoonDistanceCalculation(object):
         moon_distance_intervals = v.get_moon_distance_intervals(self.sidereal_target, target_intervals, moon_distance_constraint)
 
         # test that just the evening interval is returned by the moon_distance_intervals
-        assert_equal(moon_distance_intervals, [target_intervals[1]])
+        assert moon_distance_intervals == [target_intervals[1]]
 
     def test_moon_distance_all_removed(self):
         start = datetime(2012, 1, 2)
@@ -880,7 +872,7 @@ class TestMoonDistanceCalculation(object):
         moon_distance_intervals = v.get_moon_distance_intervals(self.sidereal_target, target_intervals, moon_distance_constraint)
 
         # test that no moon distance intervals are returned due to the constraint of > 75 degrees distance
-        assert_equal(moon_distance_intervals, [])
+        assert moon_distance_intervals == []
 
     def test_moon_distance_ignored_for_satellite_target(self):
         start = datetime(2012, 1, 2)
@@ -892,7 +884,7 @@ class TestMoonDistanceCalculation(object):
         observable_intervals = v.get_observable_intervals(target)
         # check that this doesn't crash, and that intervals match night intervals
         night_intervals = v.get_dark_intervals()
-        assert_equal(night_intervals, observable_intervals)
+        assert night_intervals == observable_intervals
 
     def test_moon_distance_ignored_for_hour_angle_target(self):
         start = datetime(2012, 1, 2)
@@ -904,7 +896,7 @@ class TestMoonDistanceCalculation(object):
         observable_intervals = v.get_observable_intervals(target)
         # check that this doesn't crash, and that intervals match night intervals
         night_intervals = v.get_dark_intervals()
-        assert_equal(night_intervals, observable_intervals)
+        assert night_intervals == observable_intervals
 
     def test_moon_distance_minor_planet_half_removed(self):
         start = datetime(2012, 8, 2)
@@ -920,9 +912,9 @@ class TestMoonDistanceCalculation(object):
         moon_distance_intervals = v.get_moon_distance_intervals(target, target_intervals, moon_distance_constraint)
 
         # Verify that moon distance intervals only goes until 21:00
-        assert_equal(moon_distance_intervals[0][0], target_intervals[0][0])
-        assert_equal(moon_distance_intervals[0][1], datetime(2012, 8, 2, 21, 0))
-        assert_equal(len(moon_distance_intervals), 1)
+        assert moon_distance_intervals[0][0] == target_intervals[0][0]
+        assert moon_distance_intervals[0][1] == datetime(2012, 8, 2, 21, 0)
+        assert len(moon_distance_intervals) == 1
 
     def test_moon_distance_minor_planet_half_removed_2(self):
         start = datetime(2012, 1, 2)
@@ -938,11 +930,11 @@ class TestMoonDistanceCalculation(object):
         moon_distance_intervals = v.get_moon_distance_intervals(target, target_intervals, moon_distance_constraint)
 
         # Verify that moon distance intervals only appear from 6:00 to 6:45 and from 23:30 to 24:00
-        assert_equal(len(moon_distance_intervals), 2)
-        assert_equal(moon_distance_intervals[0][0], datetime(2012, 1, 2, 6, 15))
-        assert_equal(moon_distance_intervals[0][1], datetime(2012, 1, 2, 6, 45))
-        assert_equal(moon_distance_intervals[1][0], datetime(2012, 1, 2, 23, 30))
-        assert_equal(moon_distance_intervals[1][1], datetime(2012, 1, 3, 0, 0))
+        assert len(moon_distance_intervals) == 2
+        assert moon_distance_intervals[0][0] == datetime(2012, 1, 2, 6, 15)
+        assert moon_distance_intervals[0][1] == datetime(2012, 1, 2, 6, 45)
+        assert moon_distance_intervals[1][0] == datetime(2012, 1, 2, 23, 30)
+        assert moon_distance_intervals[1][1] == datetime(2012, 1, 3, 0, 0)
 
     def test_moon_distance_minor_planet_none_removed(self):
         start = datetime(2012, 2, 2)
@@ -958,11 +950,11 @@ class TestMoonDistanceCalculation(object):
         moon_distance_intervals = v.get_moon_distance_intervals(target, target_intervals, moon_distance_constraint)
 
         # Verify that moon distance intervals only appear during the full target interval
-        assert_equal(len(moon_distance_intervals), 2)
-        assert_equal(moon_distance_intervals[0][0], datetime(2012, 2, 2, 0, 0))
-        assert_equal(moon_distance_intervals[0][1], datetime(2012, 2, 2, 5, 15))
-        assert_equal(moon_distance_intervals[1][0], datetime(2012, 2, 2, 22, 00))
-        assert_equal(moon_distance_intervals[1][1], datetime(2012, 2, 3, 0, 0))
+        assert len(moon_distance_intervals) == 2
+        assert moon_distance_intervals[0][0] == datetime(2012, 2, 2, 0, 0)
+        assert moon_distance_intervals[0][1] == datetime(2012, 2, 2, 5, 15)
+        assert moon_distance_intervals[1][0] == datetime(2012, 2, 2, 22, 00)
+        assert moon_distance_intervals[1][1] == datetime(2012, 2, 3, 0, 0)
 
     def test_moon_distance_minor_planet_all_removed(self):
         start = datetime(2012, 1, 2)
@@ -978,7 +970,7 @@ class TestMoonDistanceCalculation(object):
         moon_distance_intervals = v.get_moon_distance_intervals(target, target_intervals, moon_distance_constraint)
 
         # Verify that moon distance intervals only appear from 6:00 to 6:45 and from 23:30 to 24:00
-        assert_equal(len(moon_distance_intervals), 0)
+        assert len(moon_distance_intervals) == 0
 
     def test_moon_distance_comet_non_removed(self):
         start = datetime(2012, 7, 22)
@@ -993,13 +985,10 @@ class TestMoonDistanceCalculation(object):
         target_intervals = v.get_target_intervals(target=target)
         moon_distance_intervals = v.get_moon_distance_intervals(target, target_intervals, moon_distance_constraint)
 
-        print(target_intervals)
-        print(moon_distance_intervals)
-
         # Verify that moon distance intervals is the entire target interval
-        assert_equal(len(moon_distance_intervals), 1)
-        assert_equal(moon_distance_intervals[0][0], target_intervals[0][0])
-        assert_equal(moon_distance_intervals[0][1], target_intervals[-1][1])
+        assert len(moon_distance_intervals) == 1
+        assert moon_distance_intervals[0][0] == target_intervals[0][0]
+        assert moon_distance_intervals[0][1] == target_intervals[-1][1]
 
     def test_moon_distance_comet_all_removed(self):
         start = datetime(2012, 7, 22)
@@ -1015,7 +1004,7 @@ class TestMoonDistanceCalculation(object):
         moon_distance_intervals = v.get_moon_distance_intervals(target, target_intervals, moon_distance_constraint)
 
         # Verify that there are no moon distance intervals
-        assert_equal(len(moon_distance_intervals), 0)
+        assert len(moon_distance_intervals) == 0
 
     def test_moon_distance_major_planet_none_removed(self):
         start = datetime(2012, 2, 1)
@@ -1029,9 +1018,9 @@ class TestMoonDistanceCalculation(object):
         target_intervals = coalesce_adjacent_intervals(target_intervals)
 
         # Verify that moon distance intervals is the entire target interval
-        assert_equal(len(moon_distance_intervals), len(target_intervals))
-        assert_equal(moon_distance_intervals[0][0], target_intervals[0][0])
-        assert_equal(moon_distance_intervals[0][1], target_intervals[0][1])
+        assert len(moon_distance_intervals) == len(target_intervals)
+        assert moon_distance_intervals[0][0] == target_intervals[0][0]
+        assert moon_distance_intervals[0][1] == target_intervals[0][1]
 
     def test_moon_distance_major_planet_all_removed(self):
         start = datetime(2012, 2, 1)
@@ -1044,7 +1033,7 @@ class TestMoonDistanceCalculation(object):
         moon_distance_intervals = v.get_moon_distance_intervals(target, target_intervals, Angle(degrees=31))
 
         # Verify that there are no moon distance intervals
-        assert_equal(len(moon_distance_intervals), 0)
+        assert len(moon_distance_intervals) == 0
 
     def test_moon_distance_major_planet_some_removed(self):
         start = datetime(2012, 2, 1)
@@ -1058,11 +1047,11 @@ class TestMoonDistanceCalculation(object):
         target_intervals = coalesce_adjacent_intervals(target_intervals)
 
         # Verify that the first moon distance interval truncated to start at 3:45 but otherwise matches the target int
-        assert_equal(len(moon_distance_intervals), 2)
-        assert_equal(moon_distance_intervals[0][0], datetime(2012, 2, 1, 3, 45))
-        assert_equal(moon_distance_intervals[0][1], target_intervals[0][1])
-        assert_equal(moon_distance_intervals[1][0], target_intervals[1][0])
-        assert_equal(moon_distance_intervals[1][1], target_intervals[1][1])
+        assert len(moon_distance_intervals) == 2
+        assert moon_distance_intervals[0][0] == datetime(2012, 2, 1, 3, 45)
+        assert moon_distance_intervals[0][1] == target_intervals[0][1]
+        assert moon_distance_intervals[1][0] == target_intervals[1][0]
+        assert moon_distance_intervals[1][1] == target_intervals[1][1]
 
 
 class TestMoonPhaseCalculation(object):
@@ -1093,14 +1082,14 @@ class TestMoonPhaseCalculation(object):
         target_intervals   = v.get_target_intervals(target=self.sidereal_target)
         moon_phase_intervals = v.get_moon_phase_intervals(target_intervals, max_moon_phase)
 
-        assert_equal(moon_phase_intervals, target_intervals)
+        assert moon_phase_intervals == target_intervals
 
         # Test the observable intervals as well, must combine moon phase with dark and ha intervals
         observable_intervals = v.get_observable_intervals(target=self.sidereal_target, moon_distance=Angle(degrees=0), moon_phase=max_moon_phase)
         ha_intervals = v.get_ha_intervals(self.sidereal_target)
         dark_intervals = v.get_dark_intervals()
         combined_moon_phase_intervals = intersect_many_intervals(moon_phase_intervals, ha_intervals, dark_intervals)
-        assert_equal(combined_moon_phase_intervals, observable_intervals)
+        assert combined_moon_phase_intervals == observable_intervals
 
     def test_moon_phase_all_removed_except_when_moon_down(self):
         start = datetime(2012, 1, 2)
@@ -1114,14 +1103,14 @@ class TestMoonPhaseCalculation(object):
         moon_down_intervals = v.get_moon_dark_intervals()
         moon_down_intervals = intersect_intervals(target_intervals, moon_down_intervals)
 
-        assert_equal(moon_phase_intervals, moon_down_intervals)
+        assert moon_phase_intervals == moon_down_intervals
 
         # Test the observable intervals as well, must combine moon phase with dark and ha intervals
         observable_intervals = v.get_observable_intervals(target=self.sidereal_target, moon_distance=Angle(degrees=0), moon_phase=max_moon_phase)
         ha_intervals = v.get_ha_intervals(self.sidereal_target)
         dark_intervals = v.get_dark_intervals()
         combined_moon_phase_intervals = intersect_many_intervals(moon_phase_intervals, ha_intervals, dark_intervals)
-        assert_equal(combined_moon_phase_intervals, observable_intervals)
+        assert combined_moon_phase_intervals == observable_intervals
 
     def test_moon_phase_some_removed(self):
         start = datetime(2012, 1, 2)
@@ -1135,14 +1124,14 @@ class TestMoonPhaseCalculation(object):
         moon_down_intervals = v.get_moon_dark_intervals()
         # The first target interval is below the moon phase constraint, but the second is above it so its only good while the moon is down
         expected_intervals = [target_intervals[0], (target_intervals[1][0], moon_down_intervals[0][1])]
-        assert_equal(moon_phase_intervals, expected_intervals)
+        assert moon_phase_intervals == expected_intervals
 
         # Test the observable intervals as well, must combine moon phase with dark and ha intervals
         observable_intervals = v.get_observable_intervals(target=self.sidereal_target, moon_distance=Angle(degrees=0), moon_phase=max_moon_phase)
         ha_intervals = v.get_ha_intervals(self.sidereal_target)
         dark_intervals = v.get_dark_intervals()
         combined_moon_phase_intervals = intersect_many_intervals(moon_phase_intervals, ha_intervals, dark_intervals)
-        assert_equal(combined_moon_phase_intervals, observable_intervals)
+        assert combined_moon_phase_intervals == observable_intervals
 
     def test_moon_phase_longer(self):
         start = datetime(2012, 1, 1)
@@ -1174,7 +1163,7 @@ class TestMoonPhaseCalculation(object):
             if interval[0] > datetime(2012, 1, 28, 23):
                 expected_intervals.append(interval)
 
-        assert_equal(moon_phase_intervals, expected_intervals)
+        assert moon_phase_intervals == expected_intervals
 
 
 class TestZenithDistanceCalculation(unittest.TestCase):
@@ -1260,7 +1249,7 @@ class TestObservableIntervalsZDIgnoredForStaticTargets(TestZenithDistanceCalcula
         observable_intervals = self.v.get_observable_intervals(target)
         # check that this doesn't crash, and that intervals match night intervals
         night_intervals = self.v.get_dark_intervals()
-        assert_equal(night_intervals, observable_intervals)
+        assert night_intervals == observable_intervals
 
     def test_moon_distance_ignored_for_hour_angle_target(self):
         start = datetime(2012, 1, 2)
@@ -1271,7 +1260,7 @@ class TestObservableIntervalsZDIgnoredForStaticTargets(TestZenithDistanceCalcula
         observable_intervals = self.v.get_observable_intervals(target)
         # check that this doesn't crash, and that intervals match night intervals
         night_intervals = self.v.get_dark_intervals()
-        assert_equal(night_intervals, observable_intervals)
+        assert night_intervals == observable_intervals
 
 
 class TestZDIntervalsZeroZenithDistance(TestZenithDistanceCalculation):
@@ -1291,7 +1280,7 @@ class TestZDIntervalsZeroZenithDistance(TestZenithDistanceCalculation):
         zenith_distance_intervals = self.v.get_zenith_distance_intervals(target, target_intervals)
 
         coalesced_target_intervals = coalesce_adjacent_intervals(target_intervals)
-        assert_equal(zenith_distance_intervals, coalesced_target_intervals)
+        assert zenith_distance_intervals == coalesced_target_intervals
 
     def test_zd_intervals_zero_zd_non_sidereal_major_planet_target(self):
         target = self.major_planet_target
@@ -1300,7 +1289,7 @@ class TestZDIntervalsZeroZenithDistance(TestZenithDistanceCalculation):
         zenith_distance_intervals = self.v.get_zenith_distance_intervals(target, target_intervals)
 
         coalesced_target_intervals = coalesce_adjacent_intervals(target_intervals)
-        assert_equal(zenith_distance_intervals, coalesced_target_intervals)
+        assert zenith_distance_intervals == coalesced_target_intervals
 
     def test_zd_intervals_zero_zd_non_sidereal_minor_planet_target(self):
         target = self.minor_planet_target
@@ -1309,7 +1298,7 @@ class TestZDIntervalsZeroZenithDistance(TestZenithDistanceCalculation):
         zenith_distance_intervals = self.v.get_zenith_distance_intervals(target, target_intervals)
 
         coalesced_target_intervals = coalesce_adjacent_intervals(target_intervals)
-        assert_equal(zenith_distance_intervals, coalesced_target_intervals)
+        assert zenith_distance_intervals == coalesced_target_intervals
 
     def test_zd_intervals_zero_zd_non_sidereal_comet_target(self):
         target = self.comet_target
@@ -1318,7 +1307,7 @@ class TestZDIntervalsZeroZenithDistance(TestZenithDistanceCalculation):
         zenith_distance_intervals = self.v.get_zenith_distance_intervals(target, target_intervals)
 
         coalesced_target_intervals = coalesce_adjacent_intervals(target_intervals)
-        assert_equal(zenith_distance_intervals, coalesced_target_intervals)
+        assert zenith_distance_intervals == coalesced_target_intervals
 
 
 class TestZDIntervals180ZenithDistance(TestZenithDistanceCalculation):
@@ -1336,7 +1325,7 @@ class TestZDIntervals180ZenithDistance(TestZenithDistanceCalculation):
 
         target_intervals = self.v.get_target_intervals(target=target)
         zenith_distance_intervals = self.v.get_zenith_distance_intervals(target, target_intervals)
-        assert_equal(len(zenith_distance_intervals), 0)
+        assert len(zenith_distance_intervals) == 0
 
     def test_zd_intervals_180_zd_non_sidereal_major_planet_target(self):
         target = self.major_planet_target
@@ -1344,7 +1333,7 @@ class TestZDIntervals180ZenithDistance(TestZenithDistanceCalculation):
         target_intervals = self.v.get_target_intervals(target=target)
         zenith_distance_intervals = self.v.get_zenith_distance_intervals(target, target_intervals)
 
-        assert_equal(len(zenith_distance_intervals), 0)
+        assert len(zenith_distance_intervals) == 0
 
     def test_zd_intervals_180_zd_non_sidereal_minor_planet_target(self):
         target = self.minor_planet_target
@@ -1352,7 +1341,7 @@ class TestZDIntervals180ZenithDistance(TestZenithDistanceCalculation):
         target_intervals = self.v.get_target_intervals(target=target)
         zenith_distance_intervals = self.v.get_zenith_distance_intervals(target, target_intervals)
 
-        assert_equal(len(zenith_distance_intervals), 0)
+        assert len(zenith_distance_intervals) == 0
 
     def test_zd_intervals_180_zd_non_sidereal_comet_target(self):
         target = self.comet_target
@@ -1360,7 +1349,7 @@ class TestZDIntervals180ZenithDistance(TestZenithDistanceCalculation):
         target_intervals = self.v.get_target_intervals(target=target)
         zenith_distance_intervals = self.v.get_zenith_distance_intervals(target, target_intervals)
 
-        assert_equal(len(zenith_distance_intervals), 0)
+        assert len(zenith_distance_intervals) == 0
 
 
 class TestMajorPlanetZenithDistanceIntervals(TestZenithDistanceCalculation):
@@ -1404,7 +1393,7 @@ class TestMajorPlanetZenithDistanceIntervals(TestZenithDistanceCalculation):
             (datetime(2012, 2, 1, 3, 32), datetime(2012, 2, 1, 8, 30)),
             (datetime(2012, 2, 1, 22, 15), self.v.end_date)
         ]
-        assert_equal(expected_intervals, zenith_intervals)
+        assert expected_intervals == zenith_intervals
 
 
 class TestCometZenithDistanceIntervals(TestZenithDistanceCalculation):
@@ -1451,7 +1440,7 @@ class TestCometZenithDistanceIntervals(TestZenithDistanceCalculation):
             (datetime(2012, 7, 22, 4, 27), datetime(2012, 7, 22, 7, 45)),
             (datetime(2012, 7, 22, 23, 45), self.v.end_date)
         ]
-        assert_equal(expected_intervals, zenith_intervals)
+        assert expected_intervals == zenith_intervals
 
 
 class TestZDvsAltitude(TestZenithDistanceCalculation):

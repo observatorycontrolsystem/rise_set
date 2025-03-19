@@ -2,7 +2,7 @@
 from __future__ import division
 from builtins import object
 
-from nose.tools import assert_equal, assert_almost_equal, assert_less, raises, assert_greater
+import pytest
 from datetime import datetime, timedelta
 
 #Import the module to test
@@ -33,7 +33,7 @@ class TestLeapSeconds(object):
         date     = datetime(2008, 12, 31, 12, 0, 0)
         received = date_to_tdb(date)
         expected = 54831.5 + (65.184/86400)
-        assert_equal(received, expected)
+        assert received == expected
 
 
 
@@ -47,42 +47,39 @@ class TestAstrometry(object):
 
 
     def test_gregorian_to_ut_mjd(self):
-        assert_equal(gregorian_to_ut_mjd(self.date), self.mjd)
+        assert gregorian_to_ut_mjd(self.date) == self.mjd
 
     def test_gregorian_to_ut_mjd_microseconds(self):
         dt = datetime(2014, 6, 14)
         tdb = dt - timedelta(seconds=67.184)
         mjd_micros = 56821.99922240741
-        assert_equal(gregorian_to_ut_mjd(tdb), mjd_micros)
+        assert gregorian_to_ut_mjd(tdb) == mjd_micros
 
 
     def test_date_to_tdb(self):
         date     = datetime(2013, 11, 4)
         received = date_to_tdb(date)
         expected = 56600.0 + (67.184/86400)
-        assert_equal(received, expected)
+        assert received == expected
 
 
-    @raises(InvalidDateTimeError)
     def test_gregorian_to_ut_mjd_bad_month(self):
-        gregorian_to_ut_mjd(self.bad_month)
-
-#    def test_ut_mjd_to_gmst_in_radians(self):
-#        assert_equal(ut_mjd_to_gmst_in_radians(self.mjd), 4)
+        with pytest.raises(InvalidDateTimeError):
+            gregorian_to_ut_mjd(self.bad_month)
 
 
-    @raises(IncompleteTargetError)
     def test_missing_ra_raises_exception(self):
         tdb = self.mjd
         target_missing_ra = dict(dec='18 26 27.3')
-        mean_to_apparent(target_missing_ra, tdb)
+        with pytest.raises(IncompleteTargetError):
+            mean_to_apparent(target_missing_ra, tdb)
 
 
-    @raises(IncompleteTargetError)
     def test_missing_dec_raises_exception(self):
         tdb = self.mjd
         target_missing_dec = dict(ra='02 46 55.51')
-        mean_to_apparent(target_missing_dec, tdb)
+        with pytest.raises(IncompleteTargetError):
+            mean_to_apparent(target_missing_dec, tdb)
 
 
     def test_calc_local_hour_angle(self):
@@ -92,7 +89,7 @@ class TestAstrometry(object):
 
         hour_angle = calc_local_hour_angle(ra_app, elp_longitude, date)
 
-        assert_almost_equal(hour_angle.in_degrees(), -55.128564469690645, places=13)
+        assert hour_angle.in_degrees() == pytest.approx(-55.128564469690645, 0.0000000000001)
 
 
     def test_calc_local_hour_angle_normalises_negative_overrun(self):
@@ -103,7 +100,7 @@ class TestAstrometry(object):
 
         hour_angle = calc_local_hour_angle(ra_app, elp_longitude, date)
 
-        assert_almost_equal(hour_angle.in_degrees(), 8.2509, places=4)
+        assert hour_angle.in_degrees() == pytest.approx(8.2509, 0.0001)
 
 
     def test_calc_local_hour_angle_normalises_positive_overrun(self):
@@ -113,7 +110,7 @@ class TestAstrometry(object):
 
         hour_angle = calc_local_hour_angle(ra_app, coj_longitude, date)
 
-        assert_almost_equal(hour_angle.in_degrees(), 2.3088, places=4)
+        assert hour_angle.in_degrees() == pytest.approx(2.3088, 0.0001)
 
 
 class TestMoon(object):
@@ -135,7 +132,7 @@ class TestMoon(object):
     def test_apparent_position(self):
         dt_tdb = gregorian_to_ut_mjd(datetime(2012, 1, 3))
 
-        assert_equal(dt_tdb, 55929.0)
+        assert dt_tdb == 55929.0
 
         (apparent_ra, apparent_dec, diameter) = apparent_planet_pos("moon", dt_tdb, self.site)
 
@@ -143,8 +140,8 @@ class TestMoon(object):
         expected_ra = Angle(degrees=26.63848)
         expected_dec = Angle(degrees=15.61778)
 
-        assert_less(abs(apparent_ra.in_degrees() - expected_ra.in_degrees()), self.tolerance)
-        assert_less(abs(apparent_dec.in_degrees() - expected_dec.in_degrees()), self.tolerance)
+        assert abs(apparent_ra.in_degrees() - expected_ra.in_degrees()) < self.tolerance
+        assert abs(apparent_dec.in_degrees() - expected_dec.in_degrees()) < self.tolerance
 
     def test_rise_set_12_31(self):
         dt_utc = datetime(2011, 12, 31)
@@ -160,9 +157,9 @@ class TestMoon(object):
         expected_transit = timedelta(hours=17, minutes=27)
         expected_set = timedelta(hours=23, minutes=22)
 
-        assert_less(abs(sets.total_seconds() - expected_set.total_seconds()), self.time_tolerance)
-        assert_less(abs(rises.total_seconds() - expected_rise.total_seconds()), self.time_tolerance)
-        assert_less(abs(transits.total_seconds() - expected_transit.total_seconds()), self.time_tolerance)
+        assert abs(sets.total_seconds() - expected_set.total_seconds()) < self.time_tolerance
+        assert abs(rises.total_seconds() - expected_rise.total_seconds()) < self.time_tolerance
+        assert abs(transits.total_seconds() - expected_transit.total_seconds()) < self.time_tolerance
 
     def test_rise_set_1_1(self):
         dt_utc = datetime(2012, 1, 1)
@@ -178,9 +175,9 @@ class TestMoon(object):
         expected_transit = timedelta(hours=18, minutes=9)
         expected_set = timedelta(hours=23, minutes=54)
 
-        assert_less(abs(sets.total_seconds() - expected_set.total_seconds()), self.time_tolerance)
-        assert_less(abs(rises.total_seconds() - expected_rise.total_seconds()), self.time_tolerance)
-        assert_less(abs(transits.total_seconds() - expected_transit.total_seconds()), self.time_tolerance)
+        assert abs(sets.total_seconds() - expected_set.total_seconds()) < self.time_tolerance
+        assert abs(rises.total_seconds() - expected_rise.total_seconds()) < self.time_tolerance
+        assert abs(transits.total_seconds() - expected_transit.total_seconds()) < self.time_tolerance
 
     def test_rise_set_1_2(self):
         dt_utc = datetime(2012, 1, 2)
@@ -195,8 +192,8 @@ class TestMoon(object):
         expected_rise = timedelta(hours=13, minutes=16)
         expected_transit = timedelta(hours=18, minutes=52)
 
-        assert_less(abs(rises.total_seconds() - expected_rise.total_seconds()), self.time_tolerance)
-        assert_less(abs(transits.total_seconds() - expected_transit.total_seconds()), self.time_tolerance)
+        assert abs(rises.total_seconds() - expected_rise.total_seconds()) < self.time_tolerance
+        assert abs(transits.total_seconds() - expected_transit.total_seconds()) < self.time_tolerance
 
     def test_rise_set_1_3(self):
         dt_utc = datetime(2012, 1, 3)
@@ -210,9 +207,9 @@ class TestMoon(object):
         expected_rise = timedelta(hours=14, minutes=10)
         expected_transit = timedelta(hours=19, minutes=37)
 
-        assert_less(abs(sets.total_seconds() - expected_set.total_seconds()), self.time_tolerance)
-        assert_less(abs(rises.total_seconds() - expected_rise.total_seconds()), self.time_tolerance)
-        assert_less(abs(transits.total_seconds() - expected_transit.total_seconds()), self.time_tolerance)
+        assert abs(sets.total_seconds() - expected_set.total_seconds()) < self.time_tolerance
+        assert abs(rises.total_seconds() - expected_rise.total_seconds()) < self.time_tolerance
+        assert abs(transits.total_seconds() - expected_transit.total_seconds()) < self.time_tolerance
 
     def test_rise_set_1_4(self):
         dt_utc = datetime(2012, 1, 4)
@@ -226,9 +223,9 @@ class TestMoon(object):
         expected_rise = timedelta(hours=15, minutes=4)
         expected_transit = timedelta(hours=20, minutes=24)
 
-        assert_less(abs(sets.total_seconds() - expected_set.total_seconds()), self.time_tolerance)
-        assert_less(abs(rises.total_seconds() - expected_rise.total_seconds()), self.time_tolerance)
-        assert_less(abs(transits.total_seconds() - expected_transit.total_seconds()), self.time_tolerance)
+        assert abs(sets.total_seconds() - expected_set.total_seconds()) < self.time_tolerance
+        assert abs(rises.total_seconds() - expected_rise.total_seconds()) < self.time_tolerance
+        assert abs(transits.total_seconds() - expected_transit.total_seconds()) < self.time_tolerance
 
     def test_rise_set_1_31(self):
         dt_utc = datetime(2012, 1, 31)
@@ -242,9 +239,9 @@ class TestMoon(object):
         expected_rise = timedelta(hours=12, minutes=53)
         expected_transit = timedelta(hours=18, minutes=17)
 
-        assert_less(abs(sets.total_seconds() - expected_set.total_seconds()), self.time_tolerance)
-        assert_less(abs(rises.total_seconds() - expected_rise.total_seconds()), self.time_tolerance)
-        assert_less(abs(transits.total_seconds() - expected_transit.total_seconds()), self.time_tolerance)
+        assert abs(sets.total_seconds() - expected_set.total_seconds()) < self.time_tolerance
+        assert abs(rises.total_seconds() - expected_rise.total_seconds()) < self.time_tolerance
+        assert abs(transits.total_seconds() - expected_transit.total_seconds()) < self.time_tolerance
 
     def test_rise_set_2_1(self):
         dt_utc = datetime(2012, 2, 1)
@@ -258,9 +255,9 @@ class TestMoon(object):
         expected_rise = timedelta(hours=13, minutes=47)
         expected_transit = timedelta(hours=19, minutes=5)
 
-        assert_less(abs(sets.total_seconds() - expected_set.total_seconds()), self.time_tolerance)
-        assert_less(abs(rises.total_seconds() - expected_rise.total_seconds()), self.time_tolerance)
-        assert_less(abs(transits.total_seconds() - expected_transit.total_seconds()), self.time_tolerance)
+        assert abs(sets.total_seconds() - expected_set.total_seconds()) < self.time_tolerance
+        assert abs(rises.total_seconds() - expected_rise.total_seconds()) < self.time_tolerance
+        assert abs(transits.total_seconds() - expected_transit.total_seconds()) < self.time_tolerance
 
     def test_rise_set_2_2(self):
         dt_utc = datetime(2012, 2, 2)
@@ -274,9 +271,9 @@ class TestMoon(object):
         expected_rise = timedelta(hours=14, minutes=40)
         expected_transit = timedelta(hours=19, minutes=55)
 
-        assert_less(abs(sets.total_seconds() - expected_set.total_seconds()), self.time_tolerance)
-        assert_less(abs(rises.total_seconds() - expected_rise.total_seconds()), self.time_tolerance)
-        assert_less(abs(transits.total_seconds() - expected_transit.total_seconds()), self.time_tolerance)
+        assert abs(sets.total_seconds() - expected_set.total_seconds()) < self.time_tolerance
+        assert abs(rises.total_seconds() - expected_rise.total_seconds()) < self.time_tolerance
+        assert abs(transits.total_seconds() - expected_transit.total_seconds()) < self.time_tolerance
 
     def test_rise_set_2_3(self):
         dt_utc = datetime(2012, 2, 3)
@@ -290,9 +287,9 @@ class TestMoon(object):
         expected_rise = timedelta(hours=15, minutes=31)
         expected_transit = timedelta(hours=20, minutes=47)
 
-        assert_less(abs(sets.total_seconds() - expected_set.total_seconds()), self.time_tolerance)
-        assert_less(abs(rises.total_seconds() - expected_rise.total_seconds()), self.time_tolerance)
-        assert_less(abs(transits.total_seconds() - expected_transit.total_seconds()), self.time_tolerance)
+        assert abs(sets.total_seconds() - expected_set.total_seconds()) < self.time_tolerance
+        assert abs(rises.total_seconds() - expected_rise.total_seconds()) < self.time_tolerance
+        assert abs(transits.total_seconds() - expected_transit.total_seconds()) < self.time_tolerance
 
 
     def test_rise_set_2_15(self):
@@ -305,8 +302,8 @@ class TestMoon(object):
         # moon doesnt rise on this day, but rise_set returns the rise time for the next day
         expected_transit = timedelta(hours=6, minutes=26)
 
-        assert_less(abs(sets.total_seconds() - expected_set.total_seconds()), self.time_tolerance)
-        assert_less(abs(transits.total_seconds() - expected_transit.total_seconds()), self.time_tolerance)
+        assert abs(sets.total_seconds() - expected_set.total_seconds()) < self.time_tolerance
+        assert abs(transits.total_seconds() - expected_transit.total_seconds()) < self.time_tolerance
 
     def test_rise_set_3_1(self):
         dt_utc = datetime(2012, 3, 1)
@@ -318,9 +315,9 @@ class TestMoon(object):
         expected_rise = timedelta(hours=13, minutes=20)
         expected_transit = timedelta(hours=18, minutes=35)
 
-        assert_less(abs(sets.total_seconds() - expected_set.total_seconds()), self.time_tolerance)
-        assert_less(abs(rises.total_seconds() - expected_rise.total_seconds()), self.time_tolerance)
-        assert_less(abs(transits.total_seconds() - expected_transit.total_seconds()), self.time_tolerance)
+        assert abs(sets.total_seconds() - expected_set.total_seconds()) < self.time_tolerance
+        assert abs(rises.total_seconds() - expected_rise.total_seconds()) < self.time_tolerance
+        assert abs(transits.total_seconds() - expected_transit.total_seconds()) < self.time_tolerance
 
 
     def test_rise_set_5_1(self):
@@ -333,9 +330,9 @@ class TestMoon(object):
         expected_rise = timedelta(hours=14, minutes=3)
         expected_transit = timedelta(hours=20, minutes=8)
 
-        assert_less(abs(sets.total_seconds() - expected_set.total_seconds()), self.time_tolerance)
-        assert_less(abs(rises.total_seconds() - expected_rise.total_seconds()), self.time_tolerance)
-        assert_less(abs(transits.total_seconds() - expected_transit.total_seconds()), self.time_tolerance)
+        assert abs(sets.total_seconds() - expected_set.total_seconds()) < self.time_tolerance
+        assert abs(rises.total_seconds() - expected_rise.total_seconds()) < self.time_tolerance
+        assert abs(transits.total_seconds() - expected_transit.total_seconds()) < self.time_tolerance
 
 
     def test_rise_set_6_15(self):
@@ -348,9 +345,9 @@ class TestMoon(object):
         expected_rise = timedelta(hours=3, minutes=13)
         expected_transit = timedelta(hours=8, minutes=42)
 
-        assert_less(abs(sets.total_seconds() - expected_set.total_seconds()), self.time_tolerance)
-        assert_less(abs(rises.total_seconds() - expected_rise.total_seconds()), self.time_tolerance)
-        assert_less(abs(transits.total_seconds() - expected_transit.total_seconds()), self.time_tolerance)
+        assert abs(sets.total_seconds() - expected_set.total_seconds()) < self.time_tolerance
+        assert abs(rises.total_seconds() - expected_rise.total_seconds()) < self.time_tolerance
+        assert abs(transits.total_seconds() - expected_transit.total_seconds()) < self.time_tolerance
 
 
     def test_rise_set_8_1(self):
@@ -363,9 +360,9 @@ class TestMoon(object):
         expected_rise = timedelta(hours=17, minutes=5)
         expected_transit = timedelta(hours=23, minutes=53)
 
-        assert_less(abs(sets.total_seconds() - expected_set.total_seconds()), self.time_tolerance)
-        assert_less(abs(rises.total_seconds() - expected_rise.total_seconds()), self.time_tolerance)
-        assert_less(abs(transits.total_seconds() - expected_transit.total_seconds()), self.time_tolerance)
+        assert abs(sets.total_seconds() - expected_set.total_seconds()) < self.time_tolerance
+        assert abs(rises.total_seconds() - expected_rise.total_seconds()) < self.time_tolerance
+        assert abs(transits.total_seconds() - expected_transit.total_seconds()) < self.time_tolerance
 
     def test_rise_set_9_15(self):
         dt_utc = datetime(2012, 9, 15)
@@ -377,9 +374,9 @@ class TestMoon(object):
         expected_rise = timedelta(hours=5, minutes=13)
         expected_transit = timedelta(hours=11, minutes=20)
 
-        assert_less(abs(sets.total_seconds() - expected_set.total_seconds()), self.time_tolerance)
-        assert_less(abs(rises.total_seconds() - expected_rise.total_seconds()), self.time_tolerance)
-        assert_less(abs(transits.total_seconds() - expected_transit.total_seconds()), self.time_tolerance)
+        assert abs(sets.total_seconds() - expected_set.total_seconds()) < self.time_tolerance
+        assert abs(rises.total_seconds() - expected_rise.total_seconds()) < self.time_tolerance
+        assert abs(transits.total_seconds() - expected_transit.total_seconds()) < self.time_tolerance
 
     def test_rise_set_11_1(self):
         dt_utc = datetime(2012, 11, 1)
@@ -391,9 +388,9 @@ class TestMoon(object):
         expected_rise = timedelta(hours=20, minutes=52)
         expected_transit = timedelta(hours=1, minutes=22)
 
-        assert_less(abs(sets.total_seconds() - expected_set.total_seconds()), self.time_tolerance)
-        assert_less(abs(rises.total_seconds() - expected_rise.total_seconds()), self.time_tolerance)
-        assert_less(abs(transits.total_seconds() - expected_transit.total_seconds()), self.time_tolerance)
+        assert abs(sets.total_seconds() - expected_set.total_seconds()) < self.time_tolerance
+        assert abs(rises.total_seconds() - expected_rise.total_seconds()) < self.time_tolerance
+        assert abs(transits.total_seconds() - expected_transit.total_seconds()) < self.time_tolerance
 
 
 class TestSunriseSunset(object):
@@ -423,8 +420,8 @@ class TestSunriseSunset(object):
         received = calc_sunrise_set(self.lsc, date, twilight)
 
         # We only know these to the nearest 30s from USNO online calculator
-        assert_less(abs(expected[1]-received[1]), timedelta(seconds=30))
-        assert_less(abs(expected[2]-received[2]), timedelta(seconds=30))
+        assert abs(expected[1]-received[1]) < timedelta(seconds=30)
+        assert abs(expected[2]-received[2]) < timedelta(seconds=30)
 
 
     def test_nautical_twilight_from_lsc_with_time(self):
@@ -437,8 +434,8 @@ class TestSunriseSunset(object):
         received = calc_sunrise_set(self.lsc, date, twilight)
 
         # We only know these to the nearest 30s from USNO online calculator
-        assert_less(abs(expected[1]-received[1]), timedelta(seconds=30))
-        assert_less(abs(expected[2]-received[2]), timedelta(seconds=30))
+        assert abs(expected[1]-received[1]) < timedelta(seconds=30)
+        assert abs(expected[2]-received[2]) < timedelta(seconds=30)
 
 
     def test_sunrise_set_from_elp_no_time(self):
@@ -451,8 +448,8 @@ class TestSunriseSunset(object):
         received = calc_sunrise_set(self.elp, date, twilight)
 
         # We only know these to the nearest 30s from USNO online calculator
-        assert_less(abs(expected[1]-received[1]), timedelta(seconds=30))
-        assert_less(abs(expected[2]-received[2]), timedelta(seconds=30))
+        assert abs(expected[1]-received[1]) < timedelta(seconds=30)
+        assert abs(expected[2]-received[2]) < timedelta(seconds=30)
 
 
     def test_sunrise_set_from_elp_with_time(self):
@@ -465,8 +462,8 @@ class TestSunriseSunset(object):
         received = calc_sunrise_set(self.elp, date, twilight)
 
         # We only know these to the nearest 30s from USNO online calculator
-        assert_less(abs(expected[1]-received[1]), timedelta(seconds=30))
-        assert_less(abs(expected[2]-received[2]), timedelta(seconds=30))
+        assert abs(expected[1]-received[1]) < timedelta(seconds=30)
+        assert abs(expected[2]-received[2]) < timedelta(seconds=30)
 
 
 
@@ -489,27 +486,27 @@ class TestVenusRiseTransitSet(object):
     def test_calc_transit_day_fraction(self):
         m_0 = calc_transit_day_fraction(self.alpha_2, self.boston['longitude'],
                                         self.app_sidereal_time)
-        assert_almost_equal(m_0, 0.81965, places=5)
+        assert m_0 == pytest.approx(0.81965, 0.00001)
 
 
         (hour_angle, _) = calc_rise_set_hour_angle(self.boston['latitude'],
                                                      self.delta_2,
                                                      self.std_alt)
-        assert_almost_equal(hour_angle.in_degrees(), 108.5344, places=4)
+        assert hour_angle.in_degrees() == pytest.approx(108.5344, 0.0001)
 
         m_1 = calc_rising_day_fraction(m_0, hour_angle)
-        assert_almost_equal(m_1, 0.51816, places=5)
+        assert m_1 == pytest.approx(0.51816, 0.00001)
 
         m_2 = calc_setting_day_fraction(m_0, hour_angle)
-        assert_almost_equal(m_2, 0.12113, places=5)
+        assert m_2 == pytest.approx(0.12113, 0.00001)
 
 
     def test_day_frac_to_hms(self):
         (hrs, mins, secs) = day_frac_to_hms(0.531712963)
 
-        assert_equal(hrs, 12)
-        assert_equal(mins, 45)
-        assert_almost_equal(secs, 40, places=5)
+        assert hrs == 12
+        assert mins == 45
+        assert secs == pytest.approx(40, 0.00001)
 
 
 
@@ -567,8 +564,8 @@ class TestDenebFromMaui(object):
         the_date     = self.date.replace(hour=0, minute=0, second=0, microsecond=0)
         transit_time = the_date + transit
 
-        assert_equal(transit_time.hour, exp_t_hr)
-        assert_equal(transit_time.minute, exp_t_min)
+        assert transit_time.hour == exp_t_hr
+        assert transit_time.minute == exp_t_min
         msg = '%r !> %r' % (transit_time.second, exp_secs)
         assert transit_time.second >= exp_secs, msg
 
@@ -579,8 +576,8 @@ class TestDenebFromMaui(object):
 
         rise_time = the_date + rise
 
-        assert_equal(rise_time.hour, exp_r_hr)
-        assert_equal(rise_time.minute, exp_r_min)
+        assert rise_time.hour == exp_r_hr
+        assert rise_time.minute == exp_r_min
         assert rise_time.second >= exp_secs, '%r !> %r' % (rise_time.second, exp_secs)
 
 
@@ -590,8 +587,8 @@ class TestDenebFromMaui(object):
 
         set_time = the_date + sets
 
-        assert_equal(set_time.hour, exp_s_hr)
-        assert_equal(set_time.minute, exp_s_min)
+        assert set_time.hour == exp_s_hr
+        assert set_time.minute == exp_s_min
         assert set_time.second <= exp_secs, '%r !< %r' % (set_time.second, exp_secs)
 
 
@@ -652,8 +649,8 @@ class TestCanopusFromSidingSpring(object):
 
         transit_time = self.date + transit
 
-        assert_equal(transit_time.hour, exp_t_hr)
-        assert_equal(transit_time.minute, exp_t_min)
+        assert transit_time.hour == exp_t_hr
+        assert transit_time.minute == exp_t_min
         msg = '%r !> %r' % (transit_time.second, exp_secs)
         assert transit_time.second <= exp_secs, msg
 
@@ -664,8 +661,8 @@ class TestCanopusFromSidingSpring(object):
 
         rise_time = self.date + rise
 
-        assert_equal(rise_time.hour, exp_r_hr)
-        assert_equal(rise_time.minute, exp_r_min)
+        assert rise_time.hour == exp_r_hr
+        assert rise_time.minute == exp_r_min
         assert rise_time.second <= exp_secs, '%r !> %r' % (rise_time.second, exp_secs)
 
 
@@ -675,8 +672,8 @@ class TestCanopusFromSidingSpring(object):
 
         set_time = self.date + sets
 
-        assert_equal(set_time.hour, exp_s_hr)
-        assert_equal(set_time.minute, exp_s_min)
+        assert set_time.hour == exp_s_hr
+        assert set_time.minute == exp_s_min
         assert set_time.second <= exp_secs, '%r !< %r' % (set_time.second, exp_secs)
 
 
@@ -707,8 +704,8 @@ class TestNGC2997FromCPT(object):
 
 
     def test_not_circumpolar(self):
-        assert(not self.star.is_always_up(self.date))
-        assert(not self.star.is_always_down(self.date))
+        assert not self.star.is_always_up(self.date)
+        assert not self.star.is_always_down(self.date)
 
 
 
@@ -751,10 +748,10 @@ class TestCanopusFromStAndrews(object):
         self.date = datetime(year=2010, month=3, day=12)
 
 
-    @raises(RiseSetError)
     def test_rise_set(self):
-        (transit, rise, sets) = calc_rise_set(self.canopus, self.st_andrews,
-                                              self.date)
+        with pytest.raises(RiseSetError):
+            (transit, rise, sets) = calc_rise_set(self.canopus, self.st_andrews,
+                                                  self.date)
 
 
     def test_star_is_always_down(self):
@@ -763,8 +760,8 @@ class TestCanopusFromStAndrews(object):
                     self.canopus,
                     horizon = 0.0)
 
-        assert(not star.is_always_up(self.date))
-        assert(star.is_always_down(self.date))
+        assert not star.is_always_up(self.date)
+        assert star.is_always_down(self.date)
 
 
 
@@ -805,10 +802,10 @@ class TestCapellaFromStAndrews(object):
         self.date = datetime(year=2010, month=3, day=12)
 
 
-    @raises(RiseSetError)
     def test_rise_set(self):
-        (transit, rise, sets) = calc_rise_set(self.capella, self.st_andrews,
-                                              self.date)
+        with pytest.raises(RiseSetError):
+            (transit, rise, sets) = calc_rise_set(self.capella, self.st_andrews,
+                                                  self.date)
 
 
     def test_star_is_always_up(self):
@@ -817,8 +814,8 @@ class TestCapellaFromStAndrews(object):
                     self.capella,
                     horizon = 0.0)
 
-        assert(star.is_always_up(self.date))
-        assert(not star.is_always_down(self.date))
+        assert star.is_always_up(self.date)
+        assert not star.is_always_down(self.date)
 
 
     def test_reducing_horizon_keeps_star_down(self):
@@ -827,7 +824,7 @@ class TestCapellaFromStAndrews(object):
                     self.capella,
                     horizon = 80)
 
-        assert(not star.is_always_down(self.date))
+        assert not star.is_always_down(self.date)
 
 
 class TestPolarisFromSidingSpring(object):
@@ -863,10 +860,10 @@ class TestPolarisFromSidingSpring(object):
 
 
 
-    @raises(RiseSetError)
     def test_rise_set(self):
-        (transit, rise, sets) = calc_rise_set(self.polaris, self.siding_spring,
-                                              self.date)
+        with pytest.raises(RiseSetError):
+            (transit, rise, sets) = calc_rise_set(self.polaris, self.siding_spring,
+                                                  self.date)
 
 
 
@@ -902,10 +899,10 @@ class TestMimosaFromSidingSpring(object):
         self.date = datetime(year=2010, month=3, day=12)
 
 
-    @raises(RiseSetError)
     def test_rise_set(self):
-        (transit, rise, sets) = calc_rise_set(self.mimosa, self.siding_spring,
-                                              self.date)
+        with pytest.raises(RiseSetError):
+            (transit, rise, sets) = calc_rise_set(self.mimosa, self.siding_spring,
+                                                  self.date)
 
 
 class TestGetAirmassForTarget(object):
@@ -936,50 +933,50 @@ class TestGetAirmassForTarget(object):
 
         airmasses = calculate_airmass_at_times([time], self.target_1, self.ogg_latitude, self.ogg_longitude,
                                                self.ogg_height)
-        assert_equal(1, len(airmasses))
-        assert_almost_equal(2.50, airmasses[0], 2)
+        assert 1 == len(airmasses)
+        assert 2.50 == pytest.approx(airmasses[0], 0.01)
 
     def test_get_airmass_for_target_1_cpt_fail(self):
         time = datetime(2016, 5, 20, 23, 12, 32, 247312)
 
         airmasses = calculate_airmass_at_times([time], self.target_1, self.cpt_latitude, self.cpt_longitude,
                                                self.cpt_height)
-        assert_equal(1, len(airmasses))
+        assert 1 == len(airmasses)
         # assert airmass is so high its not visible
-        assert_greater(airmasses[0], 10)
+        assert airmasses[0] > 10
 
     def test_get_airmass_for_target_2_ogg(self):
         time = datetime(2016, 5, 20, 20, 12, 32, 247312)
 
         airmasses = calculate_airmass_at_times([time], self.target_2, self.ogg_latitude, self.ogg_longitude,
                                                self.ogg_height)
-        assert_equal(1, len(airmasses))
-        assert_almost_equal(1.33, airmasses[0], 2)
+        assert 1 == len(airmasses)
+        assert 1.33 == pytest.approx(airmasses[0], 0.01)
 
     def test_get_airmass_for_target_2_ogg_fail(self):
         time = datetime(2016, 5, 20, 10, 12, 32, 247312)
 
         airmasses = calculate_airmass_at_times([time], self.target_2, self.ogg_latitude, self.ogg_longitude,
                                                self.ogg_height)
-        assert_equal(1, len(airmasses))
+        assert 1 == len(airmasses)
         # assert airmass is so high its not visible
-        assert_greater(airmasses[0], 10)
+        assert airmasses[0] > 10
 
     def test_get_airmass_for_target_2_cpt(self):
         time = datetime(2016, 5, 20, 11, 12, 32, 247312)
 
         airmasses = calculate_airmass_at_times([time], self.target_2, self.cpt_latitude, self.cpt_longitude,
                                                self.cpt_height)
-        assert_equal(1, len(airmasses))
-        assert_almost_equal(1.52, airmasses[0], 2)
+        assert 1 == len(airmasses)
+        assert 1.52 == pytest.approx(airmasses[0], 0.01)
 
     def test_get_airmass_for_target_3_cpt(self):
         time = datetime(2016, 5, 20, 3, 12, 32, 247312)
 
         airmasses = calculate_airmass_at_times([time], self.target_3, self.cpt_latitude, self.cpt_longitude,
                                                self.cpt_height)
-        assert_equal(1, len(airmasses))
-        assert_almost_equal(1.52, airmasses[0], 2)
+        assert 1 == len(airmasses)
+        assert 1.52 == pytest.approx(airmasses[0], 0.01)
 
 
 class TestCalculateMoonphase(object):
@@ -1035,15 +1032,15 @@ class TestCalculateMoonphase(object):
 
     def test_calculate_moon_phase(self):
         moon_phase_1 = calculate_moon_phase(self.start_date, self.ogg_latitude.in_radians(), self.ogg_longitude.in_radians())
-        assert_almost_equal(moon_phase_1, self.ogg_moon_phase_groundtruth[0] / 100.0, 2)
+        assert moon_phase_1 == pytest.approx(self.ogg_moon_phase_groundtruth[0] / 100.0, 0.01)
 
         moon_phase_2 = calculate_moon_phase(self.end_date, self.ogg_latitude.in_radians(), self.ogg_longitude.in_radians())
-        assert_almost_equal(moon_phase_2, self.ogg_moon_phase_groundtruth[-1] / 100.0, 2)
+        assert moon_phase_2 == pytest.approx(self.ogg_moon_phase_groundtruth[-1] / 100.0, 0.01)
 
     def test_calculate_moon_phase_list(self):
         moon_phases = calculate_moon_phase_at_times(self.times, self.ogg_latitude, self.ogg_longitude)
         for i, moon_phase in enumerate(moon_phases):
-            assert_almost_equal(moon_phase, self.ogg_moon_phase_groundtruth[i] / 100.0, 2)
+            assert moon_phase == pytest.approx(self.ogg_moon_phase_groundtruth[i] / 100.0, 0.01)
 
     def test_moon_phase_similar_between_sites(self):
         time = self.start_date
@@ -1057,4 +1054,4 @@ class TestCalculateMoonphase(object):
 
         for i, moon_phase in enumerate(ogg_moon_phases):
             # Ensure that the difference never exceeds 2% between cpt and ogg over a year
-            assert_less(abs(moon_phase - cpt_moon_phases[i]), 0.02)
+            assert abs(moon_phase - cpt_moon_phases[i]) < 0.02

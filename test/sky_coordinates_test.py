@@ -1,7 +1,7 @@
 #!/usr/bin/python
 from __future__ import division
 from builtins import object
-from nose.tools import raises
+import pytest
 
 from math import pi
 
@@ -16,42 +16,38 @@ class TestCoordinateSystem(object):
     from the angle.Angle class'''
 
     # Test invalid inputs for RA
-    @raises(InvalidAngleError)
     def test_validate_ra_invalid_hr_too_small(self):
-        self.angle = RightAscension('-12:00:00')
+        with pytest.raises(InvalidAngleError):
+            self.angle = RightAscension('-12:00:00')
 
-    @raises(InvalidAngleError)
     def test_validate_ra_invalid_hr_too_big(self):
-        self.angle = RightAscension('24:00:00')
+        with pytest.raises(InvalidAngleError):
+            self.angle = RightAscension('24:00:00')
 
-    @raises(InvalidAngleError)
     def test_validate_ra_invalid_hr_too_big_rad(self):
-        self.angle = RightAscension(radians = 2*pi)
+        with pytest.raises(InvalidAngleError):
+            self.angle = RightAscension(radians = 2*pi)
 
-    @raises(InvalidAngleError)
     def test_validate_ra_invalid_min_too_big(self):
-        self.angle = RightAscension('23:61:00')
-
-
+        with pytest.raises(InvalidAngleError):
+            self.angle = RightAscension('23:61:00')
 
     # Test invalid inputs for Dec
-    @raises(InvalidAngleError)
     def test_validate_dec_invalid_deg_too_small(self):
-        self.angle = Declination(-91)
+        with pytest.raises(InvalidAngleError):
+            self.angle = Declination(-91)
 
-    @raises(InvalidAngleError)
     def test_validate_dec_invalid_deg_too_big(self):
-        self.angle = Declination(degrees = 91)
+        with pytest.raises(InvalidAngleError):
+            self.angle = Declination(degrees = 91)
 
-    @raises(InvalidAngleError)
     def test_validate_dec_invalid_deg_too_big_rad(self):
-        self.angle = Declination(radians = pi)
+        with pytest.raises(InvalidAngleError):
+            self.angle = Declination(radians = pi)
 
-    @raises(InvalidAngleError)
     def test_validate_dec_invalid_min_too_big(self):
-        self.angle = Declination(degrees = '89:61:00')
-
-
+        with pytest.raises(InvalidAngleError):
+            self.angle = Declination(degrees = '89:61:00')
 
     # Test valid inputs for RA
     def test_validate_ra_valid_at_zero_degrees(self):
