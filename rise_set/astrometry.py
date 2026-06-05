@@ -1304,10 +1304,8 @@ def calc_sky_visibility_fraction_map(site, start_time, end_time, horizon_degrees
                                      nside=64, n_samples=100, n_az=360):
     """Return a HEALPix visibility fraction map using the SLALIB AOP observer framework.
 
-    Alternate implementation of :func:`calc_sky_visibility_fraction_map` that
-    mirrors the pattern of :func:`calculate_airmass_at_times`: observer state is
-    initialised once with ``sla_aoppa`` and updated cheaply at each epoch with
-    ``sla_aoppat``.
+    It includes refraction correction using SLAlib- Observer state is initialised once
+    with ``sla_aoppa`` and updated cheaply at each epoch with ``sla_aoppat``.
 
     At every time sample the horizon circle is traced in apparent equatorial
     coordinates by looping over *n_az* azimuth angles (0–360°) at the fixed
@@ -1315,10 +1313,6 @@ def calc_sky_visibility_fraction_map(site, start_time, end_time, horizon_degrees
     Two widely-separated horizon points are cross-multiplied to recover the
     zenith direction in equatorial coordinates; visibility for all HEALPix
     pixels is then determined with a single vectorised dot-product.
-
-    This approach includes atmospheric refraction implicitly via the AOP
-    parameter set, whereas :func:`calc_sky_visibility_fraction_map` uses a
-    purely geometric horizon.
 
     Parameters
     ----------
