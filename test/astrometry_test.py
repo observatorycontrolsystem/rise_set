@@ -14,7 +14,8 @@ from rise_set.astrometry import (InvalidDateTimeError, IncompleteTargetError, Ri
                                  calc_rise_set_hour_angle, calc_rising_day_fraction,
                                  calc_transit_day_fraction, day_frac_to_hms, calc_planet_rise_set,
                                  calc_local_hour_angle, make_ra_dec_target, apparent_planet_pos,
-                                 calculate_moon_phase, calculate_moon_phase_at_times)
+                                 calculate_moon_phase, calculate_moon_phase_at_times,
+                                 calc_sky_visibility_fraction_map)
 
 from rise_set.angle import Angle
 from rise_set.visibility import MOON_REFRACTION
@@ -1055,3 +1056,131 @@ class TestCalculateMoonphase(object):
         for i, moon_phase in enumerate(ogg_moon_phases):
             # Ensure that the difference never exceeds 2% between cpt and ogg over a year
             assert abs(moon_phase - cpt_moon_phases[i]) < 0.02
+
+
+class TestSkyVisibilityFractionMap(object):
+    '''Unit tests for calc_sky_visibility_fraction_map.
+
+    The cases below are chosen to be easy to reason about geometrically, so the
+    expected output of the algorithm can be predicted by hand:
+
+      * At a pole, Earth's rotation never changes which declinations are above
+        the horizon, so the visible sky is exactly one celestial hemisphere and
+        is constant in time.
+      * At the equator over one full sidereal day, every point on the celestial
+        sphere spends exactly half its time above the horizon, so the whole-sky
+        mean fraction is 0.5.
+    '''
+
+    # healpy is an optional dependency only needed for this function
+    hp = pytest.importorskip("healpy")
+    np = pytest.importorskip("numpy")
+
+    SIDEREAL_DAY = timedelta(hours=23, minutes=56, seconds=4)
+
+    def setup_method(self):
+        self.start = datetime(2023, 6, 21, 0, 0, 0)
+
+    def _site(self, latitude, longitude=0.0, altitude=0.0):
+        return {'latitude': Angle(degrees=latitude),
+                'longitude': Angle(degrees=longitude),
+                'altitude': altitude}
+
+    def _pix_at(self, nside, dec_deg, ra_deg=0.0):
+        '''HEALPix RING index of the pixel containing the given equatorial direction.'''
+        import healpy as hp
+        import numpy as np
+        return hp.ang2pix(nside, np.radians(90.0 - dec_deg), np.radians(ra_deg))
+
+    def test_output_shape_and_bounds(self):
+        '''The map has 12*nside**2 pixels and every fraction lies in [0, 1].'''
+        import healpy as hp
+        import numpy as np
+        nside = 8
+        fraction_map = calc_sky_visibility_fraction_map(
+            self._site(30.0), self.start, self.start + timedelta(hours=6),
+            horizon_degrees=0.0, nside=nside, n_samples=13, n_az=72)
+
+        assert fraction_map.shape == (hp.nside2npix(nside),)
+        assert np.all(fraction_map >= 0.0)
+        assert np.all(fraction_map <= 1.0)
+
+    def test_north_pole_sees_only_northern_hemisphere(self):
+        '''From the north pole the visible sky is exactly Dec >= 0, fixed in time.
+
+        Because rotation does not change visibility at the pole, a single time
+        sample is enough: northern pixels are always up (fraction 1.0) and
+        southern pixels are always down (fraction 0.0).
+        '''
+        nside = 16
+        fraction_map = calc_sky_visibility_fraction_map(
+            self._site(90.0), self.start, self.start + timedelta(hours=1),
+            horizon_degrees=0.0, nside=nside, n_samples=1, n_az=72)
+
+        # Well clear of the horizon, so refraction does not blur the boundary
+        for dec in (90.0, 45.0, 10.0):
+            assert fraction_map[self._pix_at(nside, dec)] == pytest.approx(1.0)
+        for dec in (-10.0, -45.0, -90.0):
+            assert fraction_map[self._pix_at(nside, dec)] == pytest.approx(0.0)
+
+    def test_south_pole_sees_only_southern_hemisphere(self):
+        '''The mirror image of the north-pole case: only Dec <= 0 is visible.'''
+        nside = 16
+        fraction_map = calc_sky_visibility_fraction_map(
+            self._site(-90.0), self.start, self.start + timedelta(hours=1),
+            horizon_degrees=0.0, nside=nside, n_samples=1, n_az=72)
+
+        for dec in (-90.0, -45.0, -10.0):
+            assert fraction_map[self._pix_at(nside, dec)] == pytest.approx(1.0)
+        for dec in (10.0, 45.0, 90.0):
+            assert fraction_map[self._pix_at(nside, dec)] == pytest.approx(0.0)
+
+    def test_equator_full_sidereal_day_averages_to_half(self):
+        '''At the equator over one sidereal day every pixel is up half the time.
+
+        Each pixel individually averages ~0.5, so both the whole-sky mean and
+        median are 0.5.
+        '''
+        import numpy as np
+        nside = 16
+        fraction_map = calc_sky_visibility_fraction_map(
+            self._site(0.0), self.start, self.start + self.SIDEREAL_DAY,
+            horizon_degrees=0.0, nside=nside, n_samples=97, n_az=120)
+
+        assert fraction_map.mean() == pytest.approx(0.5, abs=0.01)
+        assert np.median(fraction_map) == pytest.approx(0.5, abs=0.01)
+
+    def test_higher_horizon_reduces_total_visibility(self):
+        '''Raising the horizon can only remove sky, never add it.
+
+        The total visible time summed over all pixels must shrink when the
+        minimum altitude is raised from 0 to 30 degrees.
+        '''
+        nside = 8
+        kwargs = dict(nside=nside, n_samples=25, n_az=72)
+        flat_horizon = calc_sky_visibility_fraction_map(
+            self._site(30.0), self.start, self.start + self.SIDEREAL_DAY,
+            horizon_degrees=0.0, **kwargs)
+        high_horizon = calc_sky_visibility_fraction_map(
+            self._site(30.0), self.start, self.start + self.SIDEREAL_DAY,
+            horizon_degrees=30.0, **kwargs)
+
+        assert high_horizon.sum() < flat_horizon.sum()
+
+    def test_invalid_time_range_raises(self):
+        '''end_time must be strictly after start_time.'''
+        with pytest.raises(ValueError):
+            calc_sky_visibility_fraction_map(
+                self._site(0.0), self.start, self.start,
+                nside=4, n_samples=2, n_az=8)
+        with pytest.raises(ValueError):
+            calc_sky_visibility_fraction_map(
+                self._site(0.0), self.start, self.start - timedelta(hours=1),
+                nside=4, n_samples=2, n_az=8)
+
+    def test_invalid_n_samples_raises(self):
+        '''At least one time sample is required.'''
+        with pytest.raises(ValueError):
+            calc_sky_visibility_fraction_map(
+                self._site(0.0), self.start, self.start + timedelta(hours=1),
+                nside=4, n_samples=0, n_az=8)

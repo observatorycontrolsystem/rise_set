@@ -27,7 +27,8 @@ import copy
 from rise_set.astrometry import (
     calc_local_hour_angle, calc_sunrise_set, calc_planet_rise_set, calc_rise_set, RiseSetError,
     Star, gregorian_to_ut_mjd, ut_mjd_to_gmst, date_to_tdb, apparent_planet_pos, calculate_moon_phase,
-    calculate_zenith_distance, mean_to_apparent, angular_distance_between, elem_to_topocentric_apparent)
+    calculate_zenith_distance, mean_to_apparent, angular_distance_between, elem_to_topocentric_apparent,
+    calc_sky_visibility_fraction_map)
 from rise_set.angle import Angle
 from rise_set.exceptions import InvalidHourAngleLimit
 from rise_set.moving_objects import find_moving_object_up_intervals
@@ -116,6 +117,43 @@ class Visibility(object):
 
         self.dark_intervals = []
         self.moon_dark_intervals = []
+
+
+    def get_sky_fraction_map(self, pixel_size=55.0, time_resolution=datetime.timedelta(minutes=30), azimuth_step=1.0):
+        """ Returns a healpix sky visibility fraction map for this Visibility object
+
+        Uses the initialized site details, horizon, and start/end times to generate a healpix
+        skymap with each healpix yielding the fraction of time in the window that that pixel is visible.
+
+        Parameters:
+            pixel_size : float
+                Approximate HEALPix pixel size in arcminutes. Converted to the nearest valid nside
+                (power of 2). Default 55 arcmin corresponds to nside=64 (~49 152 pixels total).
+            time_resolution : datetime.timedelta
+                Time step between visibility samples. Converted to a number of equally-spaced
+                samples spanning [start_date, end_date] (inclusive). Default 30 minutes.
+            azimuth_step : float
+                Azimuth sampling step in degrees used to trace the horizon circle at each epoch.
+                Converted to n_az = round(360 / azimuth_step). Default 1 degree (360 steps).
+
+        Returns:
+            numpy.ndarray: HEALPix RING-scheme map where the value of each pixel is the fraction of time the
+            center of that healpix is visible within the time range
+        """
+        # Convert pixel_size (arcmin) to nside, rounded to nearest power of 2
+        pixel_size_rad = pixel_size * math.pi / (60.0 * 180.0)
+        nside = int(2 ** round(math.log2(math.sqrt(math.pi / (3.0 * pixel_size_rad ** 2)))))
+
+        # Convert time_resolution to a number of samples spanning the window (inclusive endpoints)
+        total_seconds = (self.end_date - self.start_date).total_seconds()
+        n_samples = max(1, round(total_seconds / time_resolution.total_seconds()) + 1)
+
+        # Convert azimuth_step (degrees) to number of azimuth samples
+        n_az = max(1, round(360.0 / azimuth_step))
+
+        return calc_sky_visibility_fraction_map(self.site, self.start_date, self.end_date,
+                                                horizon_degrees=self.horizon.in_degrees(),
+                                                nside=nside, n_samples=n_samples, n_az=n_az)
 
 
     def get_dark_intervals(self):

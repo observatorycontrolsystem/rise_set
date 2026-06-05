@@ -1300,6 +1300,156 @@ def apparent_to_altzd(ra, dec, aop_params):
     return Angle(radians=obs_az), Angle(radians=obs_zd)
 
 
+def calc_sky_visibility_fraction_map(site, start_time, end_time, horizon_degrees=0.0,
+                                     nside=64, n_samples=100, n_az=360):
+    """Return a HEALPix visibility fraction map using the SLALIB AOP observer framework.
+
+    Alternate implementation of :func:`calc_sky_visibility_fraction_map` that
+    mirrors the pattern of :func:`calculate_airmass_at_times`: observer state is
+    initialised once with ``sla_aoppa`` and updated cheaply at each epoch with
+    ``sla_aoppat``.
+
+    At every time sample the horizon circle is traced in apparent equatorial
+    coordinates by looping over *n_az* azimuth angles (0–360°) at the fixed
+    observed altitude of *horizon_degrees* (default 0°) using ``sla_oapqk``.
+    Two widely-separated horizon points are cross-multiplied to recover the
+    zenith direction in equatorial coordinates; visibility for all HEALPix
+    pixels is then determined with a single vectorised dot-product.
+
+    This approach includes atmospheric refraction implicitly via the AOP
+    parameter set, whereas :func:`calc_sky_visibility_fraction_map` uses a
+    purely geometric horizon.
+
+    Parameters
+    ----------
+    site : dict
+        Observatory location with keys:
+            'latitude'  (Angle) – geodetic latitude, North positive
+            'longitude' (Angle) – geodetic longitude, East positive
+            'altitude'  (float) – height above sea level in metres
+    start_time : datetime.datetime
+        UTC start of the time range.
+    end_time : datetime.datetime
+        UTC end of the time range.  Must be after *start_time*.
+    horizon_degrees : float
+        Minimum observed altitude in degrees a pixel must reach to be counted
+        as visible.  Default 0.0 (exactly on the geometric/refracted horizon).
+    nside : int
+        HEALPix resolution parameter.  Number of pixels = 12 * nside**2.
+        Default 64 gives ~55 arcmin pixels (~49 152 pixels total).
+    n_samples : int
+        Number of equally-spaced time samples within [start_time, end_time].
+        Includes both endpoints.  Must be >= 1.  Default 100.
+    n_az : int
+        Number of azimuth angles sampled to trace the horizon circle at each
+        epoch.  Default 360 (1° steps).  Increase for very high nside values.
+
+    Returns
+    -------
+    numpy.ndarray, shape (12*nside**2,), dtype float64
+        HEALPix RING-scheme map where each value is the fraction of the
+        *n_samples* epochs during which that pixel centre was visible,
+        in the range [0.0, 1.0].
+    """
+    import healpy as hp
+    import numpy as np
+
+    if end_time <= start_time:
+        raise ValueError("end_time must be after start_time")
+    if n_samples < 1:
+        raise ValueError("n_samples must be >= 1")
+
+    lon_rad = site['longitude'].in_radians()
+    lat_rad = site['latitude'].in_radians()
+    alt_m   = site['altitude']
+
+    # Standard atmosphere – same defaults as calculate_airmass_at_times
+    dut    = 0.0      # UT1 - UTC (seconds)
+    xp = yp = 0.0    # polar motion (radians)
+    temp_k  = 273.15  # ambient temperature (K)
+    pres_mb = 1013.25 # atmospheric pressure (mb)
+    rh      = 0.3     # relative humidity [0, 1]
+    wl      = 0.55    # effective wavelength (microns, approx V-band)
+    tlr     = 0.0065  # tropospheric lapse rate (K/m)
+
+    # HEALPix pixel unit vectors – precomputed once, reused every time step
+    npix = hp.nside2npix(nside)
+    theta, phi = hp.pix2ang(nside, np.arange(npix))
+    dec_pix = np.pi / 2.0 - theta   # Dec in radians [-pi/2, pi/2]
+    ra_pix  = phi                    # RA  in radians [0, 2*pi]
+    pix_vecs = np.column_stack([     # shape (npix, 3)
+        np.cos(dec_pix) * np.cos(ra_pix),
+        np.cos(dec_pix) * np.sin(ra_pix),
+        np.sin(dec_pix),
+    ])
+
+    # Observed zenith distance of the horizon after applying refraction model
+    zd_horizon_rad = np.pi / 2.0 - np.radians(horizon_degrees)
+
+    # Azimuths sampled to trace the horizon circle (0 to 2π, n_az steps)
+    az_samples = np.linspace(0.0, 2.0 * np.pi, n_az, endpoint=False)
+
+    sin_lat = np.sin(lat_rad)
+    cos_lat = np.cos(lat_rad)
+
+    sin_horizon = np.sin(np.radians(horizon_degrees))
+
+    total_seconds = (end_time - start_time).total_seconds()
+    offsets = ([0.0] if n_samples == 1 else
+               [total_seconds * i / (n_samples - 1) for i in range(n_samples)])
+
+    visible_count = np.zeros(npix, dtype=np.int32)
+    aop_params = None
+
+    for offset in offsets:
+        t = start_time + timedelta(seconds=offset)
+        mjd_utc = gregorian_to_ut_mjd(t)
+
+        # Initialise observer once; update cheaply at each subsequent epoch
+        if aop_params is None:
+            aop_params = sla.sla_aoppa(mjd_utc, dut, lon_rad, lat_rad, alt_m,
+                                        xp, yp, temp_k, pres_mb, rh, wl, tlr)
+        else:
+            aop_params = sla.sla_aoppat(mjd_utc, aop_params)
+
+        # Trace the horizon circle: for each azimuth at the horizon altitude
+        # convert observed (az, zd_horizon) to apparent equatorial (RA, Dec)
+        # using sla_oapqk, then represent each point as a 3-D unit vector
+        horizon_vecs = np.empty((n_az, 3))
+        for i, az in enumerate(az_samples):
+            ra_h, dec_h = sla.sla_oapqk('A', az, zd_horizon_rad, aop_params)
+            horizon_vecs[i] = (np.cos(dec_h) * np.cos(ra_h),
+                               np.cos(dec_h) * np.sin(ra_h),
+                               np.sin(dec_h))
+
+        # The zenith direction is the normal to the horizon great circle.
+        # Recover it as the cross product of two points that are 90° apart on
+        # the circle (indices 0 and n_az//4), then sign-correct using the
+        # equatorial-coordinate zenith derived from the current LAST (aoprms[13])
+        # and the observer latitude.  The LAST is in equatorial space, so this
+        # reference vector is in the same frame as horizon_vecs.
+        last = aop_params[13]
+        equatorial_zenith = np.array([cos_lat * np.cos(last),
+                                      cos_lat * np.sin(last),
+                                      sin_lat])
+
+        zenith_vec = np.cross(horizon_vecs[0], horizon_vecs[n_az // 4])
+        norm = np.linalg.norm(zenith_vec)
+        if norm < 1e-10:
+            zenith_vec = equatorial_zenith
+        else:
+            zenith_vec /= norm
+            if np.dot(zenith_vec, equatorial_zenith) < 0:
+                zenith_vec = -zenith_vec
+
+        # dot(zenith, pixel) = sin(observed altitude of pixel)
+        # A pixel is visible iff its observed altitude >= horizon_degrees
+        dot = pix_vecs @ zenith_vec      # shape (npix,)
+        visible_count += (dot >= sin_horizon)
+
+    return visible_count / n_samples
+
+
 def calculate_moon_phase(time, obs_latitude, obs_longitude):
     """Compute the illuminated fraction (phase) of the Moon for the specific time and observing site.
 
