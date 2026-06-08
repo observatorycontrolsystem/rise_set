@@ -1301,18 +1301,15 @@ def apparent_to_altzd(ra, dec, aop_params):
 
 
 def calc_sky_visibility_fraction_map(site, start_time, end_time, horizon_degrees=0.0,
-                                     nside=64, n_samples=100, n_az=360):
+                                     nside=64, n_samples=100):
     """Return a HEALPix visibility fraction map using the SLALIB AOP observer framework.
 
-    It includes refraction correction using SLAlib- Observer state is initialised once
-    with ``sla_aoppa`` and updated cheaply at each epoch with ``sla_aoppat``.
-
-    At every time sample the horizon circle is traced in apparent equatorial
-    coordinates by looping over *n_az* azimuth angles (0–360°) at the fixed
-    observed altitude of *horizon_degrees* (default 0°) using ``sla_oapqk``.
-    Two widely-separated horizon points are cross-multiplied to recover the
-    zenith direction in equatorial coordinates; visibility for all HEALPix
-    pixels is then determined with a single vectorised dot-product.
+    Includes atmospheric refraction via the SLALIB AOP framework. Observer state
+    is initialised once with ``sla_aoppa`` and updated cheaply at each epoch with
+    ``sla_aoppat``.  At each time sample the zenith direction in apparent equatorial
+    coordinates is obtained with a single ``sla_oapqk`` call (observed zd=0);
+    visibility for all HEALPix pixels is then determined with one vectorised
+    dot-product.
 
     Parameters
     ----------
@@ -1334,9 +1331,6 @@ def calc_sky_visibility_fraction_map(site, start_time, end_time, horizon_degrees
     n_samples : int
         Number of equally-spaced time samples within [start_time, end_time].
         Includes both endpoints.  Must be >= 1.  Default 100.
-    n_az : int
-        Number of azimuth angles sampled to trace the horizon circle at each
-        epoch.  Default 360 (1° steps).  Increase for very high nside values.
 
     Returns
     -------
@@ -1377,16 +1371,8 @@ def calc_sky_visibility_fraction_map(site, start_time, end_time, horizon_degrees
         np.sin(dec_pix),
     ])
 
-    # Observed zenith distance of the horizon after applying refraction model
+    # Observed zenith distance corresponding to the minimum visible altitude
     zd_horizon_rad = np.pi / 2.0 - np.radians(horizon_degrees)
-
-    # Azimuths sampled to trace the horizon circle (0 to 2π, n_az steps)
-    az_samples = np.linspace(0.0, 2.0 * np.pi, n_az, endpoint=False)
-
-    sin_lat = np.sin(lat_rad)
-    cos_lat = np.cos(lat_rad)
-
-    sin_horizon = np.sin(np.radians(horizon_degrees))
 
     total_seconds = (end_time - start_time).total_seconds()
     offsets = ([0.0] if n_samples == 1 else
@@ -1406,40 +1392,30 @@ def calc_sky_visibility_fraction_map(site, start_time, end_time, horizon_degrees
         else:
             aop_params = sla.sla_aoppat(mjd_utc, aop_params)
 
-        # Trace the horizon circle: for each azimuth at the horizon altitude
-        # convert observed (az, zd_horizon) to apparent equatorial (RA, Dec)
-        # using sla_oapqk, then represent each point as a 3-D unit vector
-        horizon_vecs = np.empty((n_az, 3))
-        for i, az in enumerate(az_samples):
-            ra_h, dec_h = sla.sla_oapqk('A', az, zd_horizon_rad, aop_params)
-            horizon_vecs[i] = (np.cos(dec_h) * np.cos(ra_h),
-                               np.cos(dec_h) * np.sin(ra_h),
-                               np.sin(dec_h))
+        # Convert the observed zenith (az arbitrary, zd=0) to apparent equatorial
+        # Get the zenith direction in apparent equatorial coordinates.
+        # Azimuth is irrelevant at zd=0; refraction is zero at the zenith.
+        ra_z, dec_z = sla.sla_oapqk('A', 0.0, 0.0, aop_params)
+        zenith_vec = np.array([np.cos(dec_z) * np.cos(ra_z),
+                               np.cos(dec_z) * np.sin(ra_z),
+                               np.sin(dec_z)])
 
-        # The zenith direction is the normal to the horizon great circle.
-        # Recover it as the cross product of two points that are 90° apart on
-        # the circle (indices 0 and n_az//4), then sign-correct using the
-        # equatorial-coordinate zenith derived from the current LAST (aoprms[13])
-        # and the observer latitude.  The LAST is in equatorial space, so this
-        # reference vector is in the same frame as horizon_vecs.
-        last = aop_params[13]
-        equatorial_zenith = np.array([cos_lat * np.cos(last),
-                                      cos_lat * np.sin(last),
-                                      sin_lat])
+        # Find the apparent equatorial position of a point on the observed
+        # horizon (zd = 90° - horizon_degrees).  Refraction lifts it to an
+        # apparent altitude of roughly -34' above the geometric horizon, so
+        # its dot product with the zenith gives a threshold slightly below 0.
+        # Using this threshold instead of sin(horizon_degrees) is what
+        # distinguishes this implementation from the pure geometric version.
+        ra_h, dec_h = sla.sla_oapqk('A', 0.0, zd_horizon_rad, aop_params)
+        horizon_vec = np.array([np.cos(dec_h) * np.cos(ra_h),
+                                np.cos(dec_h) * np.sin(ra_h),
+                                np.sin(dec_h)])
+        sin_refracted_horizon = float(np.dot(horizon_vec, zenith_vec))
 
-        zenith_vec = np.cross(horizon_vecs[0], horizon_vecs[n_az // 4])
-        norm = np.linalg.norm(zenith_vec)
-        if norm < 1e-10:
-            zenith_vec = equatorial_zenith
-        else:
-            zenith_vec /= norm
-            if np.dot(zenith_vec, equatorial_zenith) < 0:
-                zenith_vec = -zenith_vec
-
-        # dot(zenith, pixel) = sin(observed altitude of pixel)
-        # A pixel is visible iff its observed altitude >= horizon_degrees
+        # A pixel is visible iff its apparent altitude >= apparent altitude of
+        # the observed horizon (i.e. dot product >= sin_refracted_horizon)
         dot = pix_vecs @ zenith_vec      # shape (npix,)
-        visible_count += (dot >= sin_horizon)
+        visible_count += (dot >= sin_refracted_horizon)
 
     return visible_count / n_samples
 

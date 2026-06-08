@@ -119,7 +119,7 @@ class Visibility(object):
         self.moon_dark_intervals = []
 
 
-    def get_sky_fraction_map(self, pixel_size=55.0, time_resolution=datetime.timedelta(minutes=30), azimuth_step=1.0):
+    def get_sky_fraction_map(self, pixel_size=55.0, time_resolution=datetime.timedelta(minutes=30)):
         """ Returns a healpix sky visibility fraction map for this Visibility object
 
         Uses the initialized site details, horizon, and start/end times to generate a healpix
@@ -132,9 +132,6 @@ class Visibility(object):
             time_resolution : datetime.timedelta
                 Time step between visibility samples. Converted to a number of equally-spaced
                 samples spanning [start_date, end_date] (inclusive). Default 30 minutes.
-            azimuth_step : float
-                Azimuth sampling step in degrees used to trace the horizon circle at each epoch.
-                Converted to n_az = round(360 / azimuth_step). Default 1 degree (360 steps).
 
         Returns:
             numpy.ndarray: HEALPix RING-scheme map where the value of each pixel is the fraction of time the
@@ -148,12 +145,9 @@ class Visibility(object):
         total_seconds = (self.end_date - self.start_date).total_seconds()
         n_samples = max(1, round(total_seconds / time_resolution.total_seconds()) + 1)
 
-        # Convert azimuth_step (degrees) to number of azimuth samples
-        n_az = max(1, round(360.0 / azimuth_step))
-
         return calc_sky_visibility_fraction_map(self.site, self.start_date, self.end_date,
                                                 horizon_degrees=self.horizon.in_degrees(),
-                                                nside=nside, n_samples=n_samples, n_az=n_az)
+                                                nside=nside, n_samples=n_samples)
 
 
     def get_dark_intervals(self):

@@ -1099,7 +1099,7 @@ class TestSkyVisibilityFractionMap(object):
         nside = 8
         fraction_map = calc_sky_visibility_fraction_map(
             self._site(30.0), self.start, self.start + timedelta(hours=6),
-            horizon_degrees=0.0, nside=nside, n_samples=13, n_az=72)
+            horizon_degrees=0.0, nside=nside, n_samples=13)
 
         assert fraction_map.shape == (hp.nside2npix(nside),)
         assert np.all(fraction_map >= 0.0)
@@ -1115,7 +1115,7 @@ class TestSkyVisibilityFractionMap(object):
         nside = 16
         fraction_map = calc_sky_visibility_fraction_map(
             self._site(90.0), self.start, self.start + timedelta(hours=1),
-            horizon_degrees=0.0, nside=nside, n_samples=1, n_az=72)
+            horizon_degrees=0.0, nside=nside, n_samples=1)
 
         # Well clear of the horizon, so refraction does not blur the boundary
         for dec in (90.0, 45.0, 10.0):
@@ -1128,7 +1128,7 @@ class TestSkyVisibilityFractionMap(object):
         nside = 16
         fraction_map = calc_sky_visibility_fraction_map(
             self._site(-90.0), self.start, self.start + timedelta(hours=1),
-            horizon_degrees=0.0, nside=nside, n_samples=1, n_az=72)
+            horizon_degrees=0.0, nside=nside, n_samples=1)
 
         for dec in (-90.0, -45.0, -10.0):
             assert fraction_map[self._pix_at(nside, dec)] == pytest.approx(1.0)
@@ -1145,7 +1145,7 @@ class TestSkyVisibilityFractionMap(object):
         nside = 16
         fraction_map = calc_sky_visibility_fraction_map(
             self._site(0.0), self.start, self.start + self.SIDEREAL_DAY,
-            horizon_degrees=0.0, nside=nside, n_samples=97, n_az=120)
+            horizon_degrees=0.0, nside=nside, n_samples=97)
 
         assert fraction_map.mean() == pytest.approx(0.5, abs=0.01)
         assert np.median(fraction_map) == pytest.approx(0.5, abs=0.01)
@@ -1157,7 +1157,7 @@ class TestSkyVisibilityFractionMap(object):
         minimum altitude is raised from 0 to 30 degrees.
         '''
         nside = 8
-        kwargs = dict(nside=nside, n_samples=25, n_az=72)
+        kwargs = dict(nside=nside, n_samples=25)
         flat_horizon = calc_sky_visibility_fraction_map(
             self._site(30.0), self.start, self.start + self.SIDEREAL_DAY,
             horizon_degrees=0.0, **kwargs)
@@ -1172,15 +1172,15 @@ class TestSkyVisibilityFractionMap(object):
         with pytest.raises(ValueError):
             calc_sky_visibility_fraction_map(
                 self._site(0.0), self.start, self.start,
-                nside=4, n_samples=2, n_az=8)
+                nside=4, n_samples=2)
         with pytest.raises(ValueError):
             calc_sky_visibility_fraction_map(
                 self._site(0.0), self.start, self.start - timedelta(hours=1),
-                nside=4, n_samples=2, n_az=8)
+                nside=4, n_samples=2)
 
     def test_invalid_n_samples_raises(self):
         '''At least one time sample is required.'''
         with pytest.raises(ValueError):
             calc_sky_visibility_fraction_map(
                 self._site(0.0), self.start, self.start + timedelta(hours=1),
-                nside=4, n_samples=0, n_az=8)
+                nside=4, n_samples=0)
