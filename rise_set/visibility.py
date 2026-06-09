@@ -119,16 +119,16 @@ class Visibility(object):
         self.moon_dark_intervals = []
 
 
-    def get_sky_fraction_map(self, pixel_size=55.0, time_resolution=datetime.timedelta(minutes=30)):
+    def get_sky_fraction_map(self, nside=64, time_resolution=datetime.timedelta(minutes=30)):
         """ Returns a healpix sky visibility fraction map for this Visibility object
 
         Uses the initialized site details, horizon, and start/end times to generate a healpix
         skymap with each healpix yielding the fraction of time in the window that that pixel is visible.
 
         Parameters:
-            pixel_size : float
-                Approximate HEALPix pixel size in arcminutes. Converted to the nearest valid nside
-                (power of 2). Default 55 arcmin corresponds to nside=64 (~49 152 pixels total).
+            nside : int
+                HEALPix resolution parameter. Number of pixels = 12 * nside**2.
+                Default 64 gives ~55 arcmin pixels (~49 152 pixels total).
             time_resolution : datetime.timedelta
                 Time step between visibility samples. Converted to a number of equally-spaced
                 samples spanning [start_date, end_date] (inclusive). Default 30 minutes.
@@ -137,10 +137,6 @@ class Visibility(object):
             numpy.ndarray: HEALPix RING-scheme map where the value of each pixel is the fraction of time the
             center of that healpix is visible within the time range
         """
-        # Convert pixel_size (arcmin) to nside, rounded to nearest power of 2
-        pixel_size_rad = pixel_size * math.pi / (60.0 * 180.0)
-        nside = int(2 ** round(math.log2(math.sqrt(math.pi / (3.0 * pixel_size_rad ** 2)))))
-
         # Convert time_resolution to a number of samples spanning the window (inclusive endpoints)
         total_seconds = (self.end_date - self.start_date).total_seconds()
         n_samples = max(1, round(total_seconds / time_resolution.total_seconds()) + 1)
