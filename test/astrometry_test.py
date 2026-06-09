@@ -1072,8 +1072,8 @@ class TestSkyVisibilityFractionMap(object):
         mean fraction is 0.5.
     '''
 
-    # healpy is an optional dependency only needed for this function
-    hp = pytest.importorskip("healpy")
+    # healpix is an optional dependency only needed for this function
+    hp = pytest.importorskip("healpix")
     np = pytest.importorskip("numpy")
 
     SIDEREAL_DAY = timedelta(hours=23, minutes=56, seconds=4)
@@ -1088,13 +1088,13 @@ class TestSkyVisibilityFractionMap(object):
 
     def _pix_at(self, nside, dec_deg, ra_deg=0.0):
         '''HEALPix RING index of the pixel containing the given equatorial direction.'''
-        import healpy as hp
+        import healpix as hp
         import numpy as np
         return hp.ang2pix(nside, np.radians(90.0 - dec_deg), np.radians(ra_deg))
 
     def test_output_shape_and_bounds(self):
         '''The map has 12*nside**2 pixels and every fraction lies in [0, 1].'''
-        import healpy as hp
+        import healpix as hp
         import numpy as np
         nside = 8
         fraction_map = calc_sky_visibility_fraction_map(

@@ -1339,7 +1339,7 @@ def calc_sky_visibility_fraction_map(site, start_time, end_time, horizon_degrees
         *n_samples* epochs during which that pixel centre was visible,
         in the range [0.0, 1.0].
     """
-    import healpy as hp
+    import healpix as hp
     import numpy as np
 
     if end_time <= start_time:

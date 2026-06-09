@@ -15,7 +15,7 @@ classifiers = [
 python = ">=3.11,<3.14"
 future = "^0.18.3"
 pyslalib = "^1.0.10"
-healpy = ">=1.15"
+healpix = ">=2022.11"
 
 [tool.poetry.group.dev.dependencies]
 mock = "^5.0.1"
