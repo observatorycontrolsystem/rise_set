@@ -1301,7 +1301,7 @@ def apparent_to_altzd(ra, dec, aop_params):
 
 
 def calc_sky_visibility_fraction_map(site, start_time, end_time, horizon_degrees=0.0,
-                                     nside=64, n_samples=100):
+                                     nside=64, n_samples=100, nest=False):
     """Return a HEALPix visibility fraction map using the SLALIB AOP observer framework.
 
     Includes atmospheric refraction via the SLALIB AOP framework. Observer state
@@ -1331,13 +1331,17 @@ def calc_sky_visibility_fraction_map(site, start_time, end_time, horizon_degrees
     n_samples : int
         Number of equally-spaced time samples within [start_time, end_time].
         Includes both endpoints.  Must be >= 1.  Default 100.
+    nest : bool
+        If False (default) the returned map uses the HEALPix RING ordering.
+        If True it uses the NESTED ordering, which requires *nside* to be a
+        power of two (raises ValueError otherwise).
 
     Returns
     -------
     numpy.ndarray, shape (12*nside**2,), dtype float64
-        HEALPix RING-scheme map where each value is the fraction of the
-        *n_samples* epochs during which that pixel centre was visible,
-        in the range [0.0, 1.0].
+        HEALPix map (RING ordering by default, NESTED if *nest* is True) where
+        each value is the fraction of the *n_samples* epochs during which that
+        pixel centre was visible, in the range [0.0, 1.0].
     """
     import healpix as hp
     import numpy as np
@@ -1346,6 +1350,8 @@ def calc_sky_visibility_fraction_map(site, start_time, end_time, horizon_degrees
         raise ValueError("end_time must be after start_time")
     if n_samples < 1:
         raise ValueError("n_samples must be >= 1")
+    if nest and not hp.is_power_of_two(nside):
+        raise ValueError("nside must be a power of two when nest=True (NESTED ordering)")
 
     lon_rad = site['longitude'].in_radians()
     lat_rad = site['latitude'].in_radians()
@@ -1362,7 +1368,7 @@ def calc_sky_visibility_fraction_map(site, start_time, end_time, horizon_degrees
 
     # HEALPix pixel unit vectors – precomputed once, reused every time step
     npix = hp.nside2npix(nside)
-    theta, phi = hp.pix2ang(nside, np.arange(npix))
+    theta, phi = hp.pix2ang(nside, np.arange(npix), nest=nest)
     dec_pix = np.pi / 2.0 - theta   # Dec in radians [-pi/2, pi/2]
     ra_pix  = phi                    # RA  in radians [0, 2*pi]
     pix_vecs = np.column_stack([     # shape (npix, 3)

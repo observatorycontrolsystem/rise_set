@@ -1184,3 +1184,34 @@ class TestSkyVisibilityFractionMap(object):
             calc_sky_visibility_fraction_map(
                 self._site(0.0), self.start, self.start + timedelta(hours=1),
                 nside=4, n_samples=0)
+
+    def test_nested_matches_reordered_ring(self):
+        '''nest=True output equals the RING output reordered into NESTED.
+
+        The two orderings hold the same per-pixel values, just at different
+        indices, so converting the RING map with nest2ring must reproduce the
+        nest=True map exactly (bit-for-bit, since it is pure reindexing).
+        '''
+        import healpix as hp
+        import numpy as np
+        nside = 8  # power of two, required for NESTED
+        kwargs = dict(nside=nside, n_samples=9, horizon_degrees=0.0)
+        ring_map = calc_sky_visibility_fraction_map(
+            self._site(30.0), self.start, self.start + timedelta(hours=12),
+            nest=False, **kwargs)
+        nest_map = calc_sky_visibility_fraction_map(
+            self._site(30.0), self.start, self.start + timedelta(hours=12),
+            nest=True, **kwargs)
+
+        # NESTED pixel i lives at RING index nest2ring(i)
+        ring_reordered_to_nest = ring_map[hp.nest2ring(nside, np.arange(hp.nside2npix(nside)))]
+        assert np.array_equal(nest_map, ring_reordered_to_nest)
+        # Sanity: same values overall, only the ordering differs
+        assert np.array_equal(np.sort(ring_map), np.sort(nest_map))
+
+    def test_nest_requires_power_of_two_nside(self):
+        '''NESTED ordering is only defined for power-of-two nside.'''
+        with pytest.raises(ValueError):
+            calc_sky_visibility_fraction_map(
+                self._site(0.0), self.start, self.start + timedelta(hours=1),
+                nside=10, n_samples=2, nest=True)

@@ -119,7 +119,7 @@ class Visibility(object):
         self.moon_dark_intervals = []
 
 
-    def get_sky_fraction_map(self, nside=64, time_resolution=datetime.timedelta(minutes=30)):
+    def get_sky_fraction_map(self, nside=64, time_resolution=datetime.timedelta(minutes=30), nest=False):
         """ Returns a healpix sky visibility fraction map for this Visibility object
 
         Uses the initialized site details, horizon, and start/end times to generate a healpix
@@ -132,10 +132,15 @@ class Visibility(object):
             time_resolution : datetime.timedelta
                 Time step between visibility samples. Converted to a number of equally-spaced
                 samples spanning [start_date, end_date] (inclusive). Default 30 minutes.
+            nest : bool
+                If False (default) the returned map uses the HEALPix RING ordering.
+                If True it uses the NESTED ordering, which requires nside to be a
+                power of two (raises ValueError otherwise).
 
         Returns:
-            numpy.ndarray: HEALPix RING-scheme map where the value of each pixel is the fraction of time the
-            center of that healpix is visible within the time range
+            numpy.ndarray: HEALPix map (RING ordering by default, NESTED if nest is True)
+            where the value of each pixel is the fraction of time the center of that healpix
+            is visible within the time range
         """
         # Convert time_resolution to a number of samples spanning the window (inclusive endpoints)
         total_seconds = (self.end_date - self.start_date).total_seconds()
@@ -143,7 +148,7 @@ class Visibility(object):
 
         return calc_sky_visibility_fraction_map(self.site, self.start_date, self.end_date,
                                                 horizon_degrees=self.horizon.in_degrees(),
-                                                nside=nside, n_samples=n_samples)
+                                                nside=nside, n_samples=n_samples, nest=nest)
 
 
     def get_dark_intervals(self):
