@@ -119,7 +119,7 @@ class Visibility(object):
         self.moon_dark_intervals = []
 
 
-    def get_sky_fraction_map(self, nside=64, time_resolution=datetime.timedelta(minutes=30), nest=False):
+    def get_sky_fraction_map(self, nside=64, time_resolution=datetime.timedelta(minutes=30), airmass=None, nest=False):
         """ Returns a healpix sky visibility fraction map for this Visibility object
 
         Uses the initialized site details, horizon, and start/end times to generate a healpix
@@ -138,6 +138,8 @@ class Visibility(object):
                 Time step between visibility samples within each dark interval. Converted to a
                 number of equally-spaced samples spanning each interval (inclusive). Default 30
                 minutes.
+            airmass: float
+                Airmass limit for the visibility skymap. If left out, just the telescopes horizon is used.
             nest : bool
                 If False (default) the returned map uses the HEALPix RING ordering.
                 If True it uses the NESTED ordering, which requires nside to be a
@@ -152,6 +154,7 @@ class Visibility(object):
         import healpix as hp
         import numpy as np
 
+        effective_horizon = set_airmass_limit(airmass, self.horizon.in_degrees())
         dark_intervals = self.get_dark_intervals()
 
         # Accumulate per-pixel visible-sample counts and the total sample count across every
@@ -163,7 +166,7 @@ class Visibility(object):
             n_samples = max(1, round(interval_seconds / time_resolution.total_seconds()) + 1)
 
             interval_map = calc_sky_visibility_fraction_map(self.site, start, end,
-                                                            horizon_degrees=self.horizon.in_degrees(),
+                                                            horizon_degrees=effective_horizon,
                                                             nside=nside, n_samples=n_samples, nest=nest,
                                                             raw_counts=True)
             # interval_map is count/n_samples for this window; recover the integer counts
