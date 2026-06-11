@@ -1301,7 +1301,7 @@ def apparent_to_altzd(ra, dec, aop_params):
 
 
 def calc_sky_visibility_fraction_map(site, start_time, end_time, horizon_degrees=0.0,
-                                     nside=64, n_samples=100, nest=False):
+                                     nside=64, n_samples=100, nest=False, raw_counts=False):
     """Return a HEALPix visibility fraction map using the SLALIB AOP observer framework.
 
     Includes atmospheric refraction via the SLALIB AOP framework. Observer state
@@ -1335,7 +1335,9 @@ def calc_sky_visibility_fraction_map(site, start_time, end_time, horizon_degrees
         If False (default) the returned map uses the HEALPix RING ordering.
         If True it uses the NESTED ordering, which requires *nside* to be a
         power of two (raises ValueError otherwise).
-
+    raw_counts: bool
+        If False (default) the returned map is a fraction (counts / n_samples)
+        If True, the returned map is just the raw visible counts value
     Returns
     -------
     numpy.ndarray, shape (12*nside**2,), dtype float64
@@ -1423,7 +1425,10 @@ def calc_sky_visibility_fraction_map(site, start_time, end_time, horizon_degrees
         dot = pix_vecs @ zenith_vec      # shape (npix,)
         visible_count += (dot >= sin_refracted_horizon)
 
-    return visible_count / n_samples
+    if raw_counts:
+        return visible_count
+    else:
+        return visible_count / n_samples
 
 
 def calculate_moon_phase(time, obs_latitude, obs_longitude):
