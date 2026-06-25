@@ -1541,3 +1541,78 @@ class TestZDvsAltitude(TestZenithDistanceCalculation):
                                  target_app_dec.in_degrees(),
                                  local_hour_angle.in_degrees())
         self.assertAlmostEqual((90.0 - zd.in_degrees()), alt.in_degrees(), places=4)
+
+
+class TestSkyFractionMap(object):
+    '''Unit tests for Visibility.get_sky_fraction_map.
+
+    The map must integrate only over the site's dark intervals (Sun below the
+    configured twilight threshold), not the full wall-clock window.
+    '''
+
+    # healpix is an optional dependency only needed for this function
+    hp = pytest.importorskip("healpix")
+    np = pytest.importorskip("numpy")
+
+    def _visibility(self, horizon=30, twilight='nautical'):
+        site = {'latitude': Angle(degrees=-30.1673305556),
+                'longitude': Angle(degrees=-70.8046611111),
+                'altitude': 2200.0}
+        return Visibility(site,
+                          datetime(2023, 6, 21, 0, 0),
+                          datetime(2023, 6, 23, 0, 0),
+                          horizon=horizon,
+                          twilight=twilight)
+
+    def test_shape_and_bounds(self):
+        '''The map has 12*nside**2 pixels and every fraction lies in [0, 1].'''
+        import healpix as hp
+        import numpy as np
+        nside = 8
+        v = self._visibility()
+        frac_map = v.get_sky_fraction_map(nside=nside,
+                                          time_resolution=timedelta(minutes=30))
+        assert frac_map.shape == (hp.nside2npix(nside),)
+        assert np.all(frac_map >= 0.0)
+        assert np.all(frac_map <= 1.0)
+
+    def test_integrates_only_dark_intervals(self):
+        '''The map equals the dark-time-weighted mean of the per-window maps.
+
+        Reconstructing the result directly from get_dark_intervals and the
+        low-level calc_sky_visibility_fraction_map proves daytime epochs are
+        excluded and that windows are weighted by their sample counts.
+        '''
+        import numpy as np
+        from rise_set.astrometry import calc_sky_visibility_fraction_map
+        nside = 8
+        resolution = timedelta(minutes=30)
+        v = self._visibility()
+
+        dark_intervals = v.get_dark_intervals()
+        assert dark_intervals  # sanity: this site has dark time in the window
+
+        expected_count = np.zeros(self.hp.nside2npix(nside), dtype=np.float64)
+        total_samples = 0
+        for start, end in dark_intervals:
+            n_samples = max(1, round((end - start).total_seconds()
+                                     / resolution.total_seconds()) + 1)
+            window = calc_sky_visibility_fraction_map(
+                v.site, start, end, horizon_degrees=v.horizon.in_degrees(),
+                nside=nside, n_samples=n_samples)
+            expected_count += window * n_samples
+            total_samples += n_samples
+        expected = expected_count / total_samples
+
+        frac_map = v.get_sky_fraction_map(nside=nside, time_resolution=resolution)
+        assert np.array_equal(frac_map, expected)
+
+    def test_no_dark_time_returns_zero_map(self):
+        '''With no dark intervals every pixel fraction is zero.'''
+        import numpy as np
+        nside = 4
+        v = self._visibility()
+        with patch.object(v, 'get_dark_intervals', return_value=[]):
+            frac_map = v.get_sky_fraction_map(nside=nside)
+        assert frac_map.shape == (self.hp.nside2npix(nside),)
+        assert np.all(frac_map == 0.0)

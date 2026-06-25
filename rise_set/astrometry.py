@@ -1300,6 +1300,137 @@ def apparent_to_altzd(ra, dec, aop_params):
     return Angle(radians=obs_az), Angle(radians=obs_zd)
 
 
+def calc_sky_visibility_fraction_map(site, start_time, end_time, horizon_degrees=0.0,
+                                     nside=64, n_samples=100, nest=False, raw_counts=False):
+    """Return a HEALPix visibility fraction map using the SLALIB AOP observer framework.
+
+    Includes atmospheric refraction via the SLALIB AOP framework. Observer state
+    is initialised once with ``sla_aoppa`` and updated cheaply at each epoch with
+    ``sla_aoppat``.  At each time sample the zenith direction in apparent equatorial
+    coordinates is obtained with a single ``sla_oapqk`` call (observed zd=0);
+    visibility for all HEALPix pixels is then determined with one vectorised
+    dot-product.
+
+    Parameters
+    ----------
+    site : dict
+        Observatory location with keys:
+            'latitude'  (Angle) – geodetic latitude, North positive
+            'longitude' (Angle) – geodetic longitude, East positive
+            'altitude'  (float) – height above sea level in metres
+    start_time : datetime.datetime
+        UTC start of the time range.
+    end_time : datetime.datetime
+        UTC end of the time range.  Must be after *start_time*.
+    horizon_degrees : float
+        Minimum observed altitude in degrees a pixel must reach to be counted
+        as visible.  Default 0.0 (exactly on the geometric/refracted horizon).
+    nside : int
+        HEALPix resolution parameter.  Number of pixels = 12 * nside**2.
+        Default 64 gives ~55 arcmin pixels (~49 152 pixels total).
+    n_samples : int
+        Number of equally-spaced time samples within [start_time, end_time].
+        Includes both endpoints.  Must be >= 1.  Default 100.
+    nest : bool
+        If False (default) the returned map uses the HEALPix RING ordering.
+        If True it uses the NESTED ordering, which requires *nside* to be a
+        power of two (raises ValueError otherwise).
+    raw_counts: bool
+        If False (default) the returned map is a fraction (counts / n_samples)
+        If True, the returned map is just the raw visible counts value
+    Returns
+    -------
+    numpy.ndarray, shape (12*nside**2,), dtype float64
+        HEALPix map (RING ordering by default, NESTED if *nest* is True) where
+        each value is the fraction of the *n_samples* epochs during which that
+        pixel centre was visible, in the range [0.0, 1.0].
+    """
+    import healpix as hp
+    import numpy as np
+
+    if end_time <= start_time:
+        raise ValueError("end_time must be after start_time")
+    if n_samples < 1:
+        raise ValueError("n_samples must be >= 1")
+    if nest and not hp.is_power_of_two(nside):
+        raise ValueError("nside must be a power of two when nest=True (NESTED ordering)")
+
+    lon_rad = site['longitude'].in_radians()
+    lat_rad = site['latitude'].in_radians()
+    alt_m   = site['altitude']
+
+    # Standard atmosphere – same defaults as calculate_airmass_at_times
+    dut    = 0.0      # UT1 - UTC (seconds)
+    xp = yp = 0.0    # polar motion (radians)
+    temp_k  = 273.15  # ambient temperature (K)
+    pres_mb = 1013.25 # atmospheric pressure (mb)
+    rh      = 0.3     # relative humidity [0, 1]
+    wl      = 0.55    # effective wavelength (microns, approx V-band)
+    tlr     = 0.0065  # tropospheric lapse rate (K/m)
+
+    # HEALPix pixel unit vectors – precomputed once, reused every time step
+    npix = hp.nside2npix(nside)
+    theta, phi = hp.pix2ang(nside, np.arange(npix), nest=nest)
+    dec_pix = np.pi / 2.0 - theta   # Dec in radians [-pi/2, pi/2]
+    ra_pix  = phi                    # RA  in radians [0, 2*pi]
+    pix_vecs = np.column_stack([     # shape (npix, 3)
+        np.cos(dec_pix) * np.cos(ra_pix),
+        np.cos(dec_pix) * np.sin(ra_pix),
+        np.sin(dec_pix),
+    ])
+
+    # Observed zenith distance corresponding to the minimum visible altitude
+    zd_horizon_rad = np.pi / 2.0 - np.radians(horizon_degrees)
+
+    total_seconds = (end_time - start_time).total_seconds()
+    offsets = ([0.0] if n_samples == 1 else
+               [total_seconds * i / (n_samples - 1) for i in range(n_samples)])
+
+    visible_count = np.zeros(npix, dtype=np.int32)
+    aop_params = None
+
+    for offset in offsets:
+        t = start_time + timedelta(seconds=offset)
+        mjd_utc = gregorian_to_ut_mjd(t)
+
+        # Initialise observer once; update cheaply at each subsequent epoch
+        if aop_params is None:
+            aop_params = sla.sla_aoppa(mjd_utc, dut, lon_rad, lat_rad, alt_m,
+                                        xp, yp, temp_k, pres_mb, rh, wl, tlr)
+        else:
+            aop_params = sla.sla_aoppat(mjd_utc, aop_params)
+
+        # Convert the observed zenith (az arbitrary, zd=0) to apparent equatorial
+        # Get the zenith direction in apparent equatorial coordinates.
+        # Azimuth is irrelevant at zd=0; refraction is zero at the zenith.
+        ra_z, dec_z = sla.sla_oapqk('A', 0.0, 0.0, aop_params)
+        zenith_vec = np.array([np.cos(dec_z) * np.cos(ra_z),
+                               np.cos(dec_z) * np.sin(ra_z),
+                               np.sin(dec_z)])
+
+        # Find the apparent equatorial position of a point on the observed
+        # horizon (zd = 90° - horizon_degrees).  Refraction lifts it to an
+        # apparent altitude of roughly -34' above the geometric horizon, so
+        # its dot product with the zenith gives a threshold slightly below 0.
+        # Using this threshold instead of sin(horizon_degrees) is what
+        # distinguishes this implementation from the pure geometric version.
+        ra_h, dec_h = sla.sla_oapqk('A', 0.0, zd_horizon_rad, aop_params)
+        horizon_vec = np.array([np.cos(dec_h) * np.cos(ra_h),
+                                np.cos(dec_h) * np.sin(ra_h),
+                                np.sin(dec_h)])
+        sin_refracted_horizon = float(np.dot(horizon_vec, zenith_vec))
+
+        # A pixel is visible iff its apparent altitude >= apparent altitude of
+        # the observed horizon (i.e. dot product >= sin_refracted_horizon)
+        dot = pix_vecs @ zenith_vec      # shape (npix,)
+        visible_count += (dot >= sin_refracted_horizon)
+
+    if raw_counts:
+        return visible_count
+    else:
+        return visible_count / n_samples
+
+
 def calculate_moon_phase(time, obs_latitude, obs_longitude):
     """Compute the illuminated fraction (phase) of the Moon for the specific time and observing site.
 

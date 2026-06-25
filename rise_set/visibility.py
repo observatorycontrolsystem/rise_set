@@ -27,7 +27,8 @@ import copy
 from rise_set.astrometry import (
     calc_local_hour_angle, calc_sunrise_set, calc_planet_rise_set, calc_rise_set, RiseSetError,
     Star, gregorian_to_ut_mjd, ut_mjd_to_gmst, date_to_tdb, apparent_planet_pos, calculate_moon_phase,
-    calculate_zenith_distance, mean_to_apparent, angular_distance_between, elem_to_topocentric_apparent)
+    calculate_zenith_distance, mean_to_apparent, angular_distance_between, elem_to_topocentric_apparent,
+    calc_sky_visibility_fraction_map)
 from rise_set.angle import Angle
 from rise_set.exceptions import InvalidHourAngleLimit
 from rise_set.moving_objects import find_moving_object_up_intervals
@@ -116,6 +117,62 @@ class Visibility(object):
 
         self.dark_intervals = []
         self.moon_dark_intervals = []
+
+
+    def get_sky_fraction_map(self, nside=64, time_resolution=datetime.timedelta(minutes=30), airmass=None, nest=False):
+        """Returns a healpix sky visibility fraction map for this Visibility object.
+
+        Uses the initialized site details, horizon, and start/end times to generate a healpix
+        skymap with each healpix yielding the fraction of *dark* time that that pixel is visible.
+
+        The integration is restricted to the site's dark intervals (Sun below the configured
+        ``twilight`` threshold).  Daytime epochs are excluded entirely, so each pixel value is
+        the fraction of observable (night) time it is above the horizon, not the fraction of
+        wall-clock time.
+
+        Args:
+            nside (int): HEALPix resolution parameter. Number of pixels = 12 * nside**2.
+                Default 64 gives ~55 arcmin pixels (~49 152 pixels total).
+            time_resolution (datetime.timedelta): Time step between visibility samples within each
+                dark interval. Converted to a number of equally-spaced samples spanning each
+                interval (inclusive). Default 30 minutes.
+            airmass (float): Airmass limit for the visibility skymap. If left out, just the
+                telescopes horizon is used.
+            nest (bool): If False (default) the returned map uses the HEALPix RING ordering. If
+                True it uses the NESTED ordering, which requires nside to be a power of two (raises
+                ValueError otherwise).
+        Returns:
+            numpy.ndarray: HEALPix map (RING ordering by default, NESTED if nest is True) where the
+                value of each pixel is the fraction of dark time the center of that healpix is
+                visible. If the site has no dark time in the window, every pixel is 0.
+        """
+        # Local imports to save on import time if this function is not used.
+        import healpix as hp
+        import numpy as np
+
+        effective_horizon = set_airmass_limit(airmass, self.horizon.in_degrees())
+        dark_intervals = self.get_dark_intervals()
+
+        # Accumulate per-pixel visible-sample counts and the total sample count across every
+        # dark interval, then divide once at the end so the fraction is over total dark time.
+        visible_count = np.zeros(hp.nside2npix(nside), dtype=np.float64)
+        total_samples = 0
+        for start, end in dark_intervals:
+            interval_seconds = (end - start).total_seconds()
+            n_samples = max(1, round(interval_seconds / time_resolution.total_seconds()) + 1)
+
+            interval_map = calc_sky_visibility_fraction_map(self.site, start, end,
+                                                            horizon_degrees=effective_horizon,
+                                                            nside=nside, n_samples=n_samples, nest=nest,
+                                                            raw_counts=True)
+            # interval_map is count/n_samples for this window; recover the integer counts
+            visible_count += interval_map
+            total_samples += n_samples
+
+        if total_samples == 0:
+            return visible_count
+
+        return visible_count / total_samples
 
 
     def get_dark_intervals(self):
