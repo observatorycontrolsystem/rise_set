@@ -120,7 +120,7 @@ class Visibility(object):
 
 
     def get_sky_fraction_map(self, nside=64, time_resolution=datetime.timedelta(minutes=30), airmass=None, nest=False):
-        """ Returns a healpix sky visibility fraction map for this Visibility object
+        """Returns a healpix sky visibility fraction map for this Visibility object.
 
         Uses the initialized site details, horizon, and start/end times to generate a healpix
         skymap with each healpix yielding the fraction of *dark* time that that pixel is visible.
@@ -130,25 +130,21 @@ class Visibility(object):
         the fraction of observable (night) time it is above the horizon, not the fraction of
         wall-clock time.
 
-        Parameters:
-            nside : int
-                HEALPix resolution parameter. Number of pixels = 12 * nside**2.
+        Args:
+            nside (int): HEALPix resolution parameter. Number of pixels = 12 * nside**2.
                 Default 64 gives ~55 arcmin pixels (~49 152 pixels total).
-            time_resolution : datetime.timedelta
-                Time step between visibility samples within each dark interval. Converted to a
-                number of equally-spaced samples spanning each interval (inclusive). Default 30
-                minutes.
-            airmass: float
-                Airmass limit for the visibility skymap. If left out, just the telescopes horizon is used.
-            nest : bool
-                If False (default) the returned map uses the HEALPix RING ordering.
-                If True it uses the NESTED ordering, which requires nside to be a
-                power of two (raises ValueError otherwise).
-
+            time_resolution (datetime.timedelta): Time step between visibility samples within each
+                dark interval. Converted to a number of equally-spaced samples spanning each
+                interval (inclusive). Default 30 minutes.
+            airmass (float): Airmass limit for the visibility skymap. If left out, just the
+                telescopes horizon is used.
+            nest (bool): If False (default) the returned map uses the HEALPix RING ordering. If
+                True it uses the NESTED ordering, which requires nside to be a power of two (raises
+                ValueError otherwise).
         Returns:
-            numpy.ndarray: HEALPix map (RING ordering by default, NESTED if nest is True)
-            where the value of each pixel is the fraction of dark time the center of that
-            healpix is visible. If the site has no dark time in the window, every pixel is 0.
+            numpy.ndarray: HEALPix map (RING ordering by default, NESTED if nest is True) where the
+                value of each pixel is the fraction of dark time the center of that healpix is
+                visible. If the site has no dark time in the window, every pixel is 0.
         """
         # Local imports to save on import time if this function is not used.
         import healpix as hp
