@@ -425,6 +425,22 @@ class TestSunriseSunset(object):
         assert abs(expected[2]-received[2]) < timedelta(seconds=30)
 
 
+    def test_nautical_twilight_ending_after_midnight_stays_on_the_next_day(self):
+        # The end of nautical twilight at lsc crosses UTC midnight on this date,
+        # putting the refined set time a few seconds into the 1st of November.
+        # It must be reported as such, rather than being normalised back a whole
+        # day onto a time when the sun was already well below the horizon.
+        date = datetime(2026, 10, 31)
+        twilight = 'nautical'
+
+        expected_set = timedelta(days=1, seconds=14.15)
+
+        received = calc_sunrise_set(self.lsc, date, twilight)
+
+        assert received[2] > timedelta(days=1)
+        assert abs(expected_set - received[2]) < timedelta(seconds=30)
+
+
     def test_nautical_twilight_from_lsc_with_time(self):
         date = datetime(2013, 12, 10, 12)
         twilight = 'nautical'
