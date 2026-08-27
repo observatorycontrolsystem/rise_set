@@ -52,3 +52,4 @@ v.0.5.1  - First release as ocs-rise-set
 v.0.5.2  - Added max moon_phase constraint support
 v.0.6.4  - Support for python 3.12 and numpy > 1.23, Drop support for python 3.8
 v.0.6.5  - Add function `calc_sky_visibility_fraction_map` to get healpix fractional visibility map over time range.
+v.0.6.6  - Fix bug in day_frac refinement on the day boundary
