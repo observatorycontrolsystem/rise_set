@@ -130,6 +130,31 @@ class TestIntervals(unittest.TestCase):
             assert start < end
 
 
+    def test_dark_intervals_unbroken_when_twilight_falls_on_a_day_boundary(self):
+        # At lsc the end of nautical twilight crosses UTC midnight on this date,
+        # so the refined set time for the 31st lands on the 1st of November. The
+        # night must still come back as one interval, rather than being split
+        # around a few seconds of spurious daylight at midnight.
+        site        = {
+                        'latitude': Angle(degrees=-30.237892),
+                        'longitude': Angle(degrees=-70.733642),
+                      }
+        start_date = datetime(2026, 10, 30, 19, 0)
+        visibility = Visibility(
+                                 site=site,
+                                 start_date=start_date,
+                                 end_date=start_date + timedelta(hours=24),
+                                 horizon=20,
+                                 twilight='nautical',
+                               )
+
+        dark_intervals = visibility.get_dark_intervals()
+
+        assert len(dark_intervals) == 1
+        start, end = dark_intervals[0]
+        assert start < datetime(2026, 10, 31) < end
+
+
     def test_can_get_sun_up_intervals(self):
 
         expected = [

@@ -65,6 +65,11 @@ import logging
 
 _log = logging.getLogger('rise_set.astrometry')
 
+# How far outside the day, as a fraction of a day, a refined rise/set/transit
+# time is allowed to fall before we treat it as a diverged correction rather
+# than an event sitting just the other side of a day boundary.
+MAX_REFINEMENT_OVERSHOOT = 1 / 24
+
 
 class Star(object):
     # TODO: This is a crap name - change it
@@ -661,13 +666,23 @@ def calc_setting_day_fraction(m_0, hour_angle):
 
 
 
-def normalise_day(day_frac):
+def normalise_day(day_frac, allow_overshoot=False):
     '''Adjust the day fraction to correspond to the current day.
       day_frac is a fractional day, so should be adjusted to fall in the range
       0-1 if necessary (Astro. Alg. p.98)
       TODO: This may not be what you want, if you are concerned about the next
       rise or set, as opposed to one that happened today.
+
+      If allow_overshoot is True, we will allow the day fraction to overshoot
+      by up to MAX_REFINEMENT_OVERSHOOT in either direction without adding or
+      subtracting a day. This should be set to true when called with an
+      interpolated refined day fraction value, which might be slightly outside
+      the original day range. It should be left false everywhere else, including
+      for the non-interpolated refinement - see refine_day_fraction_no_interp.
     '''
+    overshoot = MAX_REFINEMENT_OVERSHOOT if allow_overshoot else 0
+    if ( -overshoot <= day_frac <= 1 + overshoot ):
+        return day_frac
 
     if ( day_frac < 0 ):
         day_frac += 1
@@ -1034,9 +1049,11 @@ def refine_day_fraction(app_sidereal_time, m_0, m_1, m_2, tdb, target, site,
                                    interp_delta_2_set, local_hour_angle_set,
                                    std_altitude)
 
-    refined_m_0 = normalise_day(refined_m_0)
-    refined_m_1 = normalise_day(refined_m_1)
-    refined_m_2 = normalise_day(refined_m_2)
+    # An overshoot is allowed here, so that a refined time falling just the
+    # other side of a day boundary is kept rather than shifted by a whole day
+    refined_m_0 = normalise_day(refined_m_0, allow_overshoot=True)
+    refined_m_1 = normalise_day(refined_m_1, allow_overshoot=True)
+    refined_m_2 = normalise_day(refined_m_2, allow_overshoot=True)
 
     return (refined_m_0, refined_m_1, refined_m_2)
 
@@ -1106,6 +1123,8 @@ def refine_day_fraction_no_interp(app_sidereal_time, m_0, m_1, m_2, date, target
                                    delta_2.in_degrees(), local_hour_angle_set,
                                    std_altitude)
 
+    # Note these are normalised into the day, unlike the interpolated refinement
+    # above, so we do not want to allow overshoot here.
     refined_m_0 = normalise_day(refined_m_0)
     refined_m_1 = normalise_day(refined_m_1)
     refined_m_2 = normalise_day(refined_m_2)

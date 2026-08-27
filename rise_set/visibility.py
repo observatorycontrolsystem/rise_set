@@ -530,6 +530,9 @@ class Visibility(object):
             _log.warn("dt was: %s", dt)
             _log.warn("target was: %s", target)
 
+            # The target is below the horizon for the whole day
+            return [(dt, dt + ONE_DAY)]
+
         down_intervals = []
 
         # If the first value has time 00:00:00, then the target starts up
@@ -670,6 +673,14 @@ class Visibility(object):
             absolute_rise = rises + dt
             intervals.append((absolute_rise, dt + ONE_DAY))
 
+
+        # A refined rise or set time can fall just outside the day it was
+        # calculated for - a set a few seconds after midnight, say. Clip to the
+        # day so each day contributes only its own slice, and the neighbouring
+        # day contributes the part that falls outside. Anything that clips away
+        # to nothing belongs entirely to a neighbouring day.
+        intervals = [(max(start, dt), min(end, dt + ONE_DAY)) for start, end in intervals]
+        intervals = [(start, end) for start, end in intervals if start < end]
 
         return intervals
 
