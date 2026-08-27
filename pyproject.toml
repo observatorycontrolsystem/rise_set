@@ -20,7 +20,7 @@ healpix = ">=2022.11"
 [tool.poetry.group.dev.dependencies]
 mock = "^5.0.1"
 coverage = "^7.2.3"
-pytest = "^7.3.0"
+pytest = ">=7.3,<10.0"
 
 [build-system]
 requires = ["poetry-core"]
